@@ -84,7 +84,8 @@ API) and <https://authority.bibsys.no> (the Norwegian authority file). Reviewed
 2026-10-04. Only contacted when Nasjonalbiblioteket is the primary provider.
 
 - **Bibliographic records are CC0.** The National Library publishes its
-  catalogue records through its metadata delivery under CC0, so the titles,
+  catalogue records through its metadata delivery under CC0
+  (<https://doc.aja.bs.no/hente/bibliografiske-data/mlnb.html>), so the titles,
   authors, ISBNs, years, languages and series Bindery stores from them carry no
   conditions. The catalogue API itself publishes no terms or rate limits.
   Bindery keeps NB opt in so installs that do not choose it send no traffic.

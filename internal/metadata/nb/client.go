@@ -394,8 +394,10 @@ func (c *Client) workOf(ctx context.Context, it item) *models.Book {
 	return nil
 }
 
-// GetEditions returns the record behind bookForeignID as its only edition, so
-// profile checks on ISBN and page count have evidence instead of nothing.
+// GetEditions returns the editions of the work bookForeignID belongs to, as
+// GetBook assembles it: the record and its siblings, or the record alone when
+// the sibling search fails. Profile checks on ISBN and page count then have
+// evidence instead of nothing.
 func (c *Client) GetEditions(ctx context.Context, bookForeignID string) ([]models.Edition, error) {
 	b, err := c.GetBook(ctx, bookForeignID)
 	if err != nil || b == nil {
