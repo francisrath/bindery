@@ -77,6 +77,30 @@ Public domain catalogue data (CC0). Cover images come from
 `covers.openlibrary.org` and are subject to their rate limits; Bindery serves
 them through the same `/api/v1/images` cache.
 
+## Nasjonalbiblioteket
+
+Sources: <https://api.nb.no/catalog/v1/items/api-docs> (the catalogue search
+API) and <https://authority.bibsys.no> (the Norwegian authority file). Reviewed
+2026-10-04. Only contacted when Nasjonalbiblioteket is the primary provider.
+
+- **Bibliographic records are CC0.** The National Library publishes its
+  catalogue records through its metadata delivery under CC0, so the titles,
+  authors, ISBNs, years, languages and series Bindery stores from them carry no
+  conditions. The catalogue API itself publishes no terms or rate limits.
+  Bindery keeps NB opt in so installs that do not choose it send no traffic.
+- **Summaries are publisher copy.** A record's summary is usually the
+  publisher's own description of the book, not the library's cataloguing, so
+  CC0 does not reach it. Bindery stores it as the book description, the way it
+  stores descriptions from the other providers.
+- **Covers are excluded.** NB's image service refuses in-copyright books, and
+  the cover images some records link to are licensed to library catalogues
+  only. Bindery fetches no cover from NB or from those links.
+- **The authority file is Sikt's, under NLOD 2.0.** Bindery reads an author's
+  name heading from it to look up their catalogue. NLOD asks for attribution:
+
+  > Contains data under the Norwegian licence for Open Government data (NLOD)
+  > distributed by Sikt.
+
 ## Audible
 
 `internal/metadata/audible` calls an unpublished Amazon endpoint, and Amazon's

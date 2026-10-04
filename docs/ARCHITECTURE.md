@@ -25,6 +25,8 @@ Exactly one provider is *primary* — it defines what an author's catalogue is.
 `metadata.primary_provider` selects OpenLibrary (default), DNB, Nasjonalbiblioteket
 (`nb`), or Hardcover (token required); every provider that isn't primary is wired
 as an enricher, except Nasjonalbiblioteket, which is wired only when it is primary.
+Switching the primary away from it therefore leaves `nb:` authors with no provider
+to sync from until they are relinked.
 
 ## Components
 

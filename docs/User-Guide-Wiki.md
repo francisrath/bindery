@@ -759,7 +759,9 @@ like everything else on that tab that names server paths.
   (Settings → Metadata Profiles → Library Defaults) offers OpenLibrary,
   **DNB** (German National Library), **Nasjonalbiblioteket** (National Library
   of Norway: Norwegian books under their original titles, only used when chosen
-  as primary), and **Hardcover**.
+  as primary), and **Hardcover**. Switching the primary away from
+  Nasjonalbiblioteket switches it off entirely, so authors linked to it stop
+  syncing until you relink each one with "Link metadata" on their page.
 - **Hardcover** is an enricher by default — it improves search results,
   ratings, and series data, and powers import lists and the Discover wishlist
   row. **Without an API token (Settings → API Keys) Hardcover is silently
