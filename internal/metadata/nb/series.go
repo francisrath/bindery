@@ -52,7 +52,12 @@ func seriesRecords(items []item) map[string]bool {
 // authority record. A cataloguer occasionally records one without the link;
 // such an entry is accepted only when its series is linked elsewhere in the
 // same books, because an unlinked series nobody links is a publisher imprint.
-func (c *Client) fillSeries(ctx context.Context, books []models.Book, withSeries map[string]bool, authorID string) {
+//
+// The second pass also takes the number a volume carries in its own title
+// fields (see partSeries), on the same condition.
+func (c *Client) fillSeries(ctx context.Context, books []models.Book, items []item, authorID string) {
+	withSeries := seriesRecords(items)
+	parts := partSeries(items, authorID)
 	var todo []int
 	for i := range books {
 		if len(seriesCandidates(books[i], withSeries)) > 0 {
@@ -86,13 +91,61 @@ func (c *Client) fillSeries(ctx context.Context, books []models.Book, withSeries
 		if len(books[i].SeriesRefs) > 0 {
 			continue
 		}
-		for _, ref := range unlinked[i] {
+		candidates := unlinked[i]
+		for _, ed := range books[i].Editions {
+			if ref, ok := parts[strings.TrimPrefix(ed.ForeignID, idPrefix)]; ok {
+				candidates = append(candidates, ref)
+			}
+		}
+		for _, ref := range candidates {
 			if known[ref.ForeignID] {
 				books[i].SeriesRefs = []models.SeriesRef{ref}
 				break
 			}
 		}
 	}
+}
+
+// partSeries returns, per record ID, the series a record names in its own
+// title fields: a record catalogued as part n of a larger work carries that
+// work's name and the number in a titleInfo (the uniform title preferred,
+// since the title proper may have its leading article split off). It is a
+// candidate only: the work may be an omnibus rather than a series, so
+// fillSeries takes it only when the author's catalogue links that series.
+func partSeries(items []item, authorID string) map[string]models.SeriesRef {
+	refs := make(map[string]models.SeriesRef)
+	for _, it := range items {
+		var found *titleInfo
+		for i, ti := range it.Metadata.TitleInfos {
+			if strings.TrimSpace(ti.PartName) == "" || partPosition(ti.PartNumber) == "" {
+				continue
+			}
+			if found == nil || ti.Type == "uniform" {
+				found = &it.Metadata.TitleInfos[i]
+			}
+		}
+		if found == nil {
+			continue
+		}
+		title := stripLanguageQualifier(strings.Join(strings.Fields(found.Title), " "))
+		slug := seriesSlug(title)
+		if slug == "" {
+			continue
+		}
+		refs[firstNonEmpty(it.Metadata.Identifiers.SesamID, it.ID)] = models.SeriesRef{
+			ForeignID: seriesIDPrefix + authorID + ":" + slug,
+			Title:     title,
+			Position:  partPosition(found.PartNumber),
+			Primary:   true,
+		}
+	}
+	return refs
+}
+
+// partPosition cleans a catalogue part number: "[5]" (supplied by the
+// cataloguer) and "3." both mean the plain number.
+func partPosition(s string) string {
+	return strings.Trim(strings.TrimSpace(s), "[]. ")
 }
 
 // seriesCandidates lists the book's record IDs that name a series, the

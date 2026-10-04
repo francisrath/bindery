@@ -57,6 +57,11 @@ type titleInfo struct {
 	Title        string `json:"title"`
 	Type         string `json:"type"`
 	DisplayLabel string `json:"displayLabel"`
+	// PartName and PartNumber are set when the record is catalogued as one
+	// numbered part of a larger work: Title is then that work's name (often
+	// the series), PartName the volume's own title. See recordTitle.
+	PartName   string `json:"partName"`
+	PartNumber string `json:"partNumber"`
 }
 
 // person is a credited name. Identifier is "bibsys.no:authority:<id>" when the

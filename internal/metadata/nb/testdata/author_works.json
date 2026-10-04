@@ -363,13 +363,70 @@
             "issued": "2017"
           }
         }
+      },
+      {
+        "id": "a0000000000000000000000000000008",
+        "metadata": {
+          "title": "Fjellserien : Siste vinter",
+          "titleInfos": [
+            {
+              "title": "Fjellserien",
+              "partName": "Siste vinter"
+            },
+            {
+              "title": "Fjellserien",
+              "partNumber": "3",
+              "partName": "Siste vinter",
+              "type": "uniform"
+            }
+          ],
+          "people": [
+            {
+              "name": "Nordmann, Kari",
+              "identifier": "bibsys.no:authority:10000001",
+              "roles": [
+                {
+                  "name": "aut"
+                }
+              ],
+              "usage": "primary"
+            },
+            {
+              "name": "Leser, Ola",
+              "identifier": "bibsys.no:authority:30000001",
+              "roles": [
+                {
+                  "name": "nrt"
+                }
+              ]
+            }
+          ],
+          "identifiers": {
+            "isbn13": [
+              "9788200000066"
+            ],
+            "sesamId": "a0000000000000000000000000000008"
+          },
+          "languages": [
+            {
+              "code": "nob"
+            }
+          ],
+          "mediaTypes": [
+            "lydopptak"
+          ],
+          "originInfo": {
+            "publisher": "Eksempelforlaget",
+            "issued": "2018"
+          }
+        }
       }
     ]
   },
   "page": {
     "number": 0,
     "size": 100,
-    "totalElements": 7,
+    "totalElements": 8,
     "totalPages": 1
   }
 }

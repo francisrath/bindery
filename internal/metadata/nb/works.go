@@ -27,7 +27,7 @@ func groupWorks(items []item, authorID string) []models.Book {
 		if m.Identifiers.SesamID == "" {
 			m.Identifiers.SesamID = it.ID
 		}
-		if !sesamIDRe.MatchString(m.Identifiers.SesamID) || mainTitle(m.Title) == "" {
+		if !sesamIDRe.MatchString(m.Identifiers.SesamID) || recordTitle(m) == "" {
 			continue
 		}
 		author := primaryAuthor(m, authorID)
@@ -64,7 +64,7 @@ func buildWork(group []item, authorID string) models.Book {
 		}
 	}
 	m := rep.Metadata
-	title := mainTitle(m.Title)
+	title := recordTitle(m)
 	b := models.Book{
 		ForeignID:        idPrefix + m.Identifiers.SesamID,
 		Title:            title,
@@ -104,7 +104,7 @@ func buildWork(group []item, authorID string) models.Book {
 func toEdition(m itemMetadata, date *time.Time) models.Edition {
 	ed := models.Edition{
 		ForeignID:   idPrefix + m.Identifiers.SesamID,
-		Title:       mainTitle(m.Title),
+		Title:       recordTitle(m),
 		Publisher:   m.OriginInfo.Publisher,
 		PublishDate: date,
 		Language:    language(m),
@@ -172,7 +172,7 @@ func workTitle(m itemMetadata) string {
 			}
 		}
 	}
-	return mainTitle(m.Title)
+	return recordTitle(m)
 }
 
 // languageQualifiers are the Norwegian language names the catalogue appends
@@ -209,6 +209,20 @@ func translated(m itemMetadata) bool {
 		}
 	}
 	return false
+}
+
+// recordTitle is the record's own title. A volume catalogued as a part of a
+// larger work ("<series> : <volume>", "<series>. [5] : <volume>") has the
+// series name as its title proper and its own title only as the part name,
+// so the part name is used; otherwise the title proper. Taking the title
+// proper there turned every such volume into a book named after its series.
+func recordTitle(m itemMetadata) string {
+	for _, ti := range m.TitleInfos {
+		if ti.Type == "" && strings.TrimSpace(ti.PartName) != "" {
+			return strings.Join(strings.Fields(ti.PartName), " ")
+		}
+	}
+	return mainTitle(m.Title)
 }
 
 // mainTitle is the title proper without its subtitle ("<title> : roman"), with

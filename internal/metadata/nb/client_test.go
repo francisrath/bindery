@@ -65,8 +65,8 @@ func TestSearchAuthors(t *testing.T) {
 	if a.ForeignID != "nb:author:10000001" || a.Name != "Kari Nordmann" || a.SortName != "Nordmann, Kari" || a.MetadataProvider != "nb" {
 		t.Errorf("first author = %+v", a)
 	}
-	if a.Statistics == nil || a.Statistics.BookCount != 5 {
-		t.Errorf("record count = %+v, want 5 (author credits only, not the translator credit)", a.Statistics)
+	if a.Statistics == nil || a.Statistics.BookCount != 6 {
+		t.Errorf("record count = %+v, want 6 (author credits only, not the translator credit)", a.Statistics)
 	}
 	if authors[1].ForeignID != "nb:author:10000002" {
 		t.Errorf("second author = %q", authors[1].ForeignID)
@@ -165,12 +165,12 @@ func TestGetAuthorWorks_TranslationJoinsOriginal(t *testing.T) {
 		t.Error("a single-page catalogue must be complete")
 	}
 	// Homonym's book (10000002) and the book she only translated are excluded.
-	if len(books) != 2 {
+	if len(books) != 3 {
 		titles := make([]string, len(books))
 		for i, b := range books {
 			titles[i] = b.Title
 		}
-		t.Fatalf("got %d works %v, want 2", len(books), titles)
+		t.Fatalf("got %d works %v, want 3", len(books), titles)
 	}
 	w := books[0]
 	if w.Title != "Fjellvinden" || w.ForeignID != "nb:a0000000000000000000000000000001" || w.Language != "nob" {
@@ -288,7 +288,7 @@ func TestGetAuthorWorks_SeriesFromMODS(t *testing.T) {
 		"a0000000000000000000000000000005": "mods_publisher_series.xml",
 	})}
 	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
-	if err != nil || len(books) != 2 {
+	if err != nil || len(books) != 3 {
 		t.Fatalf("books=%d err=%v", len(books), err)
 	}
 	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "2", Primary: true}
@@ -307,6 +307,47 @@ func TestGetAuthorWorks_SeriesFromMODS(t *testing.T) {
 	}
 }
 
+// NB sometimes catalogues a volume under its series' name, with the volume's
+// own title and number only in the part fields: "<series> : <title>", the
+// number on the uniform title. The book must carry the volume's title, and
+// the number counts once the author's catalogue links that series elsewhere.
+func TestGetAuthorWorks_VolumeTitledBySeries(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(map[string]string{
+		"a0000000000000000000000000000001": "mods_author_series.xml",
+	})}
+	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var vol *models.Book
+	for i := range books {
+		if books[i].ForeignID == "nb:a0000000000000000000000000000008" {
+			vol = &books[i]
+		}
+		if books[i].Title == "Fjellserien" {
+			t.Errorf("a volume took the series name as its title: %+v", books[i])
+		}
+	}
+	if vol == nil {
+		t.Fatalf("volume missing from %d works", len(books))
+	}
+	if vol.Title != "Siste vinter" || vol.Editions[0].Title != "Siste vinter" {
+		t.Errorf("title = %q, edition title = %q, want the part name", vol.Title, vol.Editions[0].Title)
+	}
+	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "3", Primary: true}
+	if len(vol.SeriesRefs) != 1 || vol.SeriesRefs[0] != want {
+		t.Errorf("series = %+v, want %+v", vol.SeriesRefs, want)
+	}
+}
+
+func TestPartPosition(t *testing.T) {
+	for in, want := range map[string]string{"6": "6", "[5]": "5", "3.": "3", " [12]. ": "12", "": ""} {
+		if got := partPosition(in); got != want {
+			t.Errorf("partPosition(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
 // A cataloguer sometimes records the author's series without the authority
 // link. That entry is accepted only when the author's catalogue links the same
 // series elsewhere; an unlinked series nobody links is still a publisher's.
@@ -316,7 +357,7 @@ func TestGetAuthorWorks_UnlinkedEntryOfKnownSeries(t *testing.T) {
 		"a0000000000000000000000000000005": "mods_unlinked_series.xml",
 	})}
 	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
-	if err != nil || len(books) != 2 {
+	if err != nil || len(books) != 3 {
 		t.Fatalf("books=%d err=%v", len(books), err)
 	}
 	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "3", Primary: true}
@@ -335,7 +376,7 @@ func TestGetAuthorWorks_SeriesFailureIsNotFatal(t *testing.T) {
 		return routeWithMODS(nil)(r)
 	}}
 	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
-	if err != nil || len(books) != 2 || len(books[0].SeriesRefs) != 0 {
+	if err != nil || len(books) != 3 || len(books[0].SeriesRefs) != 0 {
 		t.Errorf("books=%d err=%v series=%v", len(books), err, books[0].SeriesRefs)
 	}
 }

@@ -246,7 +246,7 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 		}
 	}
 	books := groupWorks(items, id)
-	c.fillSeries(ctx, books, seriesRecords(items), id)
+	c.fillSeries(ctx, books, items, id)
 	return books, complete, nil
 }
 
@@ -281,7 +281,7 @@ func (c *Client) GetBook(ctx context.Context, foreignID string) (*models.Book, e
 	// A rebind replaces the book's series with these, so they are filled
 	// here as well as in the catalogue.
 	if a := primaryAuthor(it.Metadata, ""); a != nil && a.authorityID() != "" {
-		c.fillSeries(ctx, books, seriesRecords([]item{it}), a.authorityID())
+		c.fillSeries(ctx, books, []item{it}, a.authorityID())
 	}
 	return &books[0], nil
 }
@@ -295,7 +295,7 @@ func (c *Client) workOf(ctx context.Context, it item) *models.Book {
 		return nil
 	}
 	params := url.Values{
-		"q":          {escapeQuery(mainTitle(it.Metadata.Title))},
+		"q":          {escapeQuery(recordTitle(it.Metadata))},
 		"searchType": {"FIELD_RESTRICTED_SEARCH"},
 		"filter":     {`nameauthor:"` + escapeQuery(author.Name) + `"`, "mediatype:(bøker OR lydopptak)"},
 	}
@@ -312,7 +312,7 @@ func (c *Client) workOf(ctx context.Context, it item) *models.Book {
 			}
 			// Keep the requested ID: callers look the book up by it.
 			books[i].ForeignID = want
-			c.fillSeries(ctx, books[i:i+1], seriesRecords(page.Embedded.Items), author.authorityID())
+			c.fillSeries(ctx, books[i:i+1], page.Embedded.Items, author.authorityID())
 			return &books[i]
 		}
 	}
