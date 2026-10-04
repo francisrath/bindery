@@ -90,7 +90,7 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
         const value = (s.value || '').trim().toLowerCase()
         // Mirror MetadataPrimaryProviders on the backend; anything else means
         // no explicit choice, so no notice.
-        if (value === 'openlibrary' || value === 'dnb' || value === 'hardcover') setPrimaryProvider(value)
+        if (value === 'openlibrary' || value === 'dnb' || value === 'nb' || value === 'hardcover') setPrimaryProvider(value)
       })
       .catch(() => { /* unset; no provider notice needed */ })
   }, [isRequester])
