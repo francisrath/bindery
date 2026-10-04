@@ -278,9 +278,11 @@ func (h *AuthorHandler) buildCatalogueReconciliation(ctx context.Context, author
 			// NB works come from the author catalogue with every edition
 			// already attached, and its per-work editions lookup is a full
 			// GetBook, so the work's own editions are the evidence. None
-			// attached is not evidence of no ISBN or too few pages.
+			// attached is not evidence of no ISBN or too few pages, and on a
+			// partial catalogue a work may be missing editions, so then
+			// nothing is judged on them.
 			if provider == "nb" {
-				if len(work.Editions) > 0 {
+				if snapshot.Complete && len(work.Editions) > 0 {
 					mu.Lock()
 					editions[work.ForeignID] = editionEvidence{editions: work.Editions, known: true}
 					mu.Unlock()
