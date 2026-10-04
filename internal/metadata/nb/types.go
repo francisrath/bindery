@@ -45,6 +45,9 @@ type itemMetadata struct {
 	} `json:"originInfo"`
 	Summary   string `json:"summary"`
 	PageCount int    `json:"pageCount"`
+	// Series names the record's series, author's and publisher's alike,
+	// without the number. See authorSeries.
+	Series []string `json:"series"`
 }
 
 // titleInfo is one title of a record. Type is "" for the title proper,

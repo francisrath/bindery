@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/vavallee/bindery/internal/indexer"
 	"github.com/vavallee/bindery/internal/models"
@@ -176,22 +175,31 @@ func workTitle(m itemMetadata) string {
 	return mainTitle(m.Title)
 }
 
-// stripLanguageQualifier drops the trailing language name a uniform title
-// carries on a translation. Norwegian language names are capitalised here and
-// end in "sk" (Norsk, Engelsk, Fransk, Ukrainsk).
-// ponytail: suffix heuristic, not a language list; a qualifier outside the
-// pattern leaves the translation as its own book, which the language filter
-// still handles.
+// languageQualifiers are the Norwegian language names the catalogue appends
+// to a uniform or series title ("<title> Fransk", "<series> Norsk"). A list,
+// not a pattern: a pattern also matched names ("Inspektør Brask"). A language
+// missing here leaves that translation as its own book and its series as its
+// own row, which the language filter still handles.
+var languageQualifiers = map[string]bool{
+	"norsk": true, "nynorsk": true, "engelsk": true, "fransk": true, "tysk": true,
+	"svensk": true, "dansk": true, "islandsk": true, "finsk": true, "spansk": true,
+	"italiensk": true, "portugisisk": true, "nederlandsk": true, "russisk": true,
+	"ukrainsk": true, "polsk": true, "tsjekkisk": true, "slovakisk": true,
+	"slovensk": true, "kroatisk": true, "serbisk": true, "bulgarsk": true,
+	"rumensk": true, "ungarsk": true, "gresk": true, "tyrkisk": true,
+	"estisk": true, "latvisk": true, "litauisk": true, "hebraisk": true,
+	"arabisk": true, "persisk": true, "kinesisk": true, "japansk": true,
+	"koreansk": true, "vietnamesisk": true,
+}
+
+// stripLanguageQualifier drops a trailing language name from a catalogue
+// title. See languageQualifiers.
 func stripLanguageQualifier(title string) string {
 	words := strings.Fields(title)
-	if len(words) < 2 {
+	if len(words) < 2 || !languageQualifiers[strings.ToLower(words[len(words)-1])] {
 		return title
 	}
-	last := words[len(words)-1]
-	if unicode.IsUpper([]rune(last)[0]) && strings.HasSuffix(last, "sk") {
-		return strings.Join(words[:len(words)-1], " ")
-	}
-	return title
+	return strings.Join(words[:len(words)-1], " ")
 }
 
 func translated(m itemMetadata) bool {

@@ -44,6 +44,9 @@
       "issued": "2019"
     },
     "summary": "En oppdiktet roman brukt som testdata.",
-    "pageCount": 312
+    "pageCount": 312,
+    "series": [
+      "Fjellserien"
+    ]
   }
 }

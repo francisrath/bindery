@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/vavallee/bindery/internal/metadata"
+	"github.com/vavallee/bindery/internal/models"
 )
 
 // The fixtures in testdata/ have the exact shape of api.nb.no and
@@ -210,7 +211,7 @@ func TestGetAuthorWorks_PartialWhenCapped(t *testing.T) {
 		if isAuthority(r) {
 			a, _ := os.ReadFile("testdata/authority.json")
 			body = string(a)
-		} else {
+		} else if strings.HasSuffix(r.URL.Path, "/items") {
 			calls++
 		}
 		return &http.Response{StatusCode: 200, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
@@ -245,6 +246,112 @@ func TestGetAuthorWorks_ErrorsAreNotEmpty(t *testing.T) {
 		if books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001"); err == nil {
 			t.Errorf("%s: got %d books and no error", name, len(books))
 		}
+	}
+}
+
+// routeWithMODS serves the search, authority and MODS endpoints from the
+// fixtures, MODS by record ID.
+func routeWithMODS(mods map[string]string) func(*http.Request) (string, int) {
+	return func(r *http.Request) (string, int) {
+		switch {
+		case isAuthority(r):
+			return "authority.json", 200
+		case strings.HasSuffix(r.URL.Path, "/mods"):
+			id := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/catalog/v1/metadata/"), "/mods")
+			if f, ok := mods[id]; ok {
+				return f, 200
+			}
+			return "", 404
+		case strings.HasSuffix(r.URL.Path, "/items/a0000000000000000000000000000001"):
+			return "item_print.json", 200
+		}
+		return "author_works.json", 200
+	}
+}
+
+func modsRequests(f *fakeNB) []string {
+	var ids []string
+	for _, r := range f.reqs {
+		if strings.HasSuffix(r.URL.Path, "/mods") {
+			ids = append(ids, r.URL.Path)
+		}
+	}
+	return ids
+}
+
+// The series number is only in the per-record MODS. Only the author's own
+// series counts: the one linked to their authority ID, not a publisher's
+// imprint series, which NB also records as a series.
+func TestGetAuthorWorks_SeriesFromMODS(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(map[string]string{
+		"a0000000000000000000000000000001": "mods_author_series.xml",
+		"a0000000000000000000000000000005": "mods_publisher_series.xml",
+	})}
+	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
+	if err != nil || len(books) != 2 {
+		t.Fatalf("books=%d err=%v", len(books), err)
+	}
+	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "2", Primary: true}
+	if len(books[0].SeriesRefs) != 1 || books[0].SeriesRefs[0] != want {
+		t.Errorf("series = %+v, want %+v", books[0].SeriesRefs, want)
+	}
+	if len(books[1].SeriesRefs) != 0 {
+		t.Errorf("publisher imprint taken as a series: %+v", books[1].SeriesRefs)
+	}
+	// Only the two records whose search hit lists a series are fetched.
+	if got := modsRequests(f); len(got) != 2 {
+		t.Errorf("MODS requests = %v, want 2", got)
+	}
+	if ua := f.reqs[len(f.reqs)-1].Header.Get("User-Agent"); !strings.HasPrefix(ua, "bindery/") {
+		t.Errorf("MODS User-Agent = %q", ua)
+	}
+}
+
+// A cataloguer sometimes records the author's series without the authority
+// link. That entry is accepted only when the author's catalogue links the same
+// series elsewhere; an unlinked series nobody links is still a publisher's.
+func TestGetAuthorWorks_UnlinkedEntryOfKnownSeries(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(map[string]string{
+		"a0000000000000000000000000000001": "mods_author_series.xml",
+		"a0000000000000000000000000000005": "mods_unlinked_series.xml",
+	})}
+	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
+	if err != nil || len(books) != 2 {
+		t.Fatalf("books=%d err=%v", len(books), err)
+	}
+	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "3", Primary: true}
+	if len(books[1].SeriesRefs) != 1 || books[1].SeriesRefs[0] != want {
+		t.Errorf("series = %+v, want %+v", books[1].SeriesRefs, want)
+	}
+}
+
+// Series is enrichment: a MODS failure leaves the work without a series but
+// must not fail or empty the catalogue.
+func TestGetAuthorWorks_SeriesFailureIsNotFatal(t *testing.T) {
+	f := &fakeNB{t: t, route: func(r *http.Request) (string, int) {
+		if strings.HasSuffix(r.URL.Path, "/mods") {
+			return "", 503
+		}
+		return routeWithMODS(nil)(r)
+	}}
+	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
+	if err != nil || len(books) != 2 || len(books[0].SeriesRefs) != 0 {
+		t.Errorf("books=%d err=%v series=%v", len(books), err, books[0].SeriesRefs)
+	}
+}
+
+// A rebind replaces a book's series with what GetBook returns, so GetBook
+// must carry the series too.
+func TestGetBook_CarriesSeries(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(map[string]string{
+		"a0000000000000000000000000000001": "mods_author_series.xml",
+	})}
+	b, err := f.client().GetBook(context.Background(), "nb:a0000000000000000000000000000001")
+	if err != nil || b == nil {
+		t.Fatalf("book=%v err=%v", b, err)
+	}
+	if len(b.SeriesRefs) != 1 || b.SeriesRefs[0].Position != "2" {
+		t.Errorf("series = %+v", b.SeriesRefs)
 	}
 }
 
@@ -342,6 +449,9 @@ func TestStripLanguageQualifier(t *testing.T) {
 		"Fjellvinden":         "Fjellvinden",
 		"Havet og Os":         "Havet og Os",
 		"Mot øst":             "Mot øst",
+		// A name ending like a language word is not a language qualifier.
+		"Inspektør Brask": "Inspektør Brask",
+		"Kiosk":           "Kiosk",
 	} {
 		if got := stripLanguageQualifier(in); got != want {
 			t.Errorf("%q: got %q, want %q", in, got, want)

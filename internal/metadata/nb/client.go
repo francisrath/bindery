@@ -20,6 +20,7 @@ package nb
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -39,6 +40,7 @@ import (
 
 const (
 	itemsBase     = "https://api.nb.no/catalog/v1/items"
+	metadataBase  = "https://api.nb.no/catalog/v1/metadata/"
 	authorityBase = "https://authority.bibsys.no/authority/rest/authorities/v2/"
 	idPrefix      = "nb:"
 	authorPrefix  = "nb:author:"
@@ -243,7 +245,9 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 			break
 		}
 	}
-	return groupWorks(items, id), complete, nil
+	books := groupWorks(items, id)
+	c.fillSeries(ctx, books, seriesRecords(items), id)
+	return books, complete, nil
 }
 
 // GetBook fetches the edition record "nb:<sesam id>" and returns the work it
@@ -274,6 +278,11 @@ func (c *Client) GetBook(ctx context.Context, foreignID string) (*models.Book, e
 	if len(books) == 0 {
 		return nil, nil
 	}
+	// A rebind replaces the book's series with these, so they are filled
+	// here as well as in the catalogue.
+	if a := primaryAuthor(it.Metadata, ""); a != nil && a.authorityID() != "" {
+		c.fillSeries(ctx, books, seriesRecords([]item{it}), a.authorityID())
+	}
 	return &books[0], nil
 }
 
@@ -295,13 +304,16 @@ func (c *Client) workOf(ctx context.Context, it item) *models.Book {
 		return nil
 	}
 	want := idPrefix + it.ID
-	for _, b := range groupWorks(page.Embedded.Items, author.authorityID()) {
-		for _, ed := range b.Editions {
-			if ed.ForeignID == want {
-				// Keep the requested ID: callers look the book up by it.
-				b.ForeignID = want
-				return &b
+	books := groupWorks(page.Embedded.Items, author.authorityID())
+	for i := range books {
+		for _, ed := range books[i].Editions {
+			if ed.ForeignID != want {
+				continue
 			}
+			// Keep the requested ID: callers look the book up by it.
+			books[i].ForeignID = want
+			c.fillSeries(ctx, books[i:i+1], seriesRecords(page.Embedded.Items), author.authorityID())
+			return &books[i]
 		}
 	}
 	return nil
@@ -369,12 +381,26 @@ func (c *Client) authorityName(ctx context.Context, id string) (string, bool, er
 
 // getJSON GETs endpoint and decodes the body into out. found is false on 404.
 func (c *Client) getJSON(ctx context.Context, endpoint string, out any) (bool, error) {
+	return c.get(ctx, endpoint, "application/json", func(r io.Reader) error {
+		return json.NewDecoder(r).Decode(out)
+	})
+}
+
+// getXML is getJSON for the MODS endpoint.
+func (c *Client) getXML(ctx context.Context, endpoint string, out any) (bool, error) {
+	return c.get(ctx, endpoint, "application/xml", func(r io.Reader) error {
+		return xml.NewDecoder(r).Decode(out)
+	})
+}
+
+// get GETs endpoint and decodes the size-limited body. found is false on 404.
+func (c *Client) get(ctx context.Context, endpoint, accept string, decode func(io.Reader) error) (bool, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
 		return false, err
 	}
 	req.Header.Set("User-Agent", useragent.Get())
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", accept)
 
 	resp, err := c.http.Do(req)
 	if err != nil {
@@ -389,7 +415,7 @@ func (c *Client) getJSON(ctx context.Context, endpoint string, out any) (bool, e
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
 		return false, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
-	if err := json.NewDecoder(io.LimitReader(resp.Body, maxResponseBytes)).Decode(out); err != nil {
+	if err := decode(io.LimitReader(resp.Body, maxResponseBytes)); err != nil {
 		return false, fmt.Errorf("decode response: %w", err)
 	}
 	return true, nil
