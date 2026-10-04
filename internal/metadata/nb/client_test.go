@@ -577,3 +577,35 @@ func TestStripLanguageQualifier(t *testing.T) {
 		}
 	}
 }
+
+// A catalogue slip that splits a title with a space ("Fjel lbyen") must not
+// make a second book, nor name the book: the title most editions carry wins.
+func TestGroupWorks_FoldsSpacingSlip(t *testing.T) {
+	kari := person{Name: "Nordmann, Kari", Identifier: "bibsys.no:authority:10000001", Roles: []struct {
+		Name string `json:"name"`
+	}{{Name: "aut"}}}
+	rec := func(id, title string, tis []titleInfo, media string) item {
+		var m itemMetadata
+		m.Title, m.TitleInfos, m.People, m.MediaTypes = title, tis, []person{kari}, []string{media}
+		m.Identifiers.SesamID = id
+		m.Languages = []struct {
+			Code string `json:"code"`
+		}{{Code: "nob"}}
+		return item{ID: id, Metadata: m}
+	}
+	books := groupWorks([]item{
+		rec("b0000000000000000000000000000001", "Fjel lbyen  : roman", []titleInfo{{Title: "lbyen "}}, "bøker"),
+		rec("b0000000000000000000000000000002", "Fjellbyen : roman", []titleInfo{{Title: "Fjellbyen"}}, "bøker"),
+		rec("b0000000000000000000000000000003", "Fjellserien. [5] : Fjellbyen", []titleInfo{{Title: "jellserien", PartName: "Fjellbyen", PartNumber: "[5]"}}, "lydopptak"),
+		rec("b0000000000000000000000000000004", "Fjell byen og havet", []titleInfo{{Title: "Fjell byen og havet"}}, "bøker"),
+	}, "10000001")
+	if len(books) != 2 {
+		t.Fatalf("works = %d, want 2", len(books))
+	}
+	if books[0].Title != "Fjellbyen" || len(books[0].Editions) != 3 {
+		t.Errorf("work = %q with %d editions, want Fjellbyen with 3", books[0].Title, len(books[0].Editions))
+	}
+	if books[1].Title != "Fjell byen og havet" {
+		t.Errorf("a different title was folded in: %q", books[1].Title)
+	}
+}

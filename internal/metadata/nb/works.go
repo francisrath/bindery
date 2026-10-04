@@ -1,6 +1,7 @@
 package nb
 
 import (
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -38,7 +39,10 @@ func groupWorks(items []item, authorID string) []models.Book {
 		if author != nil {
 			authorKey = author.Identifier + author.Name
 		}
-		key := authorKey + "|" + indexer.CanonicalDedupKey(workTitle(m))
+		// Spaces are ignored so a catalogue slip that splits a word
+		// ("Fjel lbyen") stays with its work; the key is per author, so two
+		// titles differing only in spacing are taken as one work.
+		key := authorKey + "|" + strings.ReplaceAll(indexer.CanonicalDedupKey(workTitle(m)), " ", "")
 		if _, ok := groups[key]; !ok {
 			order = append(order, key)
 		}
@@ -64,7 +68,7 @@ func buildWork(group []item, authorID string) models.Book {
 		}
 	}
 	m := rep.Metadata
-	title := recordTitle(m)
+	title := commonTitle(group, recordTitle(m))
 	b := models.Book{
 		ForeignID:        idPrefix + m.Identifiers.SesamID,
 		Title:            title,
@@ -99,6 +103,29 @@ func buildWork(group []item, authorID string) models.Book {
 		b.ProviderISBNs = append(b.ProviderISBNs, em.Identifiers.ISBN10...)
 	}
 	return b
+}
+
+// commonTitle is the title most of a work's editions carry, so one record's
+// cataloguing slip cannot name the book. Ties keep fallback, the
+// representative's own title; among other equal counts the first in sort
+// order wins, so the result does not depend on map order.
+func commonTitle(group []item, fallback string) string {
+	counts := make(map[string]int, len(group))
+	for _, it := range group {
+		counts[recordTitle(it.Metadata)]++
+	}
+	titles := make([]string, 0, len(counts))
+	for t := range counts {
+		titles = append(titles, t)
+	}
+	sort.Strings(titles) // a deterministic winner among equal counts
+	best := fallback
+	for _, t := range titles {
+		if counts[t] > counts[best] {
+			best = t
+		}
+	}
+	return best
 }
 
 func toEdition(m itemMetadata, date *time.Time) models.Edition {
