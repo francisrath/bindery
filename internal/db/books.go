@@ -1349,6 +1349,13 @@ func (r *BookRepo) ListWithLocalImagePath(ctx context.Context) ([]models.Book, e
 	return r.query(ctx, bookCTE+" SELECT "+bookColumns+" FROM books "+bookJoins+" WHERE (books.image_url LIKE '/%' OR books.image_url LIKE '_:\\%') ORDER BY books.id", nil)
 }
 
+// ListWithFilesWithoutCover returns books that have at least one file on disk
+// but no cover, so the library scan can fill the cover from the file (see
+// importer.Scanner.WithCoverStore).
+func (r *BookRepo) ListWithFilesWithoutCover(ctx context.Context) ([]models.Book, error) {
+	return r.query(ctx, bookCTE+" SELECT "+bookColumns+" FROM books "+bookJoins+" WHERE books.image_url = '' AND EXISTS (SELECT 1 FROM book_files bf WHERE bf.book_id = books.id) ORDER BY books.id", nil)
+}
+
 // SetCalibreID stores the Calibre-assigned book id for the given Bindery
 // book row. Called from the importer after a successful `calibredb add`.
 func (r *BookRepo) SetCalibreID(ctx context.Context, id, calibreID int64) error {
