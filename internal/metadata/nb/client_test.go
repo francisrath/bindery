@@ -444,6 +444,27 @@ func TestGetAuthorWorks_EmptySearchIsPartial(t *testing.T) {
 	}
 }
 
+// An authority record that is gone (404, or deleted when Sikt merges
+// duplicate records) says nothing about the author's books: an empty,
+// complete catalogue would have reconciliation offer to remove them all.
+func TestGetAuthorWorks_MissingAuthorityIsPartial(t *testing.T) {
+	for name, authority := range map[string]func() (string, int){
+		"404":     func() (string, int) { return "", 404 },
+		"deleted": func() (string, int) { return "authority_deleted.json", 200 },
+	} {
+		f := &fakeNB{t: t, route: func(r *http.Request) (string, int) {
+			if isAuthority(r) {
+				return authority()
+			}
+			return "author_works.json", 200
+		}}
+		books, complete, err := f.client().GetAuthorWorksSnapshot(context.Background(), "nb:author:10000001")
+		if err != nil || complete || len(books) != 0 {
+			t.Errorf("%s: books=%d complete=%v err=%v, want none, partial, no error", name, len(books), complete, err)
+		}
+	}
+}
+
 // A failed recall search must not pass as a complete catalogue: a recovered
 // volume missing from it would read as removed upstream.
 func TestGetAuthorWorks_RecallFailureIsPartial(t *testing.T) {

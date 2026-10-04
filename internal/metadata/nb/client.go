@@ -226,7 +226,10 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 		return nil, false, fmt.Errorf("nb get author works %s: %w", authorForeignID, err)
 	}
 	if !found {
-		return nil, true, nil
+		// A record that is gone (Sikt merges duplicate records) says
+		// nothing about the author's books, so it is not a complete,
+		// empty catalogue that reconciliation could act on.
+		return nil, false, nil
 	}
 
 	params := url.Values{
