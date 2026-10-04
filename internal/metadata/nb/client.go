@@ -36,6 +36,7 @@ import (
 	"github.com/vavallee/bindery/internal/httpsec"
 	"github.com/vavallee/bindery/internal/isbnutil"
 	"github.com/vavallee/bindery/internal/metadata"
+	"github.com/vavallee/bindery/internal/metadata/providererr"
 	"github.com/vavallee/bindery/internal/models"
 	"github.com/vavallee/bindery/internal/useragent"
 )
@@ -478,6 +479,15 @@ func (c *Client) get(ctx context.Context, endpoint, accept string, decode func(i
 	}
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+		// A refusal or outage is the provider's state, not this request's:
+		// marked so scheduled discovery backs off. NB publishes no rate
+		// limits, so its refusals are taken at their word.
+		switch {
+		case resp.StatusCode == http.StatusTooManyRequests:
+			return false, fmt.Errorf("%w: HTTP %d: %s", providererr.ErrRateLimited, resp.StatusCode, string(body))
+		case resp.StatusCode >= 500:
+			return false, fmt.Errorf("%w: HTTP %d: %s", providererr.ErrUnavailable, resp.StatusCode, string(body))
+		}
 		return false, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
 	}
 	if err := decode(io.LimitReader(resp.Body, maxResponseBytes)); err != nil {

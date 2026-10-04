@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/vavallee/bindery/internal/metadata"
+	"github.com/vavallee/bindery/internal/metadata/providererr"
 	"github.com/vavallee/bindery/internal/models"
 )
 
@@ -540,6 +541,29 @@ func TestGetBook_RejectsMalformedID(t *testing.T) {
 	}
 	if len(f.reqs) != 0 {
 		t.Errorf("made %d requests for malformed ids", len(f.reqs))
+	}
+}
+
+// A refusal or outage is marked with the shared provider errors, so
+// scheduled discovery backs off instead of walking on through its queue.
+func TestProviderErrors(t *testing.T) {
+	for status, want := range map[int]error{
+		429: providererr.ErrRateLimited,
+		500: providererr.ErrUnavailable,
+		502: providererr.ErrUnavailable,
+		503: providererr.ErrUnavailable,
+	} {
+		f := &fakeNB{t: t, route: func(*http.Request) (string, int) { return "", status }}
+		_, err := f.client().GetBookByISBN(context.Background(), "9788200000028")
+		if !errors.Is(err, want) {
+			t.Errorf("HTTP %d: err = %v, want %v", status, err, want)
+		}
+	}
+	// A bad request is about this request, not the provider being down.
+	f := &fakeNB{t: t, route: func(*http.Request) (string, int) { return "", 400 }}
+	_, err := f.client().GetBookByISBN(context.Background(), "9788200000028")
+	if err == nil || errors.Is(err, providererr.ErrRateLimited) || errors.Is(err, providererr.ErrUnavailable) {
+		t.Errorf("HTTP 400: err = %v, want a plain error", err)
 	}
 }
 
