@@ -1,0 +1,249 @@
+package nb
+
+import (
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
+
+	"github.com/vavallee/bindery/internal/indexer"
+	"github.com/vavallee/bindery/internal/models"
+)
+
+// groupWorks folds edition records into one book per (author, work title), in
+// first-appearance order so the API's relevance ordering survives. When
+// authorID is set, only records crediting that authority ID as author are
+// kept: the name filter that fetched them also matches homonyms, and records
+// where the person is only translator or narrator.
+//
+// Translations join the original's work through the title the cataloguer
+// recorded for it (see workTitle). A translation with no such title stays its
+// own book; the metadata profile's language filter then decides whether it is
+// wanted, the same as for any other provider.
+func groupWorks(items []item, authorID string) []models.Book {
+	var order []string
+	groups := make(map[string][]item)
+	for _, it := range items {
+		m := it.Metadata
+		if m.Identifiers.SesamID == "" {
+			m.Identifiers.SesamID = it.ID
+		}
+		if !sesamIDRe.MatchString(m.Identifiers.SesamID) || mainTitle(m.Title) == "" {
+			continue
+		}
+		author := primaryAuthor(m, authorID)
+		if authorID != "" && author == nil {
+			continue
+		}
+		authorKey := ""
+		if author != nil {
+			authorKey = author.Identifier + author.Name
+		}
+		key := authorKey + "|" + indexer.CanonicalDedupKey(workTitle(m))
+		if _, ok := groups[key]; !ok {
+			order = append(order, key)
+		}
+		groups[key] = append(groups[key], item{ID: it.ID, Metadata: m})
+	}
+	books := make([]models.Book, 0, len(order))
+	for _, key := range order {
+		books = append(books, buildWork(groups[key], authorID))
+	}
+	return books
+}
+
+// buildWork turns one group of editions into a book. The representative
+// record, which supplies the ID and title, is the best Norwegian edition: this
+// provider exists for original-language Norwegian titles, and for a foreign
+// author it yields the Norwegian translation's title, which is what a
+// Norwegian library's files are named after.
+func buildWork(group []item, authorID string) models.Book {
+	rep := group[0]
+	for _, it := range group[1:] {
+		if repScore(it.Metadata) > repScore(rep.Metadata) {
+			rep = it
+		}
+	}
+	m := rep.Metadata
+	title := mainTitle(m.Title)
+	b := models.Book{
+		ForeignID:        idPrefix + m.Identifiers.SesamID,
+		Title:            title,
+		SortTitle:        title,
+		Description:      m.Summary,
+		Language:         language(m),
+		MetadataProvider: "nb",
+		Monitored:        true,
+		Status:           models.BookStatusWanted,
+		Genres:           []string{},
+	}
+	if p := primaryAuthor(m, authorID); p != nil && p.authorityID() != "" {
+		a := personToAuthor(*p)
+		b.Author = &a
+	}
+	for _, p := range m.People {
+		if p.isAuthor() && p.authorityID() != "" {
+			b.CreditedAuthorForeignIDs = append(b.CreditedAuthorForeignIDs, authorPrefix+p.authorityID())
+		}
+	}
+	for _, it := range group {
+		em := it.Metadata
+		if b.Description == "" {
+			b.Description = em.Summary
+		}
+		date := parseYear(em.OriginInfo.Issued)
+		if date != nil && (b.ReleaseDate == nil || date.Before(*b.ReleaseDate)) {
+			b.ReleaseDate = date
+		}
+		b.Editions = append(b.Editions, toEdition(em, date))
+		b.ProviderISBNs = append(b.ProviderISBNs, em.Identifiers.ISBN13...)
+		b.ProviderISBNs = append(b.ProviderISBNs, em.Identifiers.ISBN10...)
+	}
+	return b
+}
+
+func toEdition(m itemMetadata, date *time.Time) models.Edition {
+	ed := models.Edition{
+		ForeignID:   idPrefix + m.Identifiers.SesamID,
+		Title:       mainTitle(m.Title),
+		Publisher:   m.OriginInfo.Publisher,
+		PublishDate: date,
+		Language:    language(m),
+	}
+	if len(m.Identifiers.ISBN13) > 0 {
+		ed.ISBN13 = &m.Identifiers.ISBN13[0]
+	}
+	if len(m.Identifiers.ISBN10) > 0 {
+		ed.ISBN10 = &m.Identifiers.ISBN10[0]
+	}
+	if isAudio(m) {
+		ed.Format = models.MediaTypeAudiobook
+	} else if m.PageCount > 0 {
+		pages := m.PageCount
+		ed.NumPages = &pages
+	}
+	return ed
+}
+
+// repScore ranks a record as the representative of its work: Norwegian beats
+// other languages, print beats audio.
+func repScore(m itemMetadata) int {
+	score := 0
+	switch language(m) {
+	case "nob", "nno", "nor":
+		score += 2
+	}
+	if !isAudio(m) {
+		score++
+	}
+	return score
+}
+
+// primaryAuthor picks the credited author: the one with authorID when given,
+// otherwise the first "aut" credit.
+func primaryAuthor(m itemMetadata, authorID string) *person {
+	for i := range m.People {
+		p := &m.People[i]
+		if !p.isAuthor() {
+			continue
+		}
+		if authorID == "" || p.authorityID() == authorID {
+			return p
+		}
+	}
+	return nil
+}
+
+// workTitle is the title editions of one work share. A translation records
+// its original title either as an "Originaltittel" alternative or as a
+// uniform title of the form "<original> <Language>" ("<original> Fransk").
+// Anything else groups by its own title: on originals the uniform title is
+// cataloguing noise ("<title> Norsk", "<title> 2023", a collection heading)
+// that would split one work's printings apart.
+func workTitle(m itemMetadata) string {
+	for _, ti := range m.TitleInfos {
+		if ti.Type == "alternative" && strings.HasPrefix(ti.DisplayLabel, "Originaltittel") {
+			return ti.Title
+		}
+	}
+	if translated(m) {
+		for _, ti := range m.TitleInfos {
+			if ti.Type == "uniform" {
+				return stripLanguageQualifier(ti.Title)
+			}
+		}
+	}
+	return mainTitle(m.Title)
+}
+
+// stripLanguageQualifier drops the trailing language name a uniform title
+// carries on a translation. Norwegian language names are capitalised here and
+// end in "sk" (Norsk, Engelsk, Fransk, Ukrainsk).
+// ponytail: suffix heuristic, not a language list; a qualifier outside the
+// pattern leaves the translation as its own book, which the language filter
+// still handles.
+func stripLanguageQualifier(title string) string {
+	words := strings.Fields(title)
+	if len(words) < 2 {
+		return title
+	}
+	last := words[len(words)-1]
+	if unicode.IsUpper([]rune(last)[0]) && strings.HasSuffix(last, "sk") {
+		return strings.Join(words[:len(words)-1], " ")
+	}
+	return title
+}
+
+func translated(m itemMetadata) bool {
+	for _, p := range m.People {
+		if p.hasRole("trl") {
+			return true
+		}
+	}
+	return false
+}
+
+// mainTitle is the title proper without its subtitle ("<title> : roman"), with
+// the double space NB leaves after a non-sorting article collapsed.
+func mainTitle(title string) string {
+	title, _, _ = strings.Cut(title, " : ")
+	return strings.Join(strings.Fields(title), " ")
+}
+
+func language(m itemMetadata) string {
+	if len(m.Languages) == 0 {
+		return ""
+	}
+	return m.Languages[0].Code
+}
+
+func isAudio(m itemMetadata) bool {
+	for _, t := range m.MediaTypes {
+		if t == "lydopptak" {
+			return true
+		}
+	}
+	return false
+}
+
+// parseYear reads the first four-digit run of a publication date such as
+// "2019", "[2019]" or "cop. 2019".
+func parseYear(s string) *time.Time {
+	run := 0
+	for i, r := range s {
+		if r < '0' || r > '9' {
+			run = 0
+			continue
+		}
+		run++
+		if run == 4 {
+			year, _ := strconv.Atoi(s[i-3 : i+1])
+			if year < 1400 || year > 2100 {
+				return nil
+			}
+			t := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+			return &t
+		}
+	}
+	return nil
+}
