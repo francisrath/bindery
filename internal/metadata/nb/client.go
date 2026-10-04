@@ -248,6 +248,12 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 			break
 		}
 	}
+	if len(items) == 0 {
+		// The authority record exists, so the author does too; finding no
+		// records is a gap in NB's name index (see recallSeriesVolumes),
+		// not proof of an empty catalogue.
+		complete = false
+	}
 	books := groupWorks(items, id)
 	memo := &seriesMemo{}
 	c.fillSeries(ctx, books, items, id, memo)

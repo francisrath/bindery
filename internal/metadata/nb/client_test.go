@@ -428,6 +428,22 @@ func TestGetAuthorWorks_RecallsVolumesMissingFromNameIndex(t *testing.T) {
 	}
 }
 
+// The authority record exists but the name search finds nothing: that is a
+// gap in NB's name index, not proof the author has no books, so it must not
+// pass as a complete, empty catalogue that reconciliation could act on.
+func TestGetAuthorWorks_EmptySearchIsPartial(t *testing.T) {
+	f := &fakeNB{t: t, route: func(r *http.Request) (string, int) {
+		if isAuthority(r) {
+			return "authority.json", 200
+		}
+		return "empty_search.json", 200
+	}}
+	books, complete, err := f.client().GetAuthorWorksSnapshot(context.Background(), "nb:author:10000001")
+	if err != nil || complete || len(books) != 0 {
+		t.Errorf("books=%d complete=%v err=%v, want none, partial, no error", len(books), complete, err)
+	}
+}
+
 // A failed recall search must not pass as a complete catalogue: a recovered
 // volume missing from it would read as removed upstream.
 func TestGetAuthorWorks_RecallFailureIsPartial(t *testing.T) {
