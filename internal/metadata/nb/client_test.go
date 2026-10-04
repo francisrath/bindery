@@ -117,6 +117,18 @@ func TestSearchBooks_ISBNQueryUsesISBNLookup(t *testing.T) {
 	}
 }
 
+// The aggregator's canonical lookup searches the primary with "isbn:<n>".
+func TestSearchBooks_PrefixedISBNQueryUsesISBNLookup(t *testing.T) {
+	f := &fakeNB{t: t, route: func(*http.Request) (string, int) { return "isbn_audiobook.json", 200 }}
+	books, err := f.client().SearchBooks(context.Background(), "isbn:9788200000028")
+	if err != nil || len(books) != 1 {
+		t.Fatalf("books=%v err=%v", books, err)
+	}
+	if got := f.reqs[0].URL.Query().Get("q"); got != "isbn:9788200000028" {
+		t.Errorf("q = %q", got)
+	}
+}
+
 func TestSearchBooks_TextSearchIsMetadataOnly(t *testing.T) {
 	f := &fakeNB{t: t, route: func(*http.Request) (string, int) { return "author_works.json", 200 }}
 	if _, err := f.client().SearchBooks(context.Background(), "fjellvinden: roman"); err != nil {
@@ -126,6 +138,11 @@ func TestSearchBooks_TextSearchIsMetadataOnly(t *testing.T) {
 	// The default searchType includes OCR'd full text of digitised books.
 	if q.Get("searchType") != "FIELD_RESTRICTED_SEARCH" || q.Get("q") != `fjellvinden\: roman` {
 		t.Errorf("searchType=%q q=%q", q.Get("searchType"), q.Get("q"))
+	}
+	// Same media types as the author catalogue, so a work found by search
+	// carries the same editions (audiobook ISBNs included) as in the catalogue.
+	if got := q.Get("filter"); got != "mediatype:(bøker OR lydopptak)" {
+		t.Errorf("filter = %q", got)
 	}
 }
 
@@ -250,6 +267,41 @@ func TestGetAuthor(t *testing.T) {
 	}
 	if _, err := missing.client().GetAuthor(context.Background(), "nb:author:../x"); err == nil {
 		t.Error("malformed id must be rejected before any request")
+	}
+}
+
+// GetBook must return the whole work, not one record: the aggregator refreshes
+// an ISBN match through it, and a print record alone would drop the
+// audiobook's ISBN from the book.
+func TestGetBook_ReturnsWorkEditions(t *testing.T) {
+	f := &fakeNB{t: t, route: func(r *http.Request) (string, int) {
+		if strings.HasSuffix(r.URL.Path, "/items/a0000000000000000000000000000001") {
+			return "item_print.json", 200
+		}
+		return "author_works.json", 200
+	}}
+	b, err := f.client().GetBook(context.Background(), "nb:a0000000000000000000000000000001")
+	if err != nil || b == nil {
+		t.Fatalf("book=%v err=%v", b, err)
+	}
+	if b.ForeignID != "nb:a0000000000000000000000000000001" || len(b.Editions) != 4 {
+		t.Errorf("book %s has %d editions, want the work's 4", b.ForeignID, len(b.Editions))
+	}
+	q := f.reqs[1].URL.Query()
+	if got := strings.Join(q["filter"], ","); got != `nameauthor:"Nordmann, Kari",mediatype:(bøker OR lydopptak)` || q.Get("q") != "Fjellvinden" {
+		t.Errorf("sibling search q=%q filters=%s", q.Get("q"), got)
+	}
+
+	// The sibling search is best-effort: the record itself is still returned.
+	down := &fakeNB{t: t, route: func(r *http.Request) (string, int) {
+		if strings.Contains(r.URL.Path, "/items/") {
+			return "item_print.json", 200
+		}
+		return "", 503
+	}}
+	b, err = down.client().GetBook(context.Background(), "nb:a0000000000000000000000000000001")
+	if err != nil || b == nil || len(b.Editions) != 1 {
+		t.Errorf("sibling search down: book=%v err=%v", b, err)
 	}
 }
 

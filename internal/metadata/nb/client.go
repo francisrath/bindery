@@ -144,10 +144,15 @@ func (c *Client) SearchBooks(ctx context.Context, query string) ([]models.Book, 
 	if query == "" {
 		return nil, nil
 	}
-	// Only a query that is nothing but an ISBN; a title containing digits
+	// Only a query that is nothing but an ISBN, optionally in the "isbn:<n>"
+	// form the aggregator's canonical lookup sends; a title containing digits
 	// stays a text search.
-	if isbn13, isbn10 := isbnutil.Extract(query); isbnutil.Normalize(query) == firstNonEmpty(isbn13, isbn10) {
-		b, err := c.GetBookByISBN(ctx, query)
+	bare := query
+	if len(bare) > 5 && strings.EqualFold(bare[:5], "isbn:") {
+		bare = strings.TrimSpace(bare[5:])
+	}
+	if isbn13, isbn10 := isbnutil.Extract(bare); isbnutil.Normalize(bare) == firstNonEmpty(isbn13, isbn10) {
+		b, err := c.GetBookByISBN(ctx, bare)
 		if err != nil || b == nil {
 			return nil, err
 		}
@@ -156,7 +161,9 @@ func (c *Client) SearchBooks(ctx context.Context, query string) ([]models.Book, 
 	params := url.Values{
 		"q":          {escapeQuery(query)},
 		"searchType": {"FIELD_RESTRICTED_SEARCH"},
-		"filter":     {"mediatype:bøker"},
+		// The author catalogue's media types, so a work found here has the
+		// same editions as in the catalogue.
+		"filter": {"mediatype:(bøker OR lydopptak)"},
 	}
 	page, err := c.search(ctx, params, 0)
 	if err != nil {
@@ -239,8 +246,11 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 	return groupWorks(items, id), complete, nil
 }
 
-// GetBook fetches a single edition record by "nb:<sesam id>". The book's
-// editions are that one record; NB has no work record to list siblings from.
+// GetBook fetches the edition record "nb:<sesam id>" and returns the work it
+// belongs to. NB has no work record, so the record's siblings are found the
+// way the author catalogue finds them: same authority-file author, folded by
+// title. The aggregator refreshes ISBN matches through here, so a book built
+// from one record would lose its other editions' ISBNs.
 func (c *Client) GetBook(ctx context.Context, foreignID string) (*models.Book, error) {
 	if err := c.ready(); err != nil {
 		return nil, err
@@ -257,11 +267,44 @@ func (c *Client) GetBook(ctx context.Context, foreignID string) (*models.Book, e
 	if !found {
 		return nil, nil
 	}
+	if b := c.workOf(ctx, it); b != nil {
+		return b, nil
+	}
 	books := groupWorks([]item{it}, "")
 	if len(books) == 0 {
 		return nil, nil
 	}
 	return &books[0], nil
+}
+
+// workOf returns the work containing it, built from a search for the record's
+// author and title, or nil when that cannot be done. Best-effort: the caller
+// already holds the record and falls back to it alone.
+func (c *Client) workOf(ctx context.Context, it item) *models.Book {
+	author := primaryAuthor(it.Metadata, "")
+	if author == nil || author.authorityID() == "" {
+		return nil
+	}
+	params := url.Values{
+		"q":          {escapeQuery(mainTitle(it.Metadata.Title))},
+		"searchType": {"FIELD_RESTRICTED_SEARCH"},
+		"filter":     {`nameauthor:"` + escapeQuery(author.Name) + `"`, "mediatype:(bøker OR lydopptak)"},
+	}
+	page, err := c.search(ctx, params, 0)
+	if err != nil {
+		return nil
+	}
+	want := idPrefix + it.ID
+	for _, b := range groupWorks(page.Embedded.Items, author.authorityID()) {
+		for _, ed := range b.Editions {
+			if ed.ForeignID == want {
+				// Keep the requested ID: callers look the book up by it.
+				b.ForeignID = want
+				return &b
+			}
+		}
+	}
+	return nil
 }
 
 // GetEditions returns the record behind bookForeignID as its only edition, so
