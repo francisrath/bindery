@@ -24,9 +24,11 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -246,8 +248,69 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 		}
 	}
 	books := groupWorks(items, id)
-	c.fillSeries(ctx, books, items, id)
+	memo := &seriesMemo{}
+	c.fillSeries(ctx, books, items, id, memo)
+	recalled, recallComplete := c.recallSeriesVolumes(ctx, books, items, id)
+	if !recallComplete {
+		complete = false
+	}
+	if len(recalled) > 0 {
+		items = append(items, recalled...)
+		books = groupWorks(items, id)
+		c.fillSeries(ctx, books, items, id, memo)
+	}
 	return books, complete, nil
+}
+
+// recallSeriesVolumes finds the author's records that the author query
+// missed. NB leaves some records out of every name index although they
+// credit the author, so no name search returns them; a search on the series
+// name does. One search per series the catalogue links the author to,
+// keeping only records crediting the author's authority ID that are not
+// already in items.
+//
+// complete is false when a search failed, so a caller reconciling the
+// catalogue does not read a volume found this way last time as removed.
+// ponytail: first result page only (100 records); a series name matching
+// more than that across all authors misses the rest.
+func (c *Client) recallSeriesVolumes(ctx context.Context, books []models.Book, items []item, authorID string) (recalled []item, complete bool) {
+	seen := make(map[string]bool, len(items))
+	for _, it := range items {
+		seen[it.ID] = true
+	}
+	var titles []string
+	titleSeen := make(map[string]bool)
+	for _, b := range books {
+		for _, ref := range b.SeriesRefs {
+			if !titleSeen[ref.Title] {
+				titleSeen[ref.Title] = true
+				titles = append(titles, ref.Title)
+			}
+		}
+	}
+	sort.Strings(titles)
+	complete = true
+	for _, title := range titles {
+		params := url.Values{
+			"q":          {`"` + escapeQuery(title) + `"`},
+			"searchType": {"FIELD_RESTRICTED_SEARCH"},
+			"filter":     {"mediatype:(bøker OR lydopptak)"},
+		}
+		page, err := c.search(ctx, params, 0)
+		if err != nil {
+			slog.Debug("nb: series recall search failed", "series", title, "error", err)
+			complete = false
+			continue
+		}
+		for _, it := range page.Embedded.Items {
+			if seen[it.ID] || primaryAuthor(it.Metadata, authorID) == nil {
+				continue
+			}
+			seen[it.ID] = true
+			recalled = append(recalled, it)
+		}
+	}
+	return recalled, complete
 }
 
 // GetBook fetches the edition record "nb:<sesam id>" and returns the work it
@@ -281,7 +344,7 @@ func (c *Client) GetBook(ctx context.Context, foreignID string) (*models.Book, e
 	// A rebind replaces the book's series with these, so they are filled
 	// here as well as in the catalogue.
 	if a := primaryAuthor(it.Metadata, ""); a != nil && a.authorityID() != "" {
-		c.fillSeries(ctx, books, []item{it}, a.authorityID())
+		c.fillSeries(ctx, books, []item{it}, a.authorityID(), nil)
 	}
 	return &books[0], nil
 }
@@ -297,7 +360,9 @@ func (c *Client) workOf(ctx context.Context, it item) *models.Book {
 	params := url.Values{
 		"q":          {escapeQuery(recordTitle(it.Metadata))},
 		"searchType": {"FIELD_RESTRICTED_SEARCH"},
-		"filter":     {`nameauthor:"` + escapeQuery(author.Name) + `"`, "mediatype:(bøker OR lydopptak)"},
+		// No name-index filter: NB leaves some records out of it (see
+		// recallSeriesVolumes). groupWorks keeps only the author's records.
+		"filter": {"mediatype:(bøker OR lydopptak)"},
 	}
 	page, err := c.search(ctx, params, 0)
 	if err != nil {
@@ -312,7 +377,7 @@ func (c *Client) workOf(ctx context.Context, it item) *models.Book {
 			}
 			// Keep the requested ID: callers look the book up by it.
 			books[i].ForeignID = want
-			c.fillSeries(ctx, books[i:i+1], page.Embedded.Items, author.authorityID())
+			c.fillSeries(ctx, books[i:i+1], page.Embedded.Items, author.authorityID(), nil)
 			return &books[i]
 		}
 	}

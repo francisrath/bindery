@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"strings"
+	"sync"
 	"unicode"
 
 	"github.com/vavallee/bindery/internal/concurrency"
@@ -55,7 +56,10 @@ func seriesRecords(items []item) map[string]bool {
 //
 // The second pass also takes the number a volume carries in its own title
 // fields (see partSeries), on the same condition.
-func (c *Client) fillSeries(ctx context.Context, books []models.Book, items []item, authorID string) {
+func (c *Client) fillSeries(ctx context.Context, books []models.Book, items []item, authorID string, memo *seriesMemo) {
+	if memo == nil {
+		memo = &seriesMemo{}
+	}
 	withSeries := seriesRecords(items)
 	parts := partSeries(items, authorID)
 	var todo []int
@@ -68,7 +72,7 @@ func (c *Client) fillSeries(ctx context.Context, books []models.Book, items []it
 	// Each goroutine writes only its own books[i] and unlinked[i].
 	concurrency.RunBounded(ctx, todo, seriesConcurrency, func(ctx context.Context, i int) {
 		for _, id := range seriesCandidates(books[i], withSeries) {
-			linked, other, err := c.recordSeries(ctx, id, authorID)
+			linked, other, err := memo.recordSeries(ctx, c, id, authorID)
 			if err != nil {
 				slog.Debug("nb: series lookup failed", "record", id, "error", err)
 				return
@@ -165,6 +169,35 @@ func seriesCandidates(b models.Book, withSeries map[string]bool) []string {
 		add(ed.ForeignID)
 	}
 	return ids
+}
+
+// seriesMemo caches recordSeries results for one catalogue fetch, which may
+// fill series twice (see recallSeriesVolumes). The zero value is ready.
+type seriesMemo struct {
+	mu   sync.Mutex
+	seen map[string]modsSeries
+}
+
+type modsSeries struct {
+	linked   *models.SeriesRef
+	unlinked []models.SeriesRef
+	err      error
+}
+
+func (m *seriesMemo) recordSeries(ctx context.Context, c *Client, sesamID, authorID string) (*models.SeriesRef, []models.SeriesRef, error) {
+	m.mu.Lock()
+	r, ok := m.seen[sesamID]
+	m.mu.Unlock()
+	if !ok {
+		r.linked, r.unlinked, r.err = c.recordSeries(ctx, sesamID, authorID)
+		m.mu.Lock()
+		if m.seen == nil {
+			m.seen = make(map[string]modsSeries)
+		}
+		m.seen[sesamID] = r
+		m.mu.Unlock()
+	}
+	return r.linked, r.unlinked, r.err
 }
 
 // recordSeries reads a record's MODS. linked is the author's own series: the

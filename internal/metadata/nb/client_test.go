@@ -264,6 +264,8 @@ func routeWithMODS(mods map[string]string) func(*http.Request) (string, int) {
 			return "", 404
 		case strings.HasSuffix(r.URL.Path, "/items/a0000000000000000000000000000001"):
 			return "item_print.json", 200
+		case strings.Contains(r.URL.Query().Get("q"), "Fjellserien"):
+			return "series_search.json", 200
 		}
 		return "author_works.json", 200
 	}
@@ -288,7 +290,7 @@ func TestGetAuthorWorks_SeriesFromMODS(t *testing.T) {
 		"a0000000000000000000000000000005": "mods_publisher_series.xml",
 	})}
 	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
-	if err != nil || len(books) != 3 {
+	if err != nil || len(books) != 4 {
 		t.Fatalf("books=%d err=%v", len(books), err)
 	}
 	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "2", Primary: true}
@@ -298,9 +300,10 @@ func TestGetAuthorWorks_SeriesFromMODS(t *testing.T) {
 	if len(books[1].SeriesRefs) != 0 {
 		t.Errorf("publisher imprint taken as a series: %+v", books[1].SeriesRefs)
 	}
-	// Only the two records whose search hit lists a series are fetched.
-	if got := modsRequests(f); len(got) != 2 {
-		t.Errorf("MODS requests = %v, want 2", got)
+	// Only records whose search hit lists a series are fetched: two from the
+	// catalogue and the one the series recall adds.
+	if got := modsRequests(f); len(got) != 3 {
+		t.Errorf("MODS requests = %v, want 3", got)
 	}
 	if ua := f.reqs[len(f.reqs)-1].Header.Get("User-Agent"); !strings.HasPrefix(ua, "bindery/") {
 		t.Errorf("MODS User-Agent = %q", ua)
@@ -357,12 +360,85 @@ func TestGetAuthorWorks_UnlinkedEntryOfKnownSeries(t *testing.T) {
 		"a0000000000000000000000000000005": "mods_unlinked_series.xml",
 	})}
 	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
-	if err != nil || len(books) != 3 {
+	if err != nil || len(books) != 4 {
 		t.Fatalf("books=%d err=%v", len(books), err)
 	}
 	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "3", Primary: true}
 	if len(books[1].SeriesRefs) != 1 || books[1].SeriesRefs[0] != want {
 		t.Errorf("series = %+v, want %+v", books[1].SeriesRefs, want)
+	}
+}
+
+// NB leaves some records out of every name index, so the author query never
+// returns them, though they credit the author. A search on each of the
+// author's series names recovers them, keeping only records that credit the
+// author's authority ID.
+func TestGetAuthorWorks_RecallsVolumesMissingFromNameIndex(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(map[string]string{
+		"a0000000000000000000000000000001": "mods_author_series.xml",
+		"a0000000000000000000000000000009": "mods_series_4.xml",
+	})}
+	books, complete, err := f.client().GetAuthorWorksSnapshot(context.Background(), "nb:author:10000001")
+	if err != nil || !complete {
+		t.Fatalf("complete=%v err=%v", complete, err)
+	}
+	var recalled *models.Book
+	for i := range books {
+		switch books[i].ForeignID {
+		case "nb:a0000000000000000000000000000009":
+			recalled = &books[i]
+		case "nb:a0000000000000000000000000000010":
+			t.Errorf("another author's record was kept: %+v", books[i])
+		}
+	}
+	if recalled == nil {
+		t.Fatalf("volume missing from the name index was not recovered (%d works)", len(books))
+	}
+	want := models.SeriesRef{ForeignID: "nb-series:10000001:fjellserien", Title: "Fjellserien", Position: "4", Primary: true}
+	if len(recalled.SeriesRefs) != 1 || recalled.SeriesRefs[0] != want {
+		t.Errorf("series = %+v, want %+v", recalled.SeriesRefs, want)
+	}
+	if len(books) != 4 {
+		t.Errorf("works = %d, want 4 (the catalogue's 3 plus the recalled one, no duplicates)", len(books))
+	}
+
+	var recall *http.Request
+	mods := map[string]int{}
+	for _, r := range f.reqs {
+		if strings.Contains(r.URL.Query().Get("q"), "Fjellserien") {
+			recall = r
+		}
+		if strings.HasSuffix(r.URL.Path, "/mods") {
+			mods[r.URL.Path]++
+		}
+	}
+	if recall == nil {
+		t.Fatal("no series-name search was made")
+	}
+	q := recall.URL.Query()
+	if q.Get("q") != `"Fjellserien"` || q.Get("searchType") != "FIELD_RESTRICTED_SEARCH" || q.Get("filter") != "mediatype:(bøker OR lydopptak)" {
+		t.Errorf("recall query q=%q searchType=%q filter=%v", q.Get("q"), q.Get("searchType"), q["filter"])
+	}
+	// Regrouping after the recall must not fetch a record's MODS twice.
+	for path, n := range mods {
+		if n > 1 {
+			t.Errorf("MODS %s fetched %d times", path, n)
+		}
+	}
+}
+
+// A failed recall search must not pass as a complete catalogue: a recovered
+// volume missing from it would read as removed upstream.
+func TestGetAuthorWorks_RecallFailureIsPartial(t *testing.T) {
+	f := &fakeNB{t: t, route: func(r *http.Request) (string, int) {
+		if strings.Contains(r.URL.Query().Get("q"), "Fjellserien") {
+			return "", 503
+		}
+		return routeWithMODS(map[string]string{"a0000000000000000000000000000001": "mods_author_series.xml"})(r)
+	}}
+	books, complete, err := f.client().GetAuthorWorksSnapshot(context.Background(), "nb:author:10000001")
+	if err != nil || complete || len(books) != 3 {
+		t.Errorf("books=%d complete=%v err=%v, want the catalogue, partial, no error", len(books), complete, err)
 	}
 }
 
@@ -436,7 +512,9 @@ func TestGetBook_ReturnsWorkEditions(t *testing.T) {
 		t.Errorf("book %s has %d editions, want the work's 4", b.ForeignID, len(b.Editions))
 	}
 	q := f.reqs[1].URL.Query()
-	if got := strings.Join(q["filter"], ","); got != `nameauthor:"Nordmann, Kari",mediatype:(bøker OR lydopptak)` || q.Get("q") != "Fjellvinden" {
+	// Not filtered on NB's name index, which misses some records; groupWorks
+	// keeps only records crediting the author's authority ID.
+	if got := strings.Join(q["filter"], ","); got != `mediatype:(bøker OR lydopptak)` || q.Get("q") != "Fjellvinden" {
 		t.Errorf("sibling search q=%q filters=%s", q.Get("q"), got)
 	}
 
