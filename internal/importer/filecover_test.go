@@ -4,8 +4,10 @@ import (
 	"archive/zip"
 	"bytes"
 	"encoding/binary"
+	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -242,5 +244,70 @@ func TestFillCoverFromFile_DisabledWithoutStore(t *testing.T) {
 
 	if got, _ := bookRepo.GetByID(ctx, book.ID); got.ImageURL != "" {
 		t.Errorf("image_url = %q, want none without a cover store", got.ImageURL)
+	}
+}
+
+// Cover art is read through the same guards as the importer's own tag and
+// EPUB reads (#2957): a file that claims a huge picture, or an EPUB whose
+// package document is oversized, yields no cover rather than a large
+// allocation. An honest picture is still read.
+func TestReadFileCover_HostileClaimsAreRejected(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name string, body []byte) string {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, body, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	art := fakeImage("honest")
+	honest := write("honest.flac", flacFile(flacBlock{6, flacPicture(uint32(len(art)), art)}))
+	if got := readFileCover(honest); !bytes.Equal(got, art) {
+		t.Errorf("honest FLAC picture: got %q", got)
+	}
+	hostile := write("hostile.flac", flacFile(flacBlock{6, flacPicture(hostilePictureClaim, []byte("tiny"))}))
+	runtime.GC()
+	var before, after runtime.MemStats
+	runtime.ReadMemStats(&before)
+	got := readFileCover(hostile)
+	runtime.ReadMemStats(&after)
+	if got != nil {
+		t.Errorf("hostile FLAC picture claim: got %d bytes, want none", len(got))
+	}
+	// The danger is the allocation, not the result: the library allocates a
+	// picture's claimed size before it finds the data missing.
+	if alloc := after.TotalAlloc - before.TotalAlloc; alloc > audioAllocBudget {
+		t.Errorf("hostile FLAC picture claim: allocated %d MiB, budget %d MiB", alloc>>20, audioAllocBudget>>20)
+	}
+
+	big := filepath.Join(dir, "big.epub")
+	writeCoverEpub(t, big, true, fakeImage("big"))
+	// Rewrite the package document past the metadata entry cap.
+	zr, err := zip.OpenReader(big)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+	for _, f := range zr.File {
+		rc, err := f.Open()
+		if err != nil {
+			t.Fatal(err)
+		}
+		body, _ := io.ReadAll(rc)
+		rc.Close()
+		if strings.HasSuffix(f.Name, ".opf") {
+			body = append([]byte("<!--"+strings.Repeat(" ", maxEpubMetadataEntryBytes)+"-->"), body...)
+		}
+		w, _ := zw.Create(f.Name)
+		_, _ = w.Write(body)
+	}
+	zr.Close()
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	write("big.epub", buf.Bytes())
+	if got := readFileCover(big); got != nil {
+		t.Errorf("oversized package document: got a cover, want none")
 	}
 }

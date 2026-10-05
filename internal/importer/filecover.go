@@ -144,6 +144,11 @@ func audioCover(filePath string) []byte {
 		return nil
 	}
 	defer f.Close()
+	// The library allocates a picture's claimed size before reading it, so a
+	// tiny file can claim gigabytes; the same guard as ReadAudioTags (#2957).
+	if checkAudioTagClaims(f) != nil {
+		return nil
+	}
 	m, err := tag.ReadFrom(f)
 	if err != nil {
 		return nil
@@ -171,7 +176,9 @@ func epubCover(filePath string) []byte {
 	if opf == nil {
 		return nil
 	}
-	rc, err := opf.Open()
+	// Capped like ReadEpubMetadata's OPF read (#2957): the XML decoder
+	// buffers a whole token, so an oversized document is refused.
+	rc, err := openCappedEntry(opf)
 	if err != nil {
 		return nil
 	}
