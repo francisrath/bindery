@@ -87,7 +87,8 @@ API) and <https://authority.bibsys.no> (the Norwegian authority file). Reviewed
   catalogue records through its metadata delivery under CC0
   (<https://doc.aja.bs.no/hente/bibliografiske-data/mlnb.html>), so the titles,
   authors, ISBNs, years, languages and series Bindery stores from them carry no
-  conditions. The catalogue API itself publishes no terms or rate limits.
+  conditions. That covers the genres, audiobook narrators and running times it
+  stores as well. The catalogue API itself publishes no terms or rate limits.
   Bindery keeps NB opt in so installs that do not choose it send no traffic.
 - **Summaries are publisher copy.** A record's summary is usually the
   publisher's own description of the book, not the library's cataloguing, so
@@ -97,7 +98,8 @@ API) and <https://authority.bibsys.no> (the Norwegian authority file). Reviewed
   the cover images some records link to are licensed to library catalogues
   only. Bindery fetches no cover from NB or from those links.
 - **The authority file is Sikt's, under NLOD 2.0.** Bindery reads an author's
-  name heading from it to look up their catalogue. NLOD asks for attribution:
+  name heading from it to look up their catalogue, and the name's other forms,
+  which may become aliases. NLOD asks for attribution:
 
   > Contains data under the Norwegian licence for Open Government data (NLOD)
   > distributed by Sikt.

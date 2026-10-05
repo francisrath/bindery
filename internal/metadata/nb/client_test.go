@@ -519,6 +519,11 @@ func TestGetAuthor(t *testing.T) {
 	if a.Name != "Kari Nordmann" || a.ForeignID != "nb:author:10000001" {
 		t.Errorf("author = %+v", a)
 	}
+	// The authority record's name variants, in display form. Bindery decides
+	// which become aliases (textutil.LatinAliasBinds).
+	if got := strings.Join(a.AlternateNames, "|"); got != "Kari Nordman|Кари Нордманн" {
+		t.Errorf("alternate names = %q", got)
+	}
 	if got := f.reqs[0].URL.String(); got != authorityBase+"10000001?format=json" {
 		t.Errorf("url = %s", got)
 	}
@@ -601,6 +606,64 @@ func TestProviderErrors(t *testing.T) {
 	_, err := f.client().GetBookByISBN(context.Background(), "9788200000028")
 	if err == nil || errors.Is(err, providererr.ErrRateLimited) || errors.Is(err, providererr.ErrUnavailable) {
 		t.Errorf("HTTP 400: err = %v, want a plain error", err)
+	}
+}
+
+// Narrator, audiobook duration and genres come from the same catalogue
+// records the work is built from: no extra requests.
+func TestGetAuthorWorks_NarratorDurationGenres(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(nil)}
+	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var work, part *models.Book
+	for i := range books {
+		switch books[i].ForeignID {
+		case "nb:a0000000000000000000000000000001":
+			work = &books[i]
+		case "nb:a0000000000000000000000000000008":
+			part = &books[i]
+		}
+	}
+	if work == nil || part == nil {
+		t.Fatalf("works missing from %d", len(books))
+	}
+	if work.Narrator != "Ola Leser" {
+		t.Errorf("narrator = %q, want the audiobook edition's narrator credit", work.Narrator)
+	}
+	const want = 11*3600 + 16*60
+	if work.DurationSeconds != want {
+		t.Errorf("duration = %d, want %d from the audiobook edition", work.DurationSeconds, want)
+	}
+	for _, ed := range work.Editions {
+		if ed.Format == models.MediaTypeAudiobook && ed.DurationSeconds != want {
+			t.Errorf("audiobook edition duration = %d, want %d", ed.DurationSeconds, want)
+		}
+		if ed.Format != models.MediaTypeAudiobook && ed.DurationSeconds != 0 {
+			t.Errorf("print edition has a duration: %+v", ed)
+		}
+	}
+	if got := strings.Join(work.Genres, ","); got != "Romaner,Krim,Politi og detektiver" {
+		t.Errorf("genres = %q, want the subject genres without the format term or Nynorsk twins", got)
+	}
+	if part.DurationSeconds != 17*3600+42*60 {
+		t.Errorf("hh:mm:ss duration = %d", part.DurationSeconds)
+	}
+}
+
+func TestExtentDuration(t *testing.T) {
+	for in, want := range map[string]int{
+		"1 lydfil (11 t, 16 min)": 11*3600 + 16*60,
+		"21:34:00":                21*3600 + 34*60,
+		"3 plater (CD)(3 t, 7 min) digital 12 cm, i eske": 3*3600 + 7*60,
+		"1 lydfil (45 min)": 45 * 60,
+		"312 s.":            0,
+		"":                  0,
+	} {
+		if got := extentDuration(in); got != want {
+			t.Errorf("extentDuration(%q) = %d, want %d", in, got, want)
+		}
 	}
 }
 

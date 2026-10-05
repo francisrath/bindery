@@ -1,6 +1,7 @@
 package nb
 
 import (
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -78,7 +79,6 @@ func buildWork(group []item, authorID string) models.Book {
 		MetadataProvider: "nb",
 		Monitored:        true,
 		Status:           models.BookStatusWanted,
-		Genres:           []string{},
 	}
 	if p := primaryAuthor(m, authorID); p != nil && p.authorityID() != "" {
 		a := personToAuthor(*p)
@@ -89,8 +89,12 @@ func buildWork(group []item, authorID string) models.Book {
 			b.CreditedAuthorForeignIDs = append(b.CreditedAuthorForeignIDs, authorPrefix+p.authorityID())
 		}
 	}
+	b.Genres = workGenres(group, rep)
 	for _, it := range group {
 		em := it.Metadata
+		if b.Narrator == "" && isAudio(em) {
+			b.Narrator = narrators(em)
+		}
 		if b.Description == "" {
 			b.Description = em.Summary
 		}
@@ -98,7 +102,11 @@ func buildWork(group []item, authorID string) models.Book {
 		if date != nil && (b.ReleaseDate == nil || date.Before(*b.ReleaseDate)) {
 			b.ReleaseDate = date
 		}
-		b.Editions = append(b.Editions, toEdition(em, date))
+		ed := toEdition(em, date)
+		if b.DurationSeconds == 0 {
+			b.DurationSeconds = ed.DurationSeconds
+		}
+		b.Editions = append(b.Editions, ed)
 		b.ProviderISBNs = append(b.ProviderISBNs, em.Identifiers.ISBN13...)
 		b.ProviderISBNs = append(b.ProviderISBNs, em.Identifiers.ISBN10...)
 	}
@@ -128,6 +136,85 @@ func commonTitle(group []item, fallback string) string {
 	return best
 }
 
+// narrators lists a record's narrator credits (relator "nrt") in display
+// form, comma separated, as the Audible provider writes them.
+func narrators(m itemMetadata) string {
+	var names []string
+	for _, p := range m.People {
+		if p.hasRole("nrt") {
+			names = append(names, invertName(p.Name))
+		}
+	}
+	return strings.Join(names, ", ")
+}
+
+// genreFormatTerms are entries in NB's genre list that name the format, not
+// a genre.
+var genreFormatTerms = map[string]bool{"lydbøker": true, "lydbok": true, "e-bøker": true, "e-bok": true}
+
+// workGenres returns the work's genres from the representative record's
+// subject genres, or the first edition that has any. NB lists each term in
+// both written standards ("Romaner", "Romanar"), so a Nynorsk "-ar" form is
+// dropped when its Bokmål "-er" form is present.
+// ponytail: plural-ending rule, not a Bokmål/Nynorsk vocabulary; a twin
+// differing in more than the ending stays as a second genre.
+func workGenres(group []item, rep item) []string {
+	terms := rep.Metadata.Subject.Genres
+	for _, it := range group {
+		if len(terms) > 0 {
+			break
+		}
+		terms = it.Metadata.Subject.Genres
+	}
+	present := make(map[string]bool, len(terms))
+	for _, t := range terms {
+		present[strings.ToLower(strings.TrimSpace(t))] = true
+	}
+	genres := []string{}
+	seen := make(map[string]bool, len(terms))
+	for _, t := range terms {
+		t = strings.TrimSpace(t)
+		key := strings.ToLower(t)
+		if t == "" || seen[key] || genreFormatTerms[key] {
+			continue
+		}
+		if stem, ok := strings.CutSuffix(key, "ar"); ok && present[stem+"er"] {
+			continue
+		}
+		seen[key] = true
+		genres = append(genres, t)
+	}
+	return genres
+}
+
+var (
+	extentClockRe = regexp.MustCompile(`^\s*(\d+):(\d{2}):(\d{2})\s*$`)
+	extentHoursRe = regexp.MustCompile(`(\d+)\s*t\b`)
+	extentMinsRe  = regexp.MustCompile(`(\d+)\s*min\b`)
+)
+
+// extentDuration reads an audiobook's running time, in seconds, from NB's
+// extent text: "1 lydfil (11 t, 16 min)", "21:34:00", or a CD set's
+// "3 plater (CD)(3 t, 7 min) …". 0 when it states none.
+func extentDuration(extent string) int {
+	if m := extentClockRe.FindStringSubmatch(extent); m != nil {
+		h, _ := strconv.Atoi(m[1])
+		mins, _ := strconv.Atoi(m[2])
+		secs, _ := strconv.Atoi(m[3])
+		return h*3600 + mins*60 + secs
+	}
+	total := 0
+	if m := extentHoursRe.FindStringSubmatch(extent); m != nil {
+		h, _ := strconv.Atoi(m[1])
+		total += h * 3600
+	}
+	if m := extentMinsRe.FindStringSubmatch(extent); m != nil {
+		mins, _ := strconv.Atoi(m[1])
+		total += mins * 60
+	}
+	return total
+}
+
 func toEdition(m itemMetadata, date *time.Time) models.Edition {
 	ed := models.Edition{
 		ForeignID:   idPrefix + m.Identifiers.SesamID,
@@ -144,6 +231,7 @@ func toEdition(m itemMetadata, date *time.Time) models.Edition {
 	}
 	if isAudio(m) {
 		ed.Format = models.MediaTypeAudiobook
+		ed.DurationSeconds = extentDuration(m.PhysicalDescription.Extent)
 	} else if m.PageCount > 0 {
 		pages := m.PageCount
 		ed.NumPages = &pages

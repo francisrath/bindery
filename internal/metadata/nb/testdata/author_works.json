@@ -50,7 +50,24 @@
           "pageCount": 312,
           "series": [
             "Fjellserien"
-          ]
+          ],
+          "subject": {
+            "genres": [
+              "Romaner",
+              "Romanar",
+              "Lydbøker",
+              "Lydbøker",
+              "Krim",
+              "Krim",
+              "Politi og detektiver",
+              "Politi og detektivar",
+              "Krim",
+              "Romaner"
+            ]
+          },
+          "physicalDescription": {
+            "extent": "312 s."
+          }
         }
       },
       {
@@ -106,7 +123,10 @@
             "publisher": "Eksempelforlaget",
             "issued": "2020"
           },
-          "pageCount": 0
+          "pageCount": 0,
+          "physicalDescription": {
+            "extent": "1 lydfil (11 t, 16 min)"
+          }
         }
       },
       {
@@ -418,6 +438,9 @@
           "originInfo": {
             "publisher": "Eksempelforlaget",
             "issued": "2018"
+          },
+          "physicalDescription": {
+            "extent": "17:42:00"
           }
         }
       }

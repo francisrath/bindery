@@ -48,6 +48,16 @@ type itemMetadata struct {
 	// Series names the record's series, author's and publisher's alike,
 	// without the number. See authorSeries.
 	Series []string `json:"series"`
+	// Subject.Genres is the cataloguer's genre list, Bokmål and Nynorsk
+	// forms side by side. See workGenres.
+	Subject struct {
+		Genres []string `json:"genres"`
+	} `json:"subject"`
+	// PhysicalDescription.Extent is free text: page count for print, the
+	// running time for an audiobook. See extentDuration.
+	PhysicalDescription struct {
+		Extent string `json:"extent"`
+	} `json:"physicalDescription"`
 }
 
 // titleInfo is one title of a record. Type is "" for the title proper,
@@ -104,6 +114,28 @@ type authorityRecord struct {
 			Value string `json:"value"`
 		} `json:"subfields"`
 	} `json:"marcdata"`
+}
+
+// variants returns the record's other name forms (MARC 400 $a) in display
+// form: spellings without diacritics, transliterations, earlier names.
+func (r authorityRecord) variants() []string {
+	var out []string
+	seen := map[string]bool{invertName(r.heading()): true}
+	for _, f := range r.MarcData {
+		if f.Tag != "400" {
+			continue
+		}
+		for _, sf := range f.Subfields {
+			if sf.Code != "a" {
+				continue
+			}
+			if name := invertName(strings.TrimSpace(sf.Value)); name != "" && !seen[name] {
+				seen[name] = true
+				out = append(out, name)
+			}
+		}
+	}
+	return out
 }
 
 func (r authorityRecord) heading() string {

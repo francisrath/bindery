@@ -187,14 +187,17 @@ func (c *Client) GetAuthor(ctx context.Context, foreignID string) (*models.Autho
 	if err != nil {
 		return nil, err
 	}
-	name, found, err := c.authorityName(ctx, id)
+	rec, err := c.authority(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("nb get author %s: %w", foreignID, err)
 	}
-	if !found {
+	if rec == nil {
 		return nil, nil
 	}
-	a := personToAuthor(person{Name: name, Identifier: authorityIDPrefix + id})
+	a := personToAuthor(person{Name: rec.heading(), Identifier: authorityIDPrefix + id})
+	// Bindery saves the ones that are another spelling of the same name as
+	// aliases, so release names without the diacritics still match.
+	a.AlternateNames = rec.variants()
 	return &a, nil
 }
 
@@ -441,19 +444,25 @@ func (c *Client) search(ctx context.Context, params url.Values, page int) (*sear
 	return &out, nil
 }
 
-// authorityName returns the authorised name heading ("Last, First") for an
-// authority record. found is false on 404.
-func (c *Client) authorityName(ctx context.Context, id string) (string, bool, error) {
+// authority fetches an authority record, or nil when it is missing, deleted,
+// or has no name heading.
+func (c *Client) authority(ctx context.Context, id string) (*authorityRecord, error) {
 	var rec authorityRecord
 	found, err := c.getJSON(ctx, authorityBase+id+"?format=json", &rec)
-	if err != nil || !found {
-		return "", found, err
+	if err != nil || !found || rec.Deleted || rec.heading() == "" {
+		return nil, err
 	}
-	name := rec.heading()
-	if name == "" || rec.Deleted {
-		return "", false, nil
+	return &rec, nil
+}
+
+// authorityName returns the authorised name heading ("Last, First") for an
+// authority record. found is false when the record is missing or deleted.
+func (c *Client) authorityName(ctx context.Context, id string) (string, bool, error) {
+	rec, err := c.authority(ctx, id)
+	if err != nil || rec == nil {
+		return "", false, err
 	}
-	return name, true, nil
+	return rec.heading(), true, nil
 }
 
 // getJSON GETs endpoint and decodes the body into out. found is false on 404.
