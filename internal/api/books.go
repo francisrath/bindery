@@ -37,6 +37,8 @@ type BookHandler struct {
 	editions  *db.EditionRepo
 	roots     *LibraryRoots // optional: library-root containment for delete
 
+	coverStore *covers.Store // optional: enables POST /book/{id}/cover
+
 	editionFetcher bookhydrate.EditionFetcher
 
 	// lifetimeCtx is the process-lifecycle context, cancelled on server

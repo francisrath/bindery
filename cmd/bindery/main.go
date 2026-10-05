@@ -685,6 +685,7 @@ func main() {
 		WithSeries(seriesRepo).
 		WithEditionHydration(editionRepo).
 		WithRoots(libraryRoots).
+		WithCoverStore(coverStore).
 		WithLifetimeCtx(appCtx)
 	// Interactive search records what it returns here, and a grab from a
 	// non-admin account is held to it: it can grab a search result, not make
@@ -1023,6 +1024,7 @@ func main() {
 		r.Put("/book/{id}/exclude", bookHandler.ToggleExcluded)
 		r.Post("/book/{id}/rebind", bookHandler.Rebind)
 		r.Post("/book/{id}/enrich-audiobook", bookHandler.EnrichAudiobook)
+		r.Post("/book/{id}/cover", bookHandler.UploadCover)
 		r.Post("/book/{id}/search", indexerHandler.SearchBook)
 		r.Get("/book/{id}/file", fileHandler.Download)
 

@@ -240,6 +240,7 @@ DELETE /api/v1/book/{id}/file                     delete imported file(s) on dis
 PUT    /api/v1/book/{id}/exclude                  exclude from future searches
 POST   /api/v1/book/{id}/rebind                   re-link to a different metadata record
 POST   /api/v1/book/{id}/enrich-audiobook         pull narrator/duration/cover from Audnex
+POST   /api/v1/book/{id}/cover                    set the cover from the request body (raw JPEG, PNG, WebP or GIF, max 10 MB); stored locally, and a refresh does not replace it
 POST   /api/v1/book/{id}/search                   manual indexer search
 GET    /api/v1/book/{id}/file                     download the imported file (auth required; `?path=…` serves one specific tracked file, for a book holding several of a format; `?format=ebook|audiobook` picks the format on dual-format books; `?path=` wins when both are sent)
 GET    /api/v1/book/{id}/calibre                  where the book stands in the Calibre delivery queue (see Calibre below)
