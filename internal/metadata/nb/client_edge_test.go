@@ -123,3 +123,16 @@ func TestBuildWork_SparseRecord(t *testing.T) {
 		t.Errorf("books = %+v, want one book with no language and empty, non-nil genres", books)
 	}
 }
+
+// NB credits an author as "aut" or, about as often, as the generic "cre";
+// other creator-index credits (translator, narrator) are not authorship.
+func TestIsAuthor(t *testing.T) {
+	for role, want := range map[string]bool{"aut": true, "cre": true, "creator": true, "trl": false, "nrt": false, "aui": false, "": false} {
+		p := person{Roles: []struct {
+			Name string `json:"name"`
+		}{{Name: role}}}
+		if got := p.isAuthor(); got != want {
+			t.Errorf("isAuthor(%q) = %v, want %v", role, got, want)
+		}
+	}
+}

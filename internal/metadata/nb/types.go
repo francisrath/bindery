@@ -93,7 +93,11 @@ func (p person) hasRole(code string) bool {
 	return false
 }
 
-func (p person) isAuthor() bool { return p.hasRole("aut") }
+// isAuthor reports an author credit. NB catalogues one as "aut" or, about
+// as often, as the generic "cre" (creator), occasionally spelled out.
+func (p person) isAuthor() bool {
+	return p.hasRole("aut") || p.hasRole("cre") || p.hasRole("creator")
+}
 
 func (p person) authorityID() string {
 	id, ok := strings.CutPrefix(p.Identifier, authorityIDPrefix)

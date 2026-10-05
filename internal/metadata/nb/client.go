@@ -51,9 +51,11 @@ const (
 	authorityIDPrefix = "bibsys.no:authority:"
 	// pageSize is the API's largest accepted page; 101 is rejected with 400.
 	pageSize = 100
-	// maxWorksPages caps an author catalogue at 500 edition records. A larger
+	// maxWorksPages caps an author catalogue at 2000 edition records. A larger
 	// author is reported as a partial snapshot rather than paged without end.
-	maxWorksPages = 5
+	// The creator index counts every translation, so a widely translated
+	// author runs to well over a thousand.
+	maxWorksPages = 20
 	// maxResponseBytes bounds what a misbehaving host can make Bindery decode
 	// (#2357). A full 100-record page with expanded metadata is ~1 MiB.
 	maxResponseBytes = 32 << 20
@@ -239,7 +241,11 @@ func (c *Client) GetAuthorWorksSnapshot(ctx context.Context, authorForeignID str
 		"q": {"*"},
 		// Audiobooks are included so their ISBNs land on the work: a
 		// library file is as likely to be the audiobook edition.
-		"filter": {`nameauthor:"` + escapeQuery(name) + `"`, "mediatype:(bøker OR lydopptak)"},
+		// namecreators, not nameauthor: NB leaves many records crediting
+		// the author out of the author index, some authors' most of them.
+		// The authority-ID check in groupWorks drops the creator index's
+		// translator and narrator credits.
+		"filter": {`namecreators:"` + escapeQuery(name) + `"`, "mediatype:(bøker OR lydopptak)"},
 	}
 	var items []item
 	complete := false

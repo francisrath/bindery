@@ -254,7 +254,7 @@ func repScore(m itemMetadata) int {
 }
 
 // primaryAuthor picks the credited author: the one with authorID when given,
-// otherwise the first "aut" credit.
+// otherwise the first author credit.
 func primaryAuthor(m itemMetadata, authorID string) *person {
 	for i := range m.People {
 		p := &m.People[i]

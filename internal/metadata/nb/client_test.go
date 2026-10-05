@@ -195,7 +195,7 @@ func TestGetAuthorWorks_TranslationJoinsOriginal(t *testing.T) {
 	}
 
 	q := f.reqs[1].URL.Query()
-	if got := strings.Join(q["filter"], ","); got != `nameauthor:"Nordmann, Kari",mediatype:(bøker OR lydopptak)` {
+	if got := strings.Join(q["filter"], ","); got != `namecreators:"Nordmann, Kari",mediatype:(bøker OR lydopptak)` {
 		t.Errorf("filters = %s", got)
 	}
 }
@@ -205,7 +205,7 @@ func TestGetAuthorWorks_PartialWhenCapped(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	many := strings.Replace(string(b), `"totalPages": 1`, `"totalPages": 9`, 1)
+	many := strings.Replace(string(b), `"totalPages": 1`, `"totalPages": 99`, 1)
 	calls := 0
 	c := &Client{http: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
 		body := many
