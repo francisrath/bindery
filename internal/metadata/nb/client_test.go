@@ -733,3 +733,31 @@ func TestGroupWorks_FoldsSpacingSlip(t *testing.T) {
 		t.Errorf("a different title was folded in: %q", books[1].Title)
 	}
 }
+
+// NB can name one series two ways, linking both to the author. Names a
+// work's records give the same number are one series across the catalogue,
+// under the name most books carry. An unlinked imprint sharing the number is
+// not part of it.
+func TestGetAuthorWorks_MergesSeriesNamedTwoWays(t *testing.T) {
+	f := &fakeNB{t: t, route: routeWithMODS(map[string]string{
+		"a0000000000000000000000000000001": "mods_author_series.xml",
+		"a0000000000000000000000000000005": "mods_series_alias.xml",
+		"a0000000000000000000000000000009": "mods_series_4.xml",
+	})}
+	books, err := f.client().GetAuthorWorks(context.Background(), "nb:author:10000001")
+	if err != nil {
+		t.Fatal(err)
+	}
+	positions := map[string]string{}
+	for _, b := range books {
+		for _, ref := range b.SeriesRefs {
+			if ref.ForeignID != "nb-series:10000001:fjellserien" || ref.Title != "Fjellserien" {
+				t.Errorf("%s: series = %+v, want the one Fjellserien", b.Title, ref)
+			}
+			positions[b.ForeignID] = ref.Position
+		}
+	}
+	if positions["nb:a0000000000000000000000000000005"] != "3" || len(positions) < 3 {
+		t.Errorf("positions = %v, want the aliased volume at 3 among the series", positions)
+	}
+}

@@ -3,8 +3,13 @@ package nb
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
+
+	"github.com/vavallee/bindery/internal/models"
 )
 
 // The constructor's client is usable and names itself the way the prefix
@@ -133,6 +138,95 @@ func TestIsAuthor(t *testing.T) {
 		}{{Name: role}}}
 		if got := p.isAuthor(); got != want {
 			t.Errorf("isAuthor(%q) = %v, want %v", role, got, want)
+		}
+	}
+}
+
+// A translation's series entry names the series in its own language, so a
+// book's series comes from its own-language records, then Scandinavian ones,
+// which name it alike, and never from other translations.
+func TestSeriesCandidates_SkipsTranslations(t *testing.T) {
+	b := models.Book{ForeignID: "nb:a0000000000000000000000000000001", Language: "nob", Editions: []models.Edition{
+		{ForeignID: "nb:a0000000000000000000000000000002", Language: "fin"},
+		{ForeignID: "nb:a0000000000000000000000000000004", Language: "swe"},
+		{ForeignID: "nb:a0000000000000000000000000000003", Language: "nob"},
+	}}
+	with := map[string]bool{"a0000000000000000000000000000001": true, "a0000000000000000000000000000002": true, "a0000000000000000000000000000003": true, "a0000000000000000000000000000004": true}
+	preferred, fallback := seriesCandidates(b, with)
+	if got := strings.Join(preferred, ","); got != "a0000000000000000000000000000001,a0000000000000000000000000000003,a0000000000000000000000000000004" {
+		t.Errorf("preferred = %s", got)
+	}
+	if got := strings.Join(fallback, ","); got != "a0000000000000000000000000000002" {
+		t.Errorf("fallback = %s", got)
+	}
+}
+
+// modsSeriesXML is a MODS record naming the given series entries; a linked
+// entry carries the author's authority link.
+func modsSeriesXML(entries ...[3]string) string {
+	var b strings.Builder
+	b.WriteString(`<mods xmlns="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink">`)
+	for _, e := range entries { // title, number, "linked" or ""
+		href := ""
+		if e[2] == "linked" {
+			href = ` xlink:href="(NO-TrBIB)10000001"`
+		}
+		b.WriteString(`<relatedItem type="series"` + href + `><titleInfo><title>` + e[0] + `</title><partNumber>` + e[1] + `</partNumber></titleInfo></relatedItem>`)
+	}
+	b.WriteString(`</mods>`)
+	return b.String()
+}
+
+// Some series are linked only on a translation's record. Such a series is a
+// last resort: a book takes it only when its Norwegian and Scandinavian
+// records give it none, not even an unlinked entry of a known series. It
+// still counts as known for other volumes' unlinked Norwegian entries.
+func TestFillSeries_TranslationFallback(t *testing.T) {
+	id := func(n int) string { return fmt.Sprintf("a00000000000000000000000000000%02d", n) }
+	mods := map[string]string{
+		// Book 1: the Norwegian record names only an imprint; the series is
+		// linked on the Finnish record alone.
+		id(1): modsSeriesXML([3]string{"Eksempelkrim", "7", ""}),
+		id(2): modsSeriesXML([3]string{"Tunturisarja", "1", "linked"}),
+		// Book 2: an unlinked Norwegian entry of a series another book links,
+		// and a linked Finnish one. The Norwegian one wins.
+		id(3): modsSeriesXML([3]string{"Fjellserien", "2", ""}),
+		id(4): modsSeriesXML([3]string{"Tunturisarja", "2", "linked"}),
+		// Book 3: links the Norwegian series.
+		id(5): modsSeriesXML([3]string{"Fjellserien", "3", "linked"}),
+		// Book 4: an unlinked Norwegian entry of a series only a translation
+		// links (book 1's).
+		id(6): modsSeriesXML([3]string{"Tunturisarja", "4", ""}),
+	}
+	c := &Client{http: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		key := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/catalog/v1/metadata/"), "/mods")
+		body, ok := mods[key]
+		status := 200
+		if !ok {
+			status = 404
+		}
+		return &http.Response{StatusCode: status, Body: io.NopCloser(strings.NewReader(body)), Header: make(http.Header)}, nil
+	})}}
+	var items []item
+	for n := 1; n <= 6; n++ {
+		var m itemMetadata
+		m.Identifiers.SesamID, m.Series = id(n), []string{"x"}
+		items = append(items, item{ID: id(n), Metadata: m})
+	}
+	book := func(rep int, eds ...models.Edition) models.Book {
+		return models.Book{ForeignID: idPrefix + id(rep), Language: "nob", Editions: eds}
+	}
+	fin := func(n int) models.Edition { return models.Edition{ForeignID: idPrefix + id(n), Language: "fin"} }
+	books := []models.Book{book(1, fin(2)), book(3, fin(4)), book(5), book(6)}
+	c.fillSeries(context.Background(), books, items, "10000001", nil)
+
+	for i, want := range []string{"Tunturisarja 1", "Fjellserien 2", "Fjellserien 3", "Tunturisarja 4"} {
+		got := ""
+		if len(books[i].SeriesRefs) == 1 {
+			got = books[i].SeriesRefs[0].Title + " " + books[i].SeriesRefs[0].Position
+		}
+		if got != want {
+			t.Errorf("book %d series = %q, want %q", i+1, got, want)
 		}
 	}
 }
