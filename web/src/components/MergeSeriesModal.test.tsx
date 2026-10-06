@@ -44,7 +44,7 @@ const plan: SeriesMergePlan = {
 
 // A checkbox's name is the series title followed by its book count.
 function check(title: string) {
-  fireEvent.click(screen.getByRole('checkbox', { name: new RegExp(`^${title}series\\.merge\\.bookCount`) }))
+  fireEvent.click(screen.getByRole('checkbox', { name: name => name.startsWith(`${title}series.merge.bookCount`) }))
 }
 
 describe('MergeSeriesModal', () => {
