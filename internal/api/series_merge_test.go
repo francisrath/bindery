@@ -95,3 +95,16 @@ func TestSeriesMergeHandlerErrors(t *testing.T) {
 		}
 	}
 }
+
+// A storage failure is a 500, not a 400 or an empty plan.
+func TestSeriesMergeHandlerServerError(t *testing.T) {
+	database, err := db.OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := NewSeriesHandler(db.NewSeriesRepo(database), db.NewBookRepo(database), db.NewAuthorRepo(database), nil, nil)
+	database.Close()
+	if rec := postSeriesMerge(h, 1, `{"sourceIds":[2],"dryRun":true}`); rec.Code != http.StatusInternalServerError {
+		t.Errorf("status = %d %s, want 500", rec.Code, rec.Body.String())
+	}
+}

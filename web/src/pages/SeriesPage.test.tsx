@@ -22,6 +22,7 @@ vi.mock('../api/client', async importOriginal => {
       createSeries: vi.fn(),
       updateSeries: vi.fn(),
       deleteSeries: vi.fn(),
+      mergeSeries: vi.fn(),
       deleteBook: vi.fn(),
       monitorSeries: vi.fn(),
       linkBookToSeries: vi.fn(),
@@ -623,6 +624,28 @@ describe('SeriesPage', () => {
     expect(api.deleteSeries).toHaveBeenCalledTimes(1)
     expect(api.deleteBook).not.toHaveBeenCalled()
     await waitFor(() => expect(screen.queryByRole('heading', { name: 'New Series' })).not.toBeInTheDocument())
+  })
+
+  it('merges another series into one from its Merge dialog and reloads the list (#2554)', async () => {
+    const keep: Series = { id: 40, foreignSeriesId: 's:40', title: 'Fjellserien', description: '', monitored: false, books: [] }
+    const fold: Series = { id: 41, foreignSeriesId: 's:41', title: 'Serien om fjellet', description: '', monitored: false, books: [] }
+    vi.mocked(api.mergeSeries).mockResolvedValue({
+      targetId: 40, title: 'Fjellserien', aliases: ['s:41'], hardcoverLinkFrom: 0, genreOverrideFrom: 0, monitored: false,
+      sources: [{ id: 41, title: 'Serien om fjellet', foreignSeriesId: 's:41', moved: [], kept: [], conflicts: [] }],
+    })
+    renderSeriesPage([keep, fold])
+
+    expect(await screen.findByRole('heading', { name: 'Fjellserien' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Merge…' })[0])
+    fireEvent.click(await screen.findByRole('checkbox', { name: /Serien om fjellet/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Preview' }))
+    await waitFor(() => expect(api.mergeSeries).toHaveBeenCalledWith(40, { sourceIds: [41], title: undefined, dryRun: true }))
+
+    vi.mocked(api.listSeries).mockResolvedValue([keep])
+    fireEvent.click(await screen.findByRole('button', { name: 'Merge' }))
+    await acceptConfirm()
+    await waitFor(() => expect(api.mergeSeries).toHaveBeenLastCalledWith(40, { sourceIds: [41], title: undefined, dryRun: false }))
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Serien om fjellet' })).not.toBeInTheDocument())
   })
 
   it('links an existing library book to an expanded series', async () => {

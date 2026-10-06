@@ -83,8 +83,7 @@ type mergeMember struct {
 // PlanMerge computes what merging sourceIDs into targetID would do, without
 // changing anything. newTitle, when not blank, renames the target.
 func (r *SeriesRepo) PlanMerge(ctx context.Context, targetID int64, sourceIDs []int64, newTitle string) (*SeriesMergePlan, error) {
-	plan, _, err := r.planMerge(ctx, targetID, sourceIDs, newTitle)
-	return plan, err
+	return r.planMerge(ctx, targetID, sourceIDs, newTitle)
 }
 
 // Merge merges sourceIDs into targetID (#2554) in one transaction and returns
@@ -108,11 +107,11 @@ func (r *SeriesRepo) Merge(ctx context.Context, targetID int64, sourceIDs []int6
 	defer func() { _ = tx.Rollback() }()
 	txr := r.WithTx(tx)
 
-	plan, members, err := txr.planMerge(ctx, targetID, sourceIDs, newTitle)
+	plan, err := txr.planMerge(ctx, targetID, sourceIDs, newTitle)
 	if err != nil {
 		return nil, err
 	}
-	if err := txr.applyMerge(ctx, plan, members); err != nil {
+	if err := txr.applyMerge(ctx, plan); err != nil {
 		return nil, fmt.Errorf("merge series into %d: %w", targetID, err)
 	}
 	if err := tx.Commit(); err != nil {
@@ -123,30 +122,30 @@ func (r *SeriesRepo) Merge(ctx context.Context, targetID int64, sourceIDs []int6
 
 // planMerge reads the series involved through r.exec, so inside Merge the
 // plan and its application see the same state.
-func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []int64, newTitle string) (*SeriesMergePlan, map[int64][]mergeMember, error) {
+func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []int64, newTitle string) (*SeriesMergePlan, error) {
 	if len(sourceIDs) == 0 {
-		return nil, nil, fmt.Errorf("%w: no series to merge", ErrSeriesMergeInvalid)
+		return nil, fmt.Errorf("%w: no series to merge", ErrSeriesMergeInvalid)
 	}
 	seen := map[int64]bool{}
 	for _, id := range sourceIDs {
 		switch {
 		case id == targetID:
-			return nil, nil, fmt.Errorf("%w: a series cannot be merged into itself", ErrSeriesMergeInvalid)
+			return nil, fmt.Errorf("%w: a series cannot be merged into itself", ErrSeriesMergeInvalid)
 		case seen[id]:
-			return nil, nil, fmt.Errorf("%w: series %d listed twice", ErrSeriesMergeInvalid, id)
+			return nil, fmt.Errorf("%w: series %d listed twice", ErrSeriesMergeInvalid, id)
 		}
 		seen[id] = true
 	}
 	target, err := r.mergeRow(ctx, targetID)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	if target == nil {
-		return nil, nil, sql.ErrNoRows
+		return nil, sql.ErrNoRows
 	}
-	members := map[int64][]mergeMember{}
-	if members[targetID], err = r.mergeMembers(ctx, targetID); err != nil {
-		return nil, nil, err
+	targetMembers, err := r.mergeMembers(ctx, targetID)
+	if err != nil {
+		return nil, err
 	}
 
 	plan := &SeriesMergePlan{TargetID: targetID, Title: target.title, Monitored: target.monitored, Aliases: []string{}}
@@ -158,7 +157,7 @@ func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []
 	// in tracks the target's membership as the plan builds up, so a book in
 	// two sources is moved once and then kept.
 	in := map[int64]mergeMember{}
-	for _, m := range members[targetID] {
+	for _, m := range targetMembers {
 		in[m.bookID] = m
 	}
 	ordered := append([]int64(nil), sourceIDs...)
@@ -166,17 +165,18 @@ func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []
 	for _, id := range ordered {
 		src, err := r.mergeRow(ctx, id)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		if src == nil {
-			return nil, nil, fmt.Errorf("%w: series %d does not exist", ErrSeriesMergeInvalid, id)
+			return nil, fmt.Errorf("%w: series %d does not exist", ErrSeriesMergeInvalid, id)
 		}
-		if members[id], err = r.mergeMembers(ctx, id); err != nil {
-			return nil, nil, err
+		srcMembers, err := r.mergeMembers(ctx, id)
+		if err != nil {
+			return nil, err
 		}
 		ps := SeriesMergeSource{ID: id, Title: src.title, ForeignID: src.foreignID,
 			Moved: []SeriesMergeBook{}, Kept: []SeriesMergeBook{}, Conflicts: []SeriesMergeConflict{}}
-		for _, m := range members[id] {
+		for _, m := range srcMembers {
 			have, ok := in[m.bookID]
 			if !ok {
 				in[m.bookID] = m
@@ -206,7 +206,7 @@ func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []
 		}
 		plan.Monitored = plan.Monitored || src.monitored
 	}
-	return plan, members, nil
+	return plan, nil
 }
 
 func (r *SeriesRepo) mergeRow(ctx context.Context, id int64) (*mergeSeriesRow, error) {
@@ -264,56 +264,49 @@ func (r *SeriesRepo) mergeMembers(ctx context.Context, seriesID int64) ([]mergeM
 	return out, rows.Err()
 }
 
-func (r *SeriesRepo) applyMerge(ctx context.Context, plan *SeriesMergePlan, members map[int64][]mergeMember) error {
-	exec := func(query string, args ...any) error {
-		_, err := r.exec.ExecContext(ctx, query, args...)
-		return err
-	}
+// mergeStep is one statement of a merge; what names it in an error.
+type mergeStep struct {
+	what  string
+	query string
+	args  []any
+}
+
+func (r *SeriesRepo) applyMerge(ctx context.Context, plan *SeriesMergePlan) error {
 	t := plan.TargetID
+	var steps []mergeStep
+	add := func(what, query string, args ...any) { steps = append(steps, mergeStep{what, query, args}) }
 	for _, src := range plan.Sources {
 		for _, b := range src.Moved {
-			if err := exec(`INSERT INTO series_books (series_id, book_id, position_in_series, primary_series) VALUES (?, ?, ?, ?)`,
-				t, b.BookID, b.Position, boolToInt(b.Primary)); err != nil {
-				return fmt.Errorf("move book %d: %w", b.BookID, err)
-			}
+			add("move a book", `INSERT INTO series_books (series_id, book_id, position_in_series, primary_series) VALUES (?, ?, ?, ?)`,
+				t, b.BookID, b.Position, boolToInt(b.Primary))
 		}
 		for _, b := range src.Kept {
-			if err := exec(`UPDATE series_books SET position_in_series = ?, primary_series = ? WHERE series_id = ? AND book_id = ?`,
-				b.Position, boolToInt(b.Primary), t, b.BookID); err != nil {
-				return fmt.Errorf("update book %d: %w", b.BookID, err)
-			}
+			add("update a book", `UPDATE series_books SET position_in_series = ?, primary_series = ? WHERE series_id = ? AND book_id = ?`,
+				b.Position, boolToInt(b.Primary), t, b.BookID)
 		}
 		if plan.HardcoverLinkFrom == src.ID {
-			if err := exec(`UPDATE series_hardcover_links SET series_id = ? WHERE series_id = ?`, t, src.ID); err != nil {
-				return fmt.Errorf("move hardcover link: %w", err)
-			}
+			add("move the hardcover link", `UPDATE series_hardcover_links SET series_id = ? WHERE series_id = ?`, t, src.ID)
 		}
 		if plan.GenreOverrideFrom == src.ID {
-			if err := exec(`UPDATE series SET genre_override = (SELECT genre_override FROM series WHERE id = ?) WHERE id = ?`, src.ID, t); err != nil {
-				return fmt.Errorf("copy genre override: %w", err)
-			}
+			add("copy the genre override", `UPDATE series SET genre_override = (SELECT genre_override FROM series WHERE id = ?) WHERE id = ?`, src.ID, t)
 		}
-		if err := exec(`INSERT OR IGNORE INTO author_monitored_series (author_id, series_id, created_at)
-			SELECT author_id, ?, created_at FROM author_monitored_series WHERE series_id = ?`, t, src.ID); err != nil {
-			return fmt.Errorf("move author series monitoring: %w", err)
-		}
-		if err := exec(`UPDATE recommendations SET series_id = ? WHERE series_id = ?`, t, src.ID); err != nil {
-			return fmt.Errorf("repoint recommendations: %w", err)
-		}
+		add("move author series monitoring", `INSERT OR IGNORE INTO author_monitored_series (author_id, series_id, created_at)
+			SELECT author_id, ?, created_at FROM author_monitored_series WHERE series_id = ?`, t, src.ID)
+		add("repoint recommendations", `UPDATE recommendations SET series_id = ? WHERE series_id = ?`, t, src.ID)
 		// Repoint the source's aliases before deleting it, or the cascade
 		// drops them; the source's own id becomes an alias once its row is
 		// gone, so an alias never equals a live foreign id.
-		if err := exec(`UPDATE series_aliases SET series_id = ? WHERE series_id = ?`, t, src.ID); err != nil {
-			return fmt.Errorf("repoint aliases: %w", err)
-		}
-		if err := exec(`DELETE FROM series WHERE id = ?`, src.ID); err != nil {
-			return fmt.Errorf("delete series %d: %w", src.ID, err)
-		}
+		add("repoint aliases", `UPDATE series_aliases SET series_id = ? WHERE series_id = ?`, t, src.ID)
+		add("delete the merged series", `DELETE FROM series WHERE id = ?`, src.ID)
 		if src.ForeignID != "" {
-			if err := exec(`INSERT INTO series_aliases (foreign_id, series_id) VALUES (?, ?)`, src.ForeignID, t); err != nil {
-				return fmt.Errorf("alias %q: %w", src.ForeignID, err)
-			}
+			add("alias the merged series' id", `INSERT INTO series_aliases (foreign_id, series_id) VALUES (?, ?)`, src.ForeignID, t)
 		}
 	}
-	return exec(`UPDATE series SET title = ?, monitored = ? WHERE id = ?`, plan.Title, boolToInt(plan.Monitored), t)
+	add("update the series", `UPDATE series SET title = ?, monitored = ? WHERE id = ?`, plan.Title, boolToInt(plan.Monitored), t)
+	for _, st := range steps {
+		if _, err := r.exec.ExecContext(ctx, st.query, st.args...); err != nil {
+			return fmt.Errorf("%s: %w", st.what, err)
+		}
+	}
+	return nil
 }

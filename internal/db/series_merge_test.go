@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/vavallee/bindery/internal/models"
@@ -244,5 +245,43 @@ func TestSeriesMergeRejectsBadRequests(t *testing.T) {
 	}
 	if n := f.count(`SELECT COUNT(*) FROM series`); n != 2 {
 		t.Errorf("series = %d after rejected merges, want 2", n)
+	}
+}
+
+// A merge is one transaction: when a late step fails (here the alias insert,
+// after books have moved and the source is deleted), nothing is left half
+// done.
+func TestSeriesMergeRollsBackOnFailure(t *testing.T) {
+	f := newMergeFixture(t, 2)
+	target, src := f.newSeries("s:t", "T"), f.newSeries("s:s", "S")
+	f.link(target, 1, "1", true)
+	f.link(src, 2, "2", true)
+	if _, err := f.db.Exec(`CREATE TEMP TRIGGER fail_alias BEFORE INSERT ON series_aliases BEGIN SELECT RAISE(ABORT, 'injected'); END`); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := f.series.Merge(f.ctx, target, []int64{src}, "Renamed")
+	if err == nil || !strings.Contains(err.Error(), "alias the merged series' id") {
+		t.Fatalf("err = %v, want the failing step named", err)
+	}
+	if got := f.membership(target); fmt.Sprint(got) != "map[1:1/P]" {
+		t.Errorf("target books = %v, want unchanged", got)
+	}
+	if got := f.membership(src); fmt.Sprint(got) != "map[2:2/P]" {
+		t.Errorf("source books = %v, want unchanged", got)
+	}
+	if s, _ := f.series.GetByID(f.ctx, target); s == nil || s.Title != "T" {
+		t.Errorf("target = %+v, want the title unchanged", s)
+	}
+}
+
+// A failed read while planning is an error, not an empty plan.
+func TestSeriesPlanMergeReadError(t *testing.T) {
+	f := newMergeFixture(t, 0)
+	target, src := f.newSeries("s:t", "T"), f.newSeries("s:s", "S")
+	ctx, cancel := context.WithCancel(f.ctx)
+	cancel()
+	if plan, err := f.series.PlanMerge(ctx, target, []int64{src}, ""); err == nil || plan != nil {
+		t.Errorf("PlanMerge on a cancelled context = %+v, %v; want an error", plan, err)
 	}
 }

@@ -101,6 +101,7 @@ const seriesCases: Case[] = [
   ['updateSeries', () => seriesApi.updateSeries(2, { title: 'New' }), 'PUT', '/series/2', { title: 'New' }],
   ['monitorSeries', () => seriesApi.monitorSeries(2, false), 'PATCH', '/series/2', { monitored: false }],
   ['deleteSeries', () => seriesApi.deleteSeries(2), 'DELETE', '/series/2'],
+  ['mergeSeries', () => seriesApi.mergeSeries(2, { sourceIds: [3], dryRun: true }), 'POST', '/series/2/merge', { sourceIds: [3], dryRun: true }],
   [
     'linkBookToSeries',
     () => seriesApi.linkBookToSeries(2, { bookId: 5, positionInSeries: '1', primarySeries: true }),
