@@ -57,11 +57,10 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
     }
   }
 
-  const apply = async () => {
-    if (!plan) return
+  const apply = async (shown: SeriesMergePlan) => {
     if (!await confirm({
       title: t('series.merge.title', { title: target.title }),
-      body: t('series.merge.confirmBody', { count: plan.sources.length, title: plan.title }),
+      body: t('series.merge.confirmBody', { count: shown.sources.length, title: shown.title }),
       confirmLabel: t('series.merge.apply'),
     })) return
     await run(false)
@@ -144,7 +143,7 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
           </button>
           {plan ? (
             <button
-              onClick={apply}
+              onClick={() => apply(plan)}
               disabled={busy}
               className="text-sm px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
             >

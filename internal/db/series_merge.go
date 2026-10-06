@@ -212,10 +212,14 @@ func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []
 func (r *SeriesRepo) mergeRow(ctx context.Context, id int64) (*mergeSeriesRow, error) {
 	var s mergeSeriesRow
 	var monitored int
+	var aliases sql.NullString
+	// One query, aliases included: they come back joined by the unit
+	// separator, which no foreign id contains.
 	err := r.exec.QueryRowContext(ctx, `
 		SELECT s.id, s.foreign_id, s.title, s.monitored, s.genre_override,
-		       EXISTS (SELECT 1 FROM series_hardcover_links l WHERE l.series_id = s.id)
-		FROM series s WHERE s.id = ?`, id).Scan(&s.id, &s.foreignID, &s.title, &monitored, &s.genreOverride, &s.hardcoverLink)
+		       EXISTS (SELECT 1 FROM series_hardcover_links l WHERE l.series_id = s.id),
+		       (SELECT group_concat(foreign_id, char(31)) FROM (SELECT foreign_id FROM series_aliases WHERE series_id = s.id ORDER BY foreign_id))
+		FROM series s WHERE s.id = ?`, id).Scan(&s.id, &s.foreignID, &s.title, &monitored, &s.genreOverride, &s.hardcoverLink, &aliases)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -223,19 +227,10 @@ func (r *SeriesRepo) mergeRow(ctx context.Context, id int64) (*mergeSeriesRow, e
 		return nil, fmt.Errorf("read series %d: %w", id, err)
 	}
 	s.monitored = monitored == 1
-	rows, err := r.exec.QueryContext(ctx, `SELECT foreign_id FROM series_aliases WHERE series_id = ? ORDER BY foreign_id`, id)
-	if err != nil {
-		return nil, fmt.Errorf("read series %d aliases: %w", id, err)
+	if aliases.Valid && aliases.String != "" {
+		s.aliases = strings.Split(aliases.String, "\x1f")
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var a string
-		if err := rows.Scan(&a); err != nil {
-			return nil, err
-		}
-		s.aliases = append(s.aliases, a)
-	}
-	return &s, rows.Err()
+	return &s, nil
 }
 
 // mergeMembers lists every book in a series, whoever owns it: a merge is an

@@ -108,3 +108,14 @@ func TestSeriesMergeHandlerServerError(t *testing.T) {
 		t.Errorf("status = %d %s, want 500", rec.Code, rec.Body.String())
 	}
 }
+
+// The series id comes from the URL; anything but a number is a 400.
+func TestSeriesMergeHandlerBadID(t *testing.T) {
+	h, _, _, _ := seriesMergeEnv(t)
+	req := withURLParam(httptest.NewRequest(http.MethodPost, "/api/v1/series/abc/merge", strings.NewReader(`{"sourceIds":[2]}`)), "id", "abc")
+	rec := httptest.NewRecorder()
+	h.Merge(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("status = %d, want 400", rec.Code)
+	}
+}

@@ -59,6 +59,17 @@ describe('MergeSeriesModal', () => {
     expect(screen.getByRole('button', { name: 'series.merge.preview' })).toBeDisabled()
     fireEvent.change(screen.getByLabelText('series.merge.filterPlaceholder'), { target: { value: 'hav' } })
     expect(screen.getAllByRole('checkbox')).toHaveLength(1)
+    fireEvent.change(screen.getByLabelText('series.merge.filterPlaceholder'), { target: { value: 'ingen slik serie' } })
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
+    expect(screen.getByText('series.merge.noCandidates')).toBeInTheDocument()
+  })
+
+  it('unticking the only series picked turns Preview off again', () => {
+    render(<MergeSeriesModal target={target} series={all} onClose={vi.fn()} onMerged={vi.fn()} />)
+    check('Serien om fjellet')
+    expect(screen.getByRole('button', { name: 'series.merge.preview' })).toBeEnabled()
+    check('Serien om fjellet')
+    expect(screen.getByRole('button', { name: 'series.merge.preview' })).toBeDisabled()
   })
 
   it('previews with a dry run, then merges after confirmation', async () => {
@@ -110,5 +121,36 @@ describe('MergeSeriesModal', () => {
     check('Serien om fjellet')
     fireEvent.click(screen.getByRole('button', { name: 'series.merge.preview' }))
     expect((await screen.findByRole('alert')).textContent).toContain('series 9 does not exist')
+  })
+
+  it('names everything the kept series takes over: a new name, genres, monitoring', async () => {
+    vi.mocked(api.mergeSeries).mockResolvedValue({
+      ...plan, title: 'Fjell-serien', hardcoverLinkFrom: 0, genreOverrideFrom: 99, monitored: true,
+      sources: [{ ...plan.sources[0], conflicts: [] }],
+    })
+    // A series listed without its books counts as none.
+    const bare = { ...series(5, 'Uten bøker'), books: undefined }
+    render(<MergeSeriesModal target={target} series={[...all, bare]} onClose={vi.fn()} onMerged={vi.fn()} />)
+    expect(screen.getByRole('checkbox', { name: name => name.startsWith('Uten bøker') }).closest('label')?.textContent).toContain('"count":0')
+    check('Serien om fjellet')
+    fireEvent.change(screen.getByLabelText('series.merge.renameLabel'), { target: { value: 'Fjell-serien' } })
+    fireEvent.click(screen.getByRole('button', { name: 'series.merge.preview' }))
+
+    await waitFor(() => expect(api.mergeSeries).toHaveBeenCalledWith(1, { sourceIds: [2], title: 'Fjell-serien', dryRun: true }))
+    const preview = (await screen.findByTestId('merge-preview')).textContent ?? ''
+    expect(preview).toContain('series.merge.renamed')
+    // Series 99 is not in the list, so the note falls back to its id.
+    expect(preview).toContain('series.merge.takesGenres {"title":"99"}')
+    expect(preview).toContain('series.merge.becomesMonitored')
+    expect(preview).not.toContain('series.merge.takesHardcoverLink')
+    expect(preview).not.toContain('series.merge.conflict')
+  })
+
+  it('falls back to a generic message when the failure is not an Error', async () => {
+    vi.mocked(api.mergeSeries).mockRejectedValueOnce('boom')
+    render(<MergeSeriesModal target={target} series={all} onClose={vi.fn()} onMerged={vi.fn()} />)
+    check('Serien om fjellet')
+    fireEvent.click(screen.getByRole('button', { name: 'series.merge.preview' }))
+    expect((await screen.findByRole('alert')).textContent).toBe('series.merge.failed')
   })
 })
