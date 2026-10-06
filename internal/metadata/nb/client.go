@@ -8,7 +8,9 @@
 // primary provider, so installs that did not choose it never call NB.
 //
 // Endpoints:
-//   - https://api.nb.no/catalog/v1/items — bibliographic search (CC0 metadata)
+//   - https://api.nb.no/catalog/v1/items — bibliographic search. The API
+//     states no licence of its own; NB's metadata delivery (OAI-PMH, SRU)
+//     publishes the same records under CC0. See docs/third-party-data.md.
 //   - https://authority.bibsys.no — the Norwegian authority file, used only to
 //     turn an author's authority ID back into a name, because NB's search has
 //     no field that accepts the ID.
