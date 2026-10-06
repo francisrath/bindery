@@ -64,6 +64,7 @@ func (s universalStub) AutoLinkHardcover(w http.ResponseWriter, _ *http.Request)
 func (s universalStub) PutHardcoverLink(w http.ResponseWriter, _ *http.Request)      { s.h(w) }
 func (s universalStub) DeleteHardcoverLink(w http.ResponseWriter, _ *http.Request)   { s.h(w) }
 func (s universalStub) HardcoverDiff(w http.ResponseWriter, _ *http.Request)         { s.h(w) }
+func (s universalStub) Merge(w http.ResponseWriter, _ *http.Request)                 { s.h(w) }
 func (s universalStub) Clear(w http.ResponseWriter, _ *http.Request)                 { s.h(w) }
 func (s universalStub) Retry(w http.ResponseWriter, _ *http.Request)                 { s.h(w) }
 func (s universalStub) Reset(w http.ResponseWriter, _ *http.Request)                 { s.h(w) }

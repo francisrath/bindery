@@ -252,6 +252,7 @@ GET    /api/v1/series                             list series with their linked 
 GET    /api/v1/series/{id}                        one series
 POST   /api/v1/series/{id}/fill                   add the series' missing books as wanted (admin)
 PATCH  /api/v1/series/{id}                        monitor / unmonitor (admin)
+POST   /api/v1/series/{id}/merge                  merge other series into this one: {"sourceIds":[..],"title":"optional rename","dryRun":true} previews (admin)
 ```
 
 `GET /series` returns the bare array it always has. Pagination is opt-in
