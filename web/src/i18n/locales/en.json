@@ -817,6 +817,31 @@
       "placeholder": "Series name",
       "required": "Series name is required",
       "failed": "Failed to save series"
+    },
+    "merge": {
+      "button": "Merge…",
+      "buttonHint": "Fold other series into this one",
+      "title": "Merge into \"{{title}}\"",
+      "description": "The series you pick join this one and are deleted. Their books keep this series' positions and fill its gaps, and their provider ids stay as aliases so a refresh does not recreate them.",
+      "filterPlaceholder": "Find a series…",
+      "sourcesLabel": "Series to merge in",
+      "bookCount_one": "{{count}} book",
+      "bookCount_other": "{{count}} books",
+      "noCandidates": "No other series match",
+      "renameLabel": "New name (optional)",
+      "preview": "Preview",
+      "apply": "Merge",
+      "sourceSummary": "{{title}}: {{moved}} join, {{kept}} already here",
+      "conflict": "{{book}} keeps #{{kept}} (the merged series had #{{dropped}})",
+      "renamed": "Renamed to \"{{title}}\"",
+      "takesHardcoverLink": "Takes the Hardcover link of \"{{title}}\"",
+      "takesGenres": "Takes the genre override of \"{{title}}\"",
+      "becomesMonitored": "Becomes monitored, as a merged series was",
+      "aliases_one": "{{count}} old provider id will point here",
+      "aliases_other": "{{count}} old provider ids will point here",
+      "confirmBody_one": "Merge {{count}} series into \"{{title}}\"? The merged series are deleted; this cannot be undone.",
+      "confirmBody_other": "Merge {{count}} series into \"{{title}}\"? The merged series are deleted; this cannot be undone.",
+      "failed": "Merge failed"
     }
   },
   "importHints": {

@@ -7,6 +7,7 @@ import { foldedIncludes } from '../util/foldForSearch'
 import AddSeriesBookModal from '../components/AddSeriesBookModal'
 import HardcoverSeriesLinkModal from '../components/HardcoverSeriesLinkModal'
 import SeriesNameModal from '../components/SeriesNameModal'
+import MergeSeriesModal from '../components/MergeSeriesModal'
 import { btn, btnSize } from '../components/buttons'
 import Switch from '../components/Switch'
 import { useConfirmDialog } from '../components/useConfirmDialog'
@@ -64,6 +65,7 @@ export default function SeriesPage() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
   const [showAddSeries, setShowAddSeries] = useState(false)
   const [editingSeries, setEditingSeries] = useState<Series | null>(null)
+  const [mergeTarget, setMergeTarget] = useState<Series | null>(null)
   const [bookModalSeries, setBookModalSeries] = useState<Series | null>(null)
   const enhancedHardcoverApi = systemStatus?.enhancedHardcoverApi ?? false
 
@@ -459,6 +461,13 @@ export default function SeriesPage() {
                   >
                     {t('series.rename')}
                   </button>
+                  <button
+                    onClick={() => setMergeTarget(series)}
+                    className="text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700"
+                    title={t('series.merge.buttonHint')}
+                  >
+                    {t('series.merge.button')}
+                  </button>
                   {isOpen && (
                     <button
                       onClick={() => setBookModalSeries(series)}
@@ -693,6 +702,14 @@ export default function SeriesPage() {
           submitLabel={t('common.save')}
           onClose={() => setEditingSeries(null)}
           onSubmit={handleRenameSeries}
+        />
+      )}
+      {mergeTarget && (
+        <MergeSeriesModal
+          target={mergeTarget}
+          series={seriesList}
+          onClose={() => setMergeTarget(null)}
+          onMerged={() => { void refreshSeriesList() }}
         />
       )}
       {bookModalSeries && (
