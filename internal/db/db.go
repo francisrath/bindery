@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -87,6 +88,14 @@ func OpenMemory() (*sql.DB, error) {
 	if err := withRawConn(db, func(c memConn) error { return c.Deserialize(tmpl) }); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("load memory template: %w", err)
+	}
+	// Some DSN pragmas (synchronous, cache_size) belong to the schema, not the
+	// connection, so Deserialize resets them to SQLite's defaults. Set them again.
+	for _, p := range connectionPragmas() {
+		if _, err := db.Exec("PRAGMA " + p); err != nil {
+			db.Close()
+			return nil, fmt.Errorf("reapply PRAGMA %s: %w", p, err)
+		}
 	}
 	return db, nil
 }
@@ -270,6 +279,13 @@ const connectionPragmaDSN = "?_pragma=foreign_keys(1)" +
 	"&_pragma=synchronous(1)" +
 	"&_pragma=temp_store(2)" +
 	"&_pragma=cache_size(-16000)"
+
+// connectionPragmas returns the pragmas connectionPragmaDSN sets, in the
+// driver's name(value) form.
+func connectionPragmas() []string {
+	q, _ := url.ParseQuery(strings.TrimPrefix(connectionPragmaDSN, "?"))
+	return q["_pragma"]
+}
 
 func setPragmas(db *sql.DB) error {
 	pragmas := []string{

@@ -9,8 +9,8 @@ import (
 )
 
 // OpenMemory hands out copies of one migrated template; a write to one copy
-// must not show up in the next, and per-connection pragmas must survive the
-// copy.
+// must not show up in the next, and every pragma the DSN sets must still hold
+// on the copy.
 func TestOpenMemory_CopiesAreIndependent(t *testing.T) {
 	a, err := OpenMemory()
 	if err != nil {
@@ -33,9 +33,15 @@ func TestOpenMemory_CopiesAreIndependent(t *testing.T) {
 	if n != 0 {
 		t.Fatalf("row written to one OpenMemory database leaked into another")
 	}
-	var fk int
-	if err := b.QueryRow(`PRAGMA foreign_keys`).Scan(&fk); err != nil || fk != 1 {
-		t.Fatalf("foreign_keys = %d (err %v), want 1", fk, err)
+	for _, p := range connectionPragmas() {
+		name, want, _ := strings.Cut(strings.TrimSuffix(p, ")"), "(")
+		var got string
+		if err := b.QueryRow("PRAGMA " + name).Scan(&got); err != nil {
+			t.Fatal(err)
+		}
+		if got != want {
+			t.Errorf("PRAGMA %s = %s, want %s", name, got, want)
+		}
 	}
 	if got, want := len(versionSetForTest(t, b)), countMigrationFiles(t); got != want {
 		t.Fatalf("schema_migrations has %d versions, want %d", got, want)
