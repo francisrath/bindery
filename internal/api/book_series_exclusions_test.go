@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -15,7 +16,10 @@ import (
 
 // The book page lists the series a book was taken out of, and Unlock all
 // fields forgets them; any other edit leaves them alone (#2554).
-func TestBookSeriesExclusionsEndpointAndUnlockAll(t *testing.T) {
+// exclusionsEnv is a book handler with series wired, one book and the
+// database, for tests that inject failures with a temporary trigger.
+func exclusionsEnv(t *testing.T) (*BookHandler, *db.SeriesRepo, *models.Book, *sql.DB, context.Context) {
+	t.Helper()
 	database, err := db.OpenMemory()
 	if err != nil {
 		t.Fatal(err)
@@ -33,6 +37,11 @@ func TestBookSeriesExclusionsEndpointAndUnlockAll(t *testing.T) {
 	if err := books.Create(ctx, book); err != nil {
 		t.Fatal(err)
 	}
+	return h, series, book, database, ctx
+}
+
+func TestBookSeriesExclusionsEndpointAndUnlockAll(t *testing.T) {
+	h, series, book, _, ctx := exclusionsEnv(t)
 	s := &models.Series{ForeignID: "s:fjell", Title: "Fjellserien"}
 	if err := series.CreateOrGet(ctx, s); err != nil {
 		t.Fatal(err)
@@ -77,5 +86,65 @@ func TestBookSeriesExclusionsEndpointAndUnlockAll(t *testing.T) {
 	update(`{"lockedFields":[]}`)
 	if got := list(); len(got) != 0 {
 		t.Errorf("after Unlock all = %+v, want none", got)
+	}
+}
+
+func TestBookSeriesExclusionsEdges(t *testing.T) {
+	h, _, book, _, _ := exclusionsEnv(t)
+	get := func(h *BookHandler, id string) *httptest.ResponseRecorder {
+		rec := httptest.NewRecorder()
+		h.SeriesExclusions(rec, withURLParam(httptest.NewRequest(http.MethodGet, "/api/v1/book/"+id+"/series-exclusions", nil), "id", id))
+		return rec
+	}
+	if rec := get(h, "999"); rec.Code != http.StatusNotFound {
+		t.Errorf("unknown book: %d, want 404", rec.Code)
+	}
+	// A handler without series wiring has nothing to report.
+	bare := NewBookHandler(h.books, nil, nil, nil)
+	if rec := get(bare, strconv.FormatInt(book.ID, 10)); rec.Code != http.StatusOK || rec.Body.String() != "[]\n" {
+		t.Errorf("no series repo: %d %q, want an empty list", rec.Code, rec.Body.String())
+	}
+}
+
+// When forgetting the exclusions fails, Unlock all reports it instead of
+// answering as if the book had been handed back to refresh.
+func TestUnlockAllReportsAFailedExclusionClear(t *testing.T) {
+	h, _, book, database, _ := exclusionsEnv(t)
+	if _, err := database.Exec(`CREATE TEMP TRIGGER fail_clear BEFORE DELETE ON book_series_exclusions BEGIN SELECT RAISE(ABORT, 'injected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.Exec(`INSERT INTO book_series_exclusions (book_id, series_foreign_id) VALUES (?, 's:x')`, book.ID); err != nil {
+		t.Fatal(err)
+	}
+	id := strconv.FormatInt(book.ID, 10)
+	rec := httptest.NewRecorder()
+	h.Update(rec, withURLParam(httptest.NewRequest(http.MethodPut, "/api/v1/book/"+id, bytes.NewBufferString(`{"lockedFields":[]}`)), "id", id))
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("status = %d %s, want 500", rec.Code, rec.Body.String())
+	}
+}
+
+// A removal that fails is a 500, and leaves the book in the series.
+func TestRemoveBookReportsAFailedRemoval(t *testing.T) {
+	_, series, book, database, ctx := exclusionsEnv(t)
+	s := &models.Series{ForeignID: "s:fjell", Title: "Fjellserien"}
+	if err := series.CreateOrGet(ctx, s); err != nil {
+		t.Fatal(err)
+	}
+	if err := series.LinkBook(ctx, s.ID, book.ID, "1", true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.Exec(`CREATE TEMP TRIGGER fail_unlink BEFORE DELETE ON series_books BEGIN SELECT RAISE(ABORT, 'injected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	sh := NewSeriesHandler(series, db.NewBookRepo(database), db.NewAuthorRepo(database), nil, nil)
+	sid, bid := strconv.FormatInt(s.ID, 10), strconv.FormatInt(book.ID, 10)
+	rec := httptest.NewRecorder()
+	sh.RemoveBook(rec, withURLParams(httptest.NewRequest(http.MethodDelete, "/api/v1/series/"+sid+"/books/"+bid, nil), map[string]string{"id": sid, "bookId": bid}))
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("status = %d, want 500", rec.Code)
+	}
+	if ids, _ := series.GetSeriesIDsForBook(ctx, book.ID); len(ids) != 1 {
+		t.Errorf("series ids = %v, want the book still in its series", ids)
 	}
 }

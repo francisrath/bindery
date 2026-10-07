@@ -1111,6 +1111,18 @@ describe('BookDetailPage — header', () => {
     await waitFor(() => expect(api.getBookSeriesExclusions).toHaveBeenCalledTimes(2))
   })
 
+  it('says so when restoring a series fails', async () => {
+    vi.mocked(api.getBookSeriesExclusions).mockResolvedValue([
+      { seriesForeignId: 'ol:s8', seriesId: 8, seriesTitle: 'Rincewind', position: '2' },
+    ])
+    vi.mocked(api.linkBookToSeries).mockRejectedValue(new Error('series mutations are admin only'))
+
+    renderBookDetailPage()
+    const keptOut = await screen.findByRole('list', { name: resolveKey('bookDetail.series.keptOutHeading')! })
+    fireEvent.click(within(keptOut).getByRole('button', { name: resolveKey('bookDetail.series.restore')! }))
+    expect(await screen.findByText('series mutations are admin only')).toBeInTheDocument()
+  })
+
   it('names the series the renamer uses and lets you change it', async () => {
     // #2525: two primary rows meant the renamer picked one by query-plan order
     // and nothing on the page said which, or let the user say otherwise.

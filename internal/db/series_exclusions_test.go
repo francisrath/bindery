@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"testing"
 )
@@ -132,5 +133,73 @@ func TestListBookSeriesExclusions(t *testing.T) {
 	}
 	if created, err := f.series.LinkBookIfMissing(f.ctx, target, f.books[0], "4", true); err != nil || !created {
 		t.Errorf("automatic link after clearing = %v, %v; want linked again", created, err)
+	}
+}
+
+// UpsertBookLink is one transaction: when its last step (demoting the book's
+// other series) fails, the exclusion it cleared and the link it wrote are
+// rolled back too.
+func TestUpsertBookLinkIsAtomic(t *testing.T) {
+	f := newMergeFixture(t, 1)
+	a, b := f.newSeries("s:a", "A"), f.newSeries("s:b", "B")
+	f.link(a, 1, "1", true)
+	f.link(b, 1, "2", false)
+	if _, err := f.series.RemoveBookFromSeries(f.ctx, b, f.books[0]); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.db.Exec(`CREATE TEMP TRIGGER fail_demote BEFORE UPDATE OF primary_series ON series_books
+		WHEN NEW.primary_series = 0 BEGIN SELECT RAISE(ABORT, 'injected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.series.UpsertBookLink(f.ctx, b, f.books[0], "2", true); err == nil {
+		t.Fatal("UpsertBookLink succeeded although its last step failed")
+	}
+	if got := f.membership(b); len(got) != 0 {
+		t.Errorf("B = %v, want the link rolled back", got)
+	}
+	if got := f.membership(a); got[1] != "1/P" {
+		t.Errorf("A = %v, want book 1 still primary", got)
+	}
+	if n := f.count(`SELECT COUNT(*) FROM book_series_exclusions`); n != 1 {
+		t.Errorf("exclusions = %d, want the cleared one restored", n)
+	}
+}
+
+// RemoveBookFromSeries is one transaction: when the removal fails, no
+// exclusion is left behind for a book still in the series.
+func TestRemoveBookFromSeriesIsAtomic(t *testing.T) {
+	f := newMergeFixture(t, 1)
+	s := f.newSeries("s:a", "A")
+	f.link(s, 1, "1", true)
+	if _, err := f.db.Exec(`CREATE TEMP TRIGGER fail_unlink BEFORE DELETE ON series_books BEGIN SELECT RAISE(ABORT, 'injected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.series.RemoveBookFromSeries(f.ctx, s, f.books[0]); err == nil {
+		t.Fatal("RemoveBookFromSeries succeeded although the removal failed")
+	}
+	if got := f.membership(s); got[1] != "1/P" {
+		t.Errorf("membership = %v, want the book still in the series", got)
+	}
+	if n := f.count(`SELECT COUNT(*) FROM book_series_exclusions`); n != 0 {
+		t.Errorf("exclusions = %d, want none for a book still in the series", n)
+	}
+}
+
+// Read and clear failures are errors, not an empty list or a silent no-op.
+func TestBookSeriesExclusionFailures(t *testing.T) {
+	f := newMergeFixture(t, 1)
+	ctx, cancel := context.WithCancel(f.ctx)
+	cancel()
+	if got, err := f.series.ListBookSeriesExclusions(ctx, f.books[0]); err == nil {
+		t.Errorf("list on a cancelled context = %v, want an error", got)
+	}
+	if _, err := f.db.Exec(`CREATE TEMP TRIGGER fail_clear BEFORE DELETE ON book_series_exclusions BEGIN SELECT RAISE(ABORT, 'injected'); END`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.db.Exec(`INSERT INTO book_series_exclusions (book_id, series_foreign_id) VALUES (?, 's:x')`, f.books[0]); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.series.ClearBookSeriesExclusions(f.ctx, f.books[0]); err == nil {
+		t.Error("clear succeeded although the delete failed")
 	}
 }

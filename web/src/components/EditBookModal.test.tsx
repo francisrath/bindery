@@ -173,6 +173,29 @@ describe('EditBookModal (#1237, #1446)', () => {
       expect(api.linkBookToSeries).not.toHaveBeenCalled()
     })
 
+    it('files a book that is in no series under the one picked', async () => {
+      vi.mocked(api.listAuthorSeries).mockResolvedValue([{ ...A, books: [] }, B] as never)
+      render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} onSeriesSaved={onSeriesSaved} />)
+      const select = await screen.findByLabelText('Series') as HTMLSelectElement
+      await waitFor(() => expect(select.options.length).toBe(4))
+      expect(select.value).toBe('')
+      fireEvent.change(select, { target: { value: '2' } })
+      fireEvent.change(screen.getByLabelText('Position'), { target: { value: '5' } })
+      save()
+      await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(2, { bookId: 7, positionInSeries: '5', primarySeries: true }))
+      expect(api.removeBookFromSeries).not.toHaveBeenCalled()
+    })
+
+    it('preselects the only series a book is in, even when it is not flagged primary', async () => {
+      vi.mocked(api.listAuthorSeries).mockResolvedValue([
+        { ...A, books: [{ seriesId: 1, bookId: 7, positionInSeries: '4', primarySeries: false }] }, B,
+      ] as never)
+      render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} />)
+      const select = await screen.findByLabelText('Series') as HTMLSelectElement
+      await waitFor(() => expect(select.value).toBe('1'))
+      expect((screen.getByLabelText('Position') as HTMLInputElement).value).toBe('4')
+    })
+
     it('hides the series row when the series cannot be loaded, and other edits still save', async () => {
       vi.mocked(api.listAuthorSeries).mockRejectedValue(new Error('down'))
       render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} />)
