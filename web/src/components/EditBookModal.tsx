@@ -1,18 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, Book } from '../api/client'
+import { api, Book, Series } from '../api/client'
 import { useModal } from './useModal'
 
 interface Props {
   book: Book
   onClose: () => void
   onSaved: (book: Book) => void
+  // Called after the book's series changed, so the page reloads its series.
+  onSeriesSaved?: () => void
 }
+
+// The series a book is filed under for naming: its primary membership, or its
+// only one.
+interface Membership { id: number; position: string }
+
+const NEW_SERIES = 'new'
 
 // Manual metadata editor (#1237, #1446). Only fields the user actually
 // changed are sent — the backend locks every submitted field against
 // metadata refresh, so sending unchanged values would spuriously lock them.
-export default function EditBookModal({ book, onClose, onSaved }: Props) {
+export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }: Props) {
   const { t } = useTranslation()
   const [title, setTitle] = useState(book.title)
   const [description, setDescription] = useState(book.description || '')
@@ -21,6 +29,39 @@ export default function EditBookModal({ book, onClose, onSaved }: Props) {
   const [releaseDate, setReleaseDate] = useState(book.releaseDate ? book.releaseDate.slice(0, 10) : '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Series (#2554): the book's primary series and its position, edited here
+  // so one book can be fixed without going through the series page. null
+  // until loaded; the row stays hidden if loading fails, and editing the
+  // other fields still works.
+  const [allSeries, setAllSeries] = useState<Series[] | null>(null)
+  const [membership, setMembership] = useState<Membership | null>(null)
+  const [seriesChoice, setSeriesChoice] = useState<string>('')
+  const [newSeriesName, setNewSeriesName] = useState('')
+  const [position, setPosition] = useState('')
+
+  useEffect(() => {
+    let active = true
+    Promise.all([api.listSeries(), book.authorId ? api.listAuthorSeries(book.authorId) : Promise.resolve([] as Series[])])
+      .then(([list, authorSeries]) => {
+        if (!active) return
+        const mine = authorSeries.flatMap(s =>
+          (s.books ?? []).filter(b => b.bookId === book.id).map(b => ({ id: s.id, position: b.positionInSeries, primary: b.primarySeries === true })))
+        const current = mine.find(m => m.primary) ?? (mine.length === 1 ? mine[0] : null)
+        setAllSeries([...list].sort((a, b) => a.title.localeCompare(b.title)))
+        setMembership(current ? { id: current.id, position: current.position } : null)
+        setSeriesChoice(current ? String(current.id) : '')
+        setPosition(current?.position ?? '')
+      })
+      .catch(() => { /* the series row stays hidden */ })
+    return () => { active = false }
+  }, [book.authorId, book.id])
+
+  const seriesChanged = useMemo(() => {
+    if (allSeries === null) return false
+    const was = membership ? String(membership.id) : ''
+    if (seriesChoice !== was) return true
+    return seriesChoice !== '' && position.trim() !== (membership?.position ?? '')
+  }, [allSeries, membership, seriesChoice, position])
 
   const locked = book.lockedFields ?? []
   const { titleId, panelProps } = useModal({ onClose, canClose: !saving })
@@ -34,20 +75,44 @@ export default function EditBookModal({ book, onClose, onSaved }: Props) {
     if (language.trim() !== (book.language || '')) patch.language = language.trim()
     const origDate = book.releaseDate ? book.releaseDate.slice(0, 10) : ''
     if (releaseDate !== origDate) patch.releaseDate = releaseDate
-    if (Object.keys(patch).length === 0) {
+    if (Object.keys(patch).length === 0 && !seriesChanged) {
       onClose()
       return
     }
     setSaving(true)
     setError(null)
     try {
-      const updated = await api.updateBook(book.id, patch as Partial<Book>)
-      onSaved(updated)
+      if (seriesChanged) {
+        await saveSeries()
+        onSeriesSaved?.()
+      }
+      if (Object.keys(patch).length > 0) {
+        onSaved(await api.updateBook(book.id, patch as Partial<Book>))
+      }
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : t('bookDetail.edit.saveFailed', 'Save failed'))
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Files the book under the chosen series as its primary one, at the given
+  // position, and takes it out of the series it was in before. The server
+  // demotes the book's other series and remembers the removal, so a refresh
+  // does not put it back (#2554).
+  const saveSeries = async () => {
+    let target: number | null = null
+    if (seriesChoice === NEW_SERIES) {
+      target = (await api.createSeries({ title: newSeriesName.trim() })).id
+    } else if (seriesChoice !== '') {
+      target = Number(seriesChoice)
+    }
+    if (target !== null) {
+      await api.linkBookToSeries(target, { bookId: book.id, positionInSeries: position.trim(), primarySeries: true })
+    }
+    if (membership && membership.id !== target) {
+      await api.removeBookFromSeries(membership.id, book.id)
     }
   }
 
@@ -137,6 +202,35 @@ export default function EditBookModal({ book, onClose, onSaved }: Props) {
               <input id="edit-book-releasedate" type="date" value={releaseDate} onChange={e => setReleaseDate(e.target.value)} className={inputCls} />
             </div>
           </div>
+          {allSeries !== null && (
+            <div className="flex gap-3 items-end">
+              <div className="flex-1 min-w-0">
+                <label className={labelCls} htmlFor="edit-book-series">
+                  {t('bookDetail.edit.fieldSeries', 'Series')}
+                </label>
+                <select id="edit-book-series" value={seriesChoice} onChange={e => setSeriesChoice(e.target.value)} className={inputCls}>
+                  <option value="">{t('bookDetail.edit.seriesNone', 'No series')}</option>
+                  {allSeries.map(s => <option key={s.id} value={String(s.id)}>{s.title}</option>)}
+                  <option value={NEW_SERIES}>{t('bookDetail.edit.seriesNew', 'New series…')}</option>
+                </select>
+              </div>
+              <div className="w-24">
+                <label className={labelCls} htmlFor="edit-book-position">
+                  {t('bookDetail.edit.fieldPosition', 'Position')}
+                </label>
+                <input id="edit-book-position" type="text" value={position} onChange={e => setPosition(e.target.value)}
+                  disabled={seriesChoice === ''} className={inputCls} />
+              </div>
+            </div>
+          )}
+          {seriesChoice === NEW_SERIES && (
+            <div>
+              <label className={labelCls} htmlFor="edit-book-new-series">
+                {t('bookDetail.edit.fieldNewSeries', 'New series name')}
+              </label>
+              <input id="edit-book-new-series" type="text" value={newSeriesName} onChange={e => setNewSeriesName(e.target.value)} className={inputCls} />
+            </div>
+          )}
           {error && <p className="text-sm text-red-400">{error}</p>}
         </div>
 
@@ -159,7 +253,7 @@ export default function EditBookModal({ book, onClose, onSaved }: Props) {
             <button
               type="button"
               onClick={save}
-              disabled={saving || !title.trim()}
+              disabled={saving || !title.trim() || (seriesChoice === NEW_SERIES && !newSeriesName.trim())}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
             >
               {saving ? t('common.saving') : t('common.save')}

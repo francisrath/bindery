@@ -2064,7 +2064,12 @@
       "lockedHint": "Manually edited — metadata refresh will not overwrite this field",
       "unlockAll": "Unlock all fields",
       "unlockAllHint": "Let metadata refresh manage every field again",
-      "saveFailed": "Save failed"
+      "saveFailed": "Save failed",
+      "fieldSeries": "Series",
+      "seriesNone": "No series",
+      "seriesNew": "New series…",
+      "fieldNewSeries": "New series name",
+      "fieldPosition": "Position"
     },
     "exclude": "Exclude",
     "unexclude": "Un-exclude",

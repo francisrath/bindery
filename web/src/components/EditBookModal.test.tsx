@@ -19,6 +19,11 @@ vi.mock('react-i18next', () => ({
 vi.mock('../api/client', () => ({
   api: {
     updateBook: vi.fn(),
+    listSeries: vi.fn(),
+    listAuthorSeries: vi.fn(),
+    createSeries: vi.fn(),
+    linkBookToSeries: vi.fn(),
+    removeBookFromSeries: vi.fn(),
   },
 }))
 
@@ -43,6 +48,8 @@ describe('EditBookModal (#1237, #1446)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(api.updateBook).mockResolvedValue({ ...BOOK, title: 'Changed' } as never)
+    vi.mocked(api.listSeries).mockResolvedValue([])
+    vi.mocked(api.listAuthorSeries).mockResolvedValue([])
   })
 
   it('sends only the fields the user changed', async () => {
@@ -86,5 +93,86 @@ describe('EditBookModal (#1237, #1446)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Unlock all fields' }))
     await waitFor(() => expect(api.updateBook).toHaveBeenCalled())
     expect(vi.mocked(api.updateBook).mock.calls[0]).toEqual([7, { lockedFields: [] }])
+  })
+
+  describe('series (#2554)', () => {
+    const IN_SERIES = { ...BOOK, authorId: 3 } as unknown as Book
+    const A = { id: 1, title: 'Fjellserien', books: [{ seriesId: 1, bookId: 7, positionInSeries: '1', primarySeries: true }] }
+    const B = { id: 2, title: 'Havserien', books: [] }
+    const onSeriesSaved = vi.fn()
+
+    beforeEach(() => {
+      vi.mocked(api.listSeries).mockResolvedValue([A, B] as never)
+      vi.mocked(api.listAuthorSeries).mockResolvedValue([A] as never)
+      vi.mocked(api.linkBookToSeries).mockResolvedValue({} as never)
+      vi.mocked(api.removeBookFromSeries).mockResolvedValue(undefined as never)
+      vi.mocked(api.createSeries).mockResolvedValue({ id: 9, title: 'Ny serie' } as never)
+    })
+
+    const open = async () => {
+      render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} onSeriesSaved={onSeriesSaved} />)
+      const select = await screen.findByLabelText('Series') as HTMLSelectElement
+      await waitFor(() => expect(select.value).toBe('1'))
+      return select
+    }
+    const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    it('shows the primary series and position, and saving untouched makes no series call', async () => {
+      await open()
+      expect((screen.getByLabelText('Position') as HTMLInputElement).value).toBe('1')
+      save()
+      await waitFor(() => expect(onClose).toHaveBeenCalled())
+      expect(api.linkBookToSeries).not.toHaveBeenCalled()
+      expect(api.removeBookFromSeries).not.toHaveBeenCalled()
+      expect(onSeriesSaved).not.toHaveBeenCalled()
+    })
+
+    it('moves the book: files it under the new series and takes it out of the old one', async () => {
+      const select = await open()
+      fireEvent.change(select, { target: { value: '2' } })
+      fireEvent.change(screen.getByLabelText('Position'), { target: { value: ' 3 ' } })
+      save()
+      await waitFor(() => expect(api.removeBookFromSeries).toHaveBeenCalledWith(1, 7))
+      expect(api.linkBookToSeries).toHaveBeenCalledWith(2, { bookId: 7, positionInSeries: '3', primarySeries: true })
+      expect(api.updateBook).not.toHaveBeenCalled()
+      expect(onSeriesSaved).toHaveBeenCalled()
+    })
+
+    it('changes only the position in the same series', async () => {
+      await open()
+      fireEvent.change(screen.getByLabelText('Position'), { target: { value: '2' } })
+      save()
+      await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(1, { bookId: 7, positionInSeries: '2', primarySeries: true }))
+      expect(api.removeBookFromSeries).not.toHaveBeenCalled()
+    })
+
+    it('creates a new series and files the book there', async () => {
+      const select = await open()
+      fireEvent.change(select, { target: { value: 'new' } })
+      expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+      fireEvent.change(screen.getByLabelText('New series name'), { target: { value: ' Ny serie ' } })
+      save()
+      await waitFor(() => expect(api.createSeries).toHaveBeenCalledWith({ title: 'Ny serie' }))
+      expect(api.linkBookToSeries).toHaveBeenCalledWith(9, { bookId: 7, positionInSeries: '1', primarySeries: true })
+      expect(api.removeBookFromSeries).toHaveBeenCalledWith(1, 7)
+    })
+
+    it('takes the book out of its series when cleared', async () => {
+      const select = await open()
+      fireEvent.change(select, { target: { value: '' } })
+      expect(screen.getByLabelText('Position')).toBeDisabled()
+      save()
+      await waitFor(() => expect(api.removeBookFromSeries).toHaveBeenCalledWith(1, 7))
+      expect(api.linkBookToSeries).not.toHaveBeenCalled()
+    })
+
+    it('hides the series row when the series cannot be loaded, and other edits still save', async () => {
+      vi.mocked(api.listSeries).mockRejectedValue(new Error('down'))
+      render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} />)
+      fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Changed' } })
+      save()
+      await waitFor(() => expect(api.updateBook).toHaveBeenCalledWith(7, { title: 'Changed' }))
+      expect(screen.queryByLabelText('Series')).toBeNull()
+    })
   })
 })

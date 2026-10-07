@@ -1457,6 +1457,7 @@ function BookDetailPageInner() {
           book={book}
           onClose={() => setShowEdit(false)}
           onSaved={updated => setBook(updated)}
+          onSeriesSaved={() => setSeriesNonce(n => n + 1)}
         />
       )}
       {showRebind && (
