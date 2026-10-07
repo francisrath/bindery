@@ -95,6 +95,34 @@ export interface Series {
   hardcoverLink?: SeriesHardcoverLink
 }
 
+// What a series merge does (#2554): POST /series/{id}/merge returns it, as a
+// preview with dryRun or as what was applied.
+export interface SeriesMergeBook {
+  bookId: number
+  title: string
+  position: string
+  primary: boolean
+}
+
+export interface SeriesMergeSource {
+  id: number
+  title: string
+  foreignSeriesId: string
+  moved: SeriesMergeBook[]
+  kept: SeriesMergeBook[]
+  conflicts: Array<{ bookId: number; title: string; targetPosition: string; sourcePosition: string }>
+}
+
+export interface SeriesMergePlan {
+  targetId: number
+  title: string
+  aliases: string[]
+  sources: SeriesMergeSource[]
+  hardcoverLinkFrom: number
+  genreOverrideFrom: number
+  monitored: boolean
+}
+
 export const seriesApi = {
   // Series
   listSeries: () => request<Series[]>('/series'),
@@ -103,6 +131,8 @@ export const seriesApi = {
   updateSeries: (id: number, data: { title: string }) => request<Series>(`/series/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   monitorSeries: (id: number, monitored: boolean) => request<{ monitored: boolean }>(`/series/${id}`, { method: 'PATCH', body: JSON.stringify({ monitored }) }),
   deleteSeries: (id: number) => request<void>(`/series/${id}`, { method: 'DELETE' }),
+  mergeSeries: (id: number, data: { sourceIds: number[]; title?: string; dryRun?: boolean }) =>
+    request<SeriesMergePlan>(`/series/${id}/merge`, { method: 'POST', body: JSON.stringify(data) }),
   linkBookToSeries: (id: number, data: { bookId: number; positionInSeries: string; primarySeries: boolean }) =>
     request<Series>(`/series/${id}/books`, { method: 'POST', body: JSON.stringify(data) }),
   // #2525: a book can sit in several series, and only one of them names its

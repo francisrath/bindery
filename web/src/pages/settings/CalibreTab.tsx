@@ -12,6 +12,8 @@ import Toggle from './Toggle'
 import SaveButton from './SaveButton'
 import CalibreDeliveryPanel from './CalibreDeliveryPanel'
 import { useSaveResult } from './useSaveResult'
+import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
+import { useModal } from '../../components/useModal'
 
 export default function CalibreTab() {
   const [settings, setSettings] = useState<Record<string, string>>({})
@@ -194,7 +196,7 @@ function CalibreSection({
       const p = await api.calibreSyncStart()
       setSyncProgress(p)
     } catch (err) {
-      setSyncError(err instanceof Error ? err.message : 'Push failed to start')
+      setSyncError(err instanceof Error ? err.message : t('settings.calibre.pushAll.startFailed'))
     }
   }
 
@@ -292,12 +294,12 @@ function CalibreSection({
             Directory containing <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">metadata.db</code>.
             Used by both the write integration and library import.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={settings['calibre.library_path'] ?? ''}
               onChange={e => setSettings(s => ({ ...s, 'calibre.library_path': e.target.value }))}
               placeholder="/data/calibre-library"
-              className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+              className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
             />
             <SaveButton
               result={libraryPathSaveResult}
@@ -340,12 +342,12 @@ function CalibreSection({
           <div>
             <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Binary path (optional)</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Leave blank to resolve <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">calibredb</code> on PATH. Set explicitly when running in a container that bundles Calibre at a pinned location.</p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 value={settings['calibre.binary_path'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.binary_path': e.target.value }))}
                 placeholder="/usr/bin/calibredb"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={binaryPathSaveResult}
@@ -392,12 +394,13 @@ function CalibreSection({
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               Base URL of the Bindery Bridge plugin&rsquo;s HTTP server running inside Calibre.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
+                {...urlInputAttrs}
                 value={settings['calibre.plugin_url'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.plugin_url': e.target.value }))}
                 placeholder="http://calibre.default.svc:8099"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={pluginUrlSaveResult}
@@ -419,13 +422,14 @@ function CalibreSection({
                 ? t('settings.calibre.transport.apiKeyPullHelp')
                 : <>Bearer token configured in the plugin&rsquo;s Calibre Preferences dialog.</>}
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
+                {...secretInputAttrs}
                 type="password"
                 value={settings['calibre.plugin_api_key'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.plugin_api_key': e.target.value }))}
                 placeholder="plugin api key"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={pluginKeySaveResult}
@@ -450,12 +454,12 @@ function CalibreSection({
               a share address is more reliable than a mapped drive letter, which the running Calibre may not see.
               Leave empty when both containers see the library at the same path.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 value={settings['calibre.push_path_remap'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.push_path_remap': e.target.value }))}
                 placeholder="/books:/mnt/user/media/books"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={pushRemapSaveResult}
@@ -505,21 +509,21 @@ function CalibreSection({
           <div className="pt-3 border-t border-slate-200 dark:border-zinc-800">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">Push all to Calibre</label>
+                <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.calibre.pushAll.label')}</label>
                 <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
-                  Queue every imported book for the Calibre Bridge plugin. Books already delivered are not sent again, and queued books go out as soon as Calibre is reachable.
+                  {t('settings.calibre.pushAll.description')}
                 </p>
                 {bridgeReachable === false && (
-                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Bridge not reachable right now. Books you push will wait in the queue until it is.</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">{t('settings.calibre.pushAll.bridgeUnreachable')}</p>
                 )}
               </div>
               <button
                 onClick={startSync}
                 disabled={!!syncProgress?.queueing || (!pulling && !pluginURL)}
                 className="px-4 py-2 bg-sky-600 hover:bg-sky-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
-                title={!pulling && !pluginURL ? 'Set the plugin URL first' : ''}
+                title={!pulling && !pluginURL ? t('settings.calibre.pushAll.needPluginUrl') : ''}
               >
-                {syncProgress?.queueing ? 'Queueing…' : 'Push all to Calibre'}
+                {syncProgress?.queueing ? t('settings.calibre.pushAll.queueing') : t('settings.calibre.pushAll.label')}
               </button>
             </div>
           </div>
@@ -647,12 +651,12 @@ function CalibreSection({
         <div>
           <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Ingest folder path</label>
           <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Mount the same path into both containers. CWA's docs use <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">/cwa-book-ingest</code>.</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={settings['cwa.ingest_path'] ?? ''}
               onChange={e => setSettings(s => ({ ...s, 'cwa.ingest_path': e.target.value }))}
               placeholder="/cwa-book-ingest"
-              className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+              className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
             />
             <SaveButton
               result={cwaPathSaveResult}
@@ -786,8 +790,8 @@ function CalibreRunsList({
 // CalibreRollbackModal shows the rollback preview, lets the admin confirm,
 // and surfaces the resulting per-action list. Apply uses amber styling
 // rather than red because rollback restores Bindery state — it does not
-// delete on-disk files.
-function CalibreRollbackModal({
+// delete on-disk files. Exported for its own test.
+export function CalibreRollbackModal({
   run,
   onClose,
   onApplied,
@@ -827,25 +831,30 @@ function CalibreRollbackModal({
   }
 
   const display = applied ?? preview
+  // An older server sends actions: null for a run with nothing to undo.
+  const actions = display?.actions ?? []
+  const nothingToRollBack = !!preview && !applied && (preview.actions ?? []).length === 0
   const closable = !applying
+  const { titleId, panelProps } = useModal({ onClose, canClose: closable })
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-2xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-zinc-100">
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div {...panelProps} className="w-full max-w-2xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl modal-max-h flex flex-col">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
+          <h3 id={titleId} className="text-base font-semibold text-slate-800 dark:text-zinc-100">
             {t('settings.calibre.runs.modalTitle', { runId: run.id })}
           </h3>
           <button
             onClick={closable ? onClose : undefined}
             disabled={!closable}
             className="text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-40"
+            aria-label={t('common.close')}
             title={closable ? '' : t('settings.calibre.runs.applying')}
           >
             ✕
           </button>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           <p className="text-xs text-slate-600 dark:text-zinc-400">{t('settings.calibre.runs.modalIntro')}</p>
 
           {previewLoading && (
@@ -889,13 +898,17 @@ function CalibreRollbackModal({
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-zinc-300 mb-1">
                   {t('settings.calibre.runs.actionsHeading')}
                 </p>
-                {display.actions.length === 0 ? (
+                {nothingToRollBack ? (
+                  <p className="text-xs text-slate-500 dark:text-zinc-500" data-testid="calibre-rollback-nothing">
+                    {display.dryRun ? t('settings.calibre.runs.nothingToRollBackDryRun') : t('settings.calibre.runs.nothingToRollBack')}
+                  </p>
+                ) : actions.length === 0 ? (
                   <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.runs.noActions')}</p>
                 ) : (
                   <div className="max-h-64 overflow-y-auto rounded border border-slate-200 dark:border-zinc-800">
                     <table className="w-full text-xs">
                       <tbody>
-                        {display.actions.map(action => (
+                        {actions.map(action => (
                           <tr
                             key={`${action.entityType}-${action.externalId}-${action.localId}-${action.action}`}
                             className="border-t border-slate-200 dark:border-zinc-800"
@@ -931,7 +944,7 @@ function CalibreRollbackModal({
             </>
           )}
         </div>
-        <div className="px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end gap-2">
+        <div className="shrink-0 px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end gap-2">
           <button
             onClick={closable ? onClose : undefined}
             disabled={!closable}
@@ -942,7 +955,7 @@ function CalibreRollbackModal({
           {!applied && (
             <button
               onClick={apply}
-              disabled={applying || previewLoading || !!error}
+              disabled={applying || previewLoading || !!error || nothingToRollBack}
               className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 rounded text-sm font-medium text-white disabled:opacity-50"
             >
               {applying ? t('settings.calibre.runs.applying') : t('settings.calibre.runs.applyRollback')}
@@ -973,27 +986,31 @@ export function CalibreSyncModal({
   const processed = stats?.processed ?? 0
   const pct = total > 0 ? Math.min(100, (processed / total) * 100) : 0
   const running = !!progress?.running
+  const { t } = useTranslation()
+  // Closing only hides the progress; the push carries on in the background.
+  const { titleId, panelProps } = useModal({ onClose })
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-zinc-100">Push all to Calibre</h3>
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div {...panelProps} className="w-full max-w-xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl modal-max-h flex flex-col">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
+          <h3 id={titleId} className="text-base font-semibold text-slate-800 dark:text-zinc-100">{t('settings.calibre.pushAll.label')}</h3>
           <button
             onClick={onClose}
             className="text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-40"
-            title={running ? 'Close. Queued books keep going out in the background.' : 'Close'}
+            aria-label={t('settings.calibre.pushAll.close')}
+            title={running ? t('settings.calibre.pushAll.closeRunningHint') : t('settings.calibre.pushAll.close')}
           >
             ✕
           </button>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           {error && (
             <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
           )}
           {progress && (
             <>
               <div className="flex justify-between text-xs text-slate-600 dark:text-zinc-400">
-                <span>{progress.message || (running ? 'Working…' : 'Idle')}</span>
+                <span>{progress.message || (running ? t('settings.calibre.pushAll.working') : t('settings.calibre.pushAll.idle'))}</span>
                 <span>{processed} / {total || '?'}</span>
               </div>
               <div className="h-1.5 bg-slate-200 dark:bg-zinc-800 rounded overflow-hidden">
@@ -1001,19 +1018,19 @@ export function CalibreSyncModal({
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">Pushed</div>
+                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.pushed')}</div>
                   <div className="font-semibold text-emerald-600 dark:text-emerald-400">{stats?.pushed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">Already in Calibre</div>
+                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.alreadyInCalibre')}</div>
                   <div className="font-semibold text-slate-700 dark:text-zinc-300">{stats?.alreadyInCalibre ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">Failed</div>
+                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.failed')}</div>
                   <div className="font-semibold text-red-600 dark:text-red-400">{stats?.failed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">Skipped</div>
+                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.skipped')}</div>
                   <div
                     data-testid="calibre-sync-skipped"
                     className="font-semibold text-amber-600 dark:text-amber-400"
@@ -1023,12 +1040,16 @@ export function CalibreSyncModal({
                 </div>
               </div>
               {!running && progress.error && (
-                <p className="text-xs text-red-600 dark:text-red-400">Sync failed: {progress.error}</p>
+                <p className="text-xs text-red-600 dark:text-red-400">{t('settings.calibre.pushAll.syncFailed', { error: progress.error })}</p>
               )}
               {!running && progress.finishedAt && !progress.error && (
                 <p className="text-xs text-emerald-600 dark:text-emerald-400">
-                  Done. Pushed {stats?.pushed ?? 0}, already in Calibre {stats?.alreadyInCalibre ?? 0}, failed{' '}
-                  {stats?.failed ?? 0}, skipped {stats?.skipped ?? 0}.
+                  {t('settings.calibre.pushAll.done', {
+                    pushed: stats?.pushed ?? 0,
+                    already: stats?.alreadyInCalibre ?? 0,
+                    failed: stats?.failed ?? 0,
+                    skipped: stats?.skipped ?? 0,
+                  })}
                 </p>
               )}
               {progress.errors && progress.errors.length > 0 && (
@@ -1036,8 +1057,8 @@ export function CalibreSyncModal({
                   <table className="w-full text-xs">
                     <thead className="bg-slate-100 dark:bg-zinc-800 sticky top-0">
                       <tr>
-                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">Title</th>
-                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">Reason</th>
+                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">{t('settings.calibre.pushAll.errorTitle')}</th>
+                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">{t('settings.calibre.pushAll.errorReason')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1059,8 +1080,8 @@ export function CalibreSyncModal({
                   <table className="w-full text-xs">
                     <thead className="bg-slate-100 dark:bg-zinc-800 sticky top-0">
                       <tr>
-                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">Not pushed</th>
-                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">Why</th>
+                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">{t('settings.calibre.pushAll.skipTitle')}</th>
+                        <th className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">{t('settings.calibre.pushAll.skipReason')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1077,7 +1098,7 @@ export function CalibreSyncModal({
             </>
           )}
         </div>
-        <div className="px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end">
+        <div className="shrink-0 px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end">
           {/* Closable while running: after the queueing, the run waits on
               Calibre, which can take as long as Calibre stays closed. The
               delivery queue carries on without the modal. */}
@@ -1085,7 +1106,7 @@ export function CalibreSyncModal({
             onClick={onClose}
             className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-sm font-medium disabled:opacity-50 text-white"
           >
-            {running ? 'Close and keep going' : 'Close'}
+            {running ? t('settings.calibre.pushAll.closeAndKeepGoing') : t('settings.calibre.pushAll.close')}
           </button>
         </div>
       </div>

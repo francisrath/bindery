@@ -67,7 +67,7 @@ export default function SearchPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 py-8">
       <h2 className="text-xl font-bold mb-6">{t('search.heading')}</h2>
 
       <form
@@ -75,6 +75,7 @@ export default function SearchPage() {
         className="flex gap-2 mb-6"
       >
         <input
+          enterKeyHint="search"
           ref={inputRef}
           value={query}
           onChange={e => setQuery(e.target.value)}

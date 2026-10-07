@@ -30,6 +30,10 @@ const HARDCOVER_SYNC_INTERVAL_PRESETS = ['1h', '3h', '6h', '12h', '24h', '48h', 
 // option appended, the same as the Hardcover picker.
 const DISCOVERY_INTERVAL_PRESETS = ['off', '24h', '168h', '720h']
 
+// How long the General tab waits for the auth config before it renders
+// without the Security section (see the fetch in GeneralTab).
+const AUTH_CONFIG_WAIT_MS = 2500
+
 export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
   const { t } = useTranslation()
   const { isAdmin } = useAuth()
@@ -68,16 +72,40 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
   const [audiobookTemplateResult, audiobookTemplateSave] = useSaveResult()
   const [audiobookFileResult, audiobookFileSave] = useSaveResult()
 
+  // The Security section's config is fetched here, alongside the settings,
+  // and the tab waits for both. Security used to fetch its own config only
+  // once it mounted, which was after the settings arrived, so it popped in
+  // between Appearance and File Naming a round trip later and pushed every
+  // section below it down by its own height. Since phones got the tab select
+  // (#3065) that content sits on screen, and the jump was most of the page's
+  // layout shift (CLS 0.05 to 0.52 on a throttled Pixel 7).
+  //
+  // The wait for the auth config is capped: a request that hangs must not
+  // keep the whole tab on Loading. Past AUTH_CONFIG_WAIT_MS the tab renders
+  // without Security, which then appears whenever the config arrives. That
+  // late shift is the rare case, traded for a tab that always opens.
+  const [authCfg, setAuthCfg] = useState<AuthConfig | null>(null)
+
   useEffect(() => {
-    api.listSettings()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const settingsLoaded = api.listSettings()
       .then(list => {
         const map: Record<string, string> = {}
         list.forEach(s => { map[s.key] = s.value })
         setSettings(map)
       })
       .catch(console.error)
-      .finally(() => setLoading(false))
+    const authCfgLoaded = api.authConfig().then(setAuthCfg).catch(console.error)
+    const authCfgCapped = Promise.race([
+      authCfgLoaded,
+      new Promise<void>(resolve => { timer = setTimeout(resolve, AUTH_CONFIG_WAIT_MS) }),
+    ])
+    Promise.all([settingsLoaded, authCfgCapped]).finally(() => {
+      clearTimeout(timer)
+      setLoading(false)
+    })
     api.getStorage().then(setStorage).catch(console.error)
+    return () => clearTimeout(timer)
   }, [])
 
   // The last scan summary names the library roots and the absolute path of
@@ -241,7 +269,9 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
 
       {/* Security — visible to all authenticated users for their own password
           change; admin-only sub-controls are gated inside the component. */}
-      <SecuritySection />
+      {/* Mounted with its config, so a config that arrives after the cap
+          still shows the section rather than an empty one. */}
+      {authCfg && <SecuritySection initialCfg={authCfg} />}
 
       {isAdmin && (<>
       {/* Naming */}
@@ -473,13 +503,13 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {t('settings.general.audiobookFileTemplateHint', 'Leave empty to keep the download’s original file layout. Set a template to rename every audiobook track in playback order; it must include {Part}. A single-file audiobook is renamed too, as part 1, unless {Part} sits in a group with its own text, such as {Title}{ - Pt. Part:3}.{ext}, which is left out when there is only one file.')}
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 type="text"
                 value={settings['naming.audiobook_file_template'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'naming.audiobook_file_template': e.target.value }))}
                 placeholder="{Title} - Part {Part:3}.{ext}"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm font-mono focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={audiobookFileResult}
@@ -499,11 +529,11 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           <div>
             <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.preferredLanguage')}</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{t('settings.general.preferredLanguageHint')}</p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <select
                 value={settings['search.preferredLanguage'] ?? 'en'}
                 onChange={e => setSettings(s => ({ ...s, 'search.preferredLanguage': e.target.value }))}
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               >
                 <option value="any">{t('settings.general.preferredLanguageAny')}</option>
                 <option value="en">{t('settings.general.preferredLanguageEn')}</option>
@@ -866,11 +896,11 @@ function StorageHealthBadge({ status, loading }: { status: StorageDirStatus | un
   )
 }
 
-function SecuritySection() {
+function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const { status, refresh, isAdmin } = useAuth()
-  const [cfg, setCfg] = useState<AuthConfig | null>(null)
+  const [cfg, setCfg] = useState<AuthConfig | null>(initialCfg)
   const [showKey, setShowKey] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
   const [rotatingSecret, setRotatingSecret] = useState(false)
@@ -881,11 +911,11 @@ function SecuritySection() {
   const [modeWarning, setModeWarning] = useState('')
   const apiKeyClipboard = useClipboardCopy()
 
+  // GeneralTab loads the first config with the settings, so this only
+  // refetches after a change here.
   const loadCfg = () => {
     api.authConfig().then(setCfg).catch(console.error)
   }
-
-  useEffect(() => { loadCfg() }, [])
 
   const regenerate = async () => {
     if (!await confirm({

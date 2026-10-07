@@ -8,7 +8,7 @@ This page is the user-facing companion to the deployment notes in [`docs/DEPLOYM
 
 When enhanced Hardcover series data is enabled, Bindery can:
 
-- create, rename, shortlist, and delete local series from the Series page
+- create, rename, shortlist, delete and merge local series from the Series page
 - add existing Bindery books to a local series with a position number
 - search Hardcover for the matching catalog series
 - link or unlink a local series to a Hardcover series
@@ -90,6 +90,20 @@ Catalog entries whose titles name a box set rather than a book ("box set", "boxe
 The fill action may create new authors and books from Hardcover metadata when the catalog entry is not already in Bindery. Those books are linked back to the series with the catalog position.
 
 The format dropdown beside **add all** sets the media type of every book the fill creates. Pick **Ebook** and the created books are ebook only, even when Hardcover lists an audiobook edition of the same work, so only one search is queued per book. Pick **Audiobook** for audio only. Pick **Both** if you want Bindery to look for both formats. Books that are already in the series keep whatever media type they were added with, so change those on the book itself.
+
+## Merging Series
+
+One series can end up as several rows, when a provider names it in more than one way or a provider fix renames it. **Merge…** on the series you want to keep opens a dialog to pick the others and fold them into it:
+
+- Their books join it. A book already in it keeps its position there; a source fills a position it left empty.
+- The series becomes a book's primary series where a merged one was.
+- It keeps its own Hardcover link and genre override, and takes a merged series' only when it has none. It is monitored when any of them was.
+- Optionally, rename it in the same step, when none of the names was right.
+- The merged series are deleted. Their provider ids stay as aliases of the one you kept, so a later refresh that still reports an old id files the book there instead of recreating the old series.
+
+The dialog previews every change, including books whose positions differ, before anything is applied. Merging is for admins.
+
+Undoing an import (ABS, Calibre) made before a merge does not take the merged books back out of the series you kept.
 
 ## Known Behavior
 

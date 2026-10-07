@@ -1019,6 +1019,13 @@ func (r *BookRepo) PathOwnedByOtherBook(ctx context.Context, path string, exclud
 	return r.files.PathOwnedByOtherBook(ctx, path, excludeBookID)
 }
 
+// PathOwnedByLiveOtherBook is PathOwnedByOtherBook ignoring a row left by a
+// deleted book. For pre-checks of a write that takes such a row over, never
+// for a delete guard. See BookFileRepo.PathOwnedByLiveOtherBook.
+func (r *BookRepo) PathOwnedByLiveOtherBook(ctx context.Context, path string, excludeBookID int64) (bool, error) {
+	return r.files.PathOwnedByLiveOtherBook(ctx, path, excludeBookID)
+}
+
 // ListAllBookFilePaths returns every path in book_files.
 // Used by ScanLibrary to build the set of already-tracked files efficiently.
 func (r *BookRepo) ListAllBookFilePaths(ctx context.Context) ([]string, error) {
@@ -1536,6 +1543,30 @@ func (r *BookRepo) SetExcluded(ctx context.Context, id int64, excluded bool) err
 	}
 	_, err := r.db.ExecContext(ctx, "UPDATE books SET excluded=?, updated_at=? WHERE id=?", v, timeValueArg(time.Now().UTC()), id)
 	return err
+}
+
+// ExcludeIfNoFiles sets the excluded flag only while the book has no file:
+// no book_files row and no legacy file_path, ebook_file_path or
+// audiobook_file_path. It reports whether the row was excluded. The check
+// and the write are one UPDATE, so an import that lands between a caller's
+// read and this call can never be excluded on a stale "no files" (#2999).
+// An already excluded book with no files reports true.
+func (r *BookRepo) ExcludeIfNoFiles(ctx context.Context, id int64) (bool, error) {
+	res, err := r.db.ExecContext(ctx, `UPDATE books SET excluded = 1, updated_at = ?
+		WHERE id = ?
+		  AND COALESCE(file_path, '') = ''
+		  AND COALESCE(ebook_file_path, '') = ''
+		  AND COALESCE(audiobook_file_path, '') = ''
+		  AND NOT EXISTS (SELECT 1 FROM book_files WHERE book_id = books.id)`,
+		timeValueArg(time.Now().UTC()), id)
+	if err != nil {
+		return false, fmt.Errorf("exclude book %d if no files: %w", id, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
 }
 
 func (r *BookRepo) Delete(ctx context.Context, id int64) error {

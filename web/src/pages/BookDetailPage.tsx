@@ -828,7 +828,7 @@ function BookDetailPageInner() {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">{book.title}</h2>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white [overflow-wrap:anywhere]">{book.title}</h2>
               {book.author?.authorName && (
                 <Link
                   to={`/author/${book.authorId}`}
@@ -1115,7 +1115,7 @@ function BookDetailPageInner() {
                             className="px-3 py-2 flex items-center gap-2 min-w-0 border-t first:border-t-0 border-slate-100 dark:border-zinc-900"
                           >
                             <code
-                              className="font-mono text-xs text-slate-500 dark:text-zinc-500 truncate"
+                              className="min-w-0 font-mono text-xs text-slate-500 dark:text-zinc-500 break-all sm:truncate"
                               title={row.path}
                             >
                               {row.path}
@@ -1352,6 +1352,9 @@ function BookDetailPageInner() {
                 </label>
                 <input
                   id="book-asin"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
                   value={asinDraft}
                   onChange={e => setAsinDraft(e.target.value.toUpperCase())}
                   placeholder="B08GB58KD5"
@@ -1372,10 +1375,19 @@ function BookDetailPageInner() {
                 disabled={!book.asin || enriching}
                 className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-sm font-medium disabled:opacity-40"
                 title={book.asin ? t('bookDetail.enrichHint') : t('bookDetail.enrichHintNoAsin')}
+                aria-describedby={book.asin ? undefined : 'book-enrich-no-asin'}
               >
                 {enriching ? t('bookDetail.enriching') : t('bookDetail.enrich')}
               </button>
             </div>
+            {/* Why Enrich is disabled. The title tooltip says it with a mouse;
+                a disabled button gets no hover or tap on a touch screen, so
+                there the reason is written out under the row. */}
+            {!book.asin && (
+              <p id="book-enrich-no-asin" className="hidden pointer-coarse:block mt-1 text-xs text-fg-muted">
+                {t('bookDetail.enrichHintNoAsin')}
+              </p>
+            )}
           </div>
         </Section>
       )}

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -43,13 +44,94 @@ const notifierEventHealth = "health"
 
 // HealthStore keeps non-persistent download-client health diagnostics.
 type HealthStore struct {
-	mu    sync.RWMutex
-	byID  map[int64]models.DownloadClientHealth
-	notif eventNotifier
+	mu   sync.RWMutex
+	byID map[int64]models.DownloadClientHealth
+	// advisory holds problems found outside the path probe, by source: the
+	// importer pausing automatic blocklisting (AdvisoryBlocklist) and NZBGet
+	// missing UnRAR (AdvisoryUnpackers), both #3024. They live apart from
+	// byID because the 15 minute probe rewrites byID wholesale and would
+	// otherwise erase them.
+	advisory map[int64]map[string]models.DownloadClientHealth
+	notif    eventNotifier
+
+	// unpackers caches what NZBGet's sysinfo said (see NZBGetUnpackers).
+	unpackersMu sync.Mutex
+	unpackers   map[int64]*unpackerEntry
+	// sysinfo and now are test seams; nil means the real NZBGet call and
+	// time.Now.
+	sysinfo func(ctx context.Context, client *models.DownloadClient) ([]string, error)
+	now     func() time.Time
 }
 
+// Advisory sources.
+const (
+	AdvisoryBlocklist = "blocklist"
+	AdvisoryUnpackers = "unpackers"
+)
+
 func NewHealthStore() *HealthStore {
-	return &HealthStore{byID: make(map[int64]models.DownloadClientHealth)}
+	return &HealthStore{
+		byID:      make(map[int64]models.DownloadClientHealth),
+		advisory:  make(map[int64]map[string]models.DownloadClientHealth),
+		unpackers: make(map[int64]*unpackerEntry),
+	}
+}
+
+// SetAdvisory records a problem for the client from one source. It is shown
+// in place of a passing path check, or after a failing one, until
+// ClearAdvisory. The first advisory from a source publishes the health
+// event, like an entry into HealthError does in Set.
+func (s *HealthStore) SetAdvisory(id int64, source string, health models.DownloadClientHealth) {
+	if s == nil || id == 0 {
+		return
+	}
+	s.mu.Lock()
+	bySource := s.advisory[id]
+	if bySource == nil {
+		bySource = make(map[string]models.DownloadClientHealth)
+		s.advisory[id] = bySource
+	}
+	_, had := bySource[source]
+	bySource[source] = health
+	notif := s.notif
+	s.mu.Unlock()
+	if had || notif == nil {
+		return
+	}
+	notif.Send(context.Background(), notifierEventHealth, map[string]interface{}{
+		"clientId": id,
+		"status":   health.Status,
+		"message":  health.Message,
+	})
+}
+
+// ClearAdvisory removes one source's advisory, if any.
+func (s *HealthStore) ClearAdvisory(id int64, source string) {
+	if s == nil || id == 0 {
+		return
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if bySource := s.advisory[id]; bySource != nil {
+		delete(bySource, source)
+		if len(bySource) == 0 {
+			delete(s.advisory, id)
+		}
+	}
+}
+
+// ForgetClient drops every advisory and the cached unpacker check for a
+// client that was disabled or deleted.
+func (s *HealthStore) ForgetClient(id int64) {
+	if s == nil || id == 0 {
+		return
+	}
+	s.mu.Lock()
+	delete(s.advisory, id)
+	s.mu.Unlock()
+	s.unpackersMu.Lock()
+	delete(s.unpackers, id)
+	s.unpackersMu.Unlock()
 }
 
 // WithNotifier attaches a webhook event notifier so transitions into
@@ -116,10 +198,26 @@ func (s *HealthStore) Get(id int64) *models.DownloadClientHealth {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	health, ok := s.byID[id]
-	if !ok {
-		return nil
+	bySource := s.advisory[id]
+	if len(bySource) == 0 {
+		if !ok {
+			return nil
+		}
+		return &health
 	}
-	return &health
+	sources := make([]string, 0, len(bySource))
+	for src := range bySource {
+		sources = append(sources, src)
+	}
+	sort.Strings(sources)
+	msgs := make([]string, 0, len(sources)+1)
+	if ok && health.Status == HealthError {
+		msgs = append(msgs, strings.TrimRight(health.Message, ". "))
+	}
+	for _, src := range sources {
+		msgs = append(msgs, strings.TrimRight(bySource[src].Message, ". "))
+	}
+	return &models.DownloadClientHealth{Status: HealthError, Message: strings.Join(msgs, ". ")}
 }
 
 func (s *HealthStore) Attach(client *models.DownloadClient) {
@@ -197,7 +295,12 @@ func CheckDownloadClientHealth(ctx context.Context, client *models.DownloadClien
 	if client.Type == "qbittorrent" {
 		return checkQbittorrentCategoryPath(ctx, client, downloadDir, audiobookDownloadDir, globalRemap)
 	}
+	return checkCompletedPath(ctx, client, downloadDir, audiobookDownloadDir, globalRemap)
+}
 
+// checkCompletedPath is the shared visibility check for every client type
+// but qBittorrent.
+func checkCompletedPath(ctx context.Context, client *models.DownloadClient, downloadDir, audiobookDownloadDir, globalRemap string) models.DownloadClientHealth {
 	vis := CheckCompletedPathVisibility(ctx, client, downloadDir, audiobookDownloadDir, globalRemap)
 	switch vis.Status {
 	case PathVisible:

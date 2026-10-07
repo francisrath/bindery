@@ -424,10 +424,16 @@ been.
   French and English is allowed under an English profile. Region tags are
   ignored, so `en-US` and `en_GB` count as English, Bokmål and Nynorsk (`nb`,
   `nob`, `nn`, `nno`) count as Norwegian, and `cmn` and `yue` count as
-  Chinese. Every two letter ISO 639-1 code is recognised.
+  Chinese. Every two letter ISO 639-1 code is recognised, including the
+  withdrawn `iw`, `in` and `ji`, which count as Hebrew, Indonesian and
+  Yiddish.
 - **The release holds EPUBs in both allowed and disallowed languages**: the
   allowed ones are imported and the others are left out, the same way a
-  disallowed format inside a release is left out.
+  disallowed format inside a release is left out. An EPUB that declares no
+  language, or `und` or `mul`, is imported alongside them. Next to a
+  disallowed EPUB with nothing in an allowed language, though, it does not
+  save the release: it is most likely the same edition with its metadata
+  stripped, so the release is rejected as below.
 - **Every file is in a language the profile does not allow**: the release is
   treated as the wrong release. Nothing is placed, the Queue row is blocked
   with a message naming both languages ("file declares Swedish (swe), but the
@@ -466,7 +472,10 @@ per-row error detail. Tick rows for **Retry selected**, or use **Retry all
 failed** to cover every failed row at once. If a download client does not answer
 in time the page says so above the list, so a short Queue is never mistaken for
 lost downloads. History records every grab/import/failure and can
-blocklist a bad release in one click. Blocked releases are listed under
+blocklist a bad release in one click. A release NZBGet or SABnzbd fails as
+broken (missing articles, a failed repair or unpack, a corrupt archive) is
+blocklisted for you, with the client's verdict as the reason, so the next
+search picks a different one. Blocked releases are listed under
 Settings → Blocklist, where you can remove one to let it be grabbed again.
 
 Bindery does not chase format upgrades on its own: the sweep only searches
@@ -555,8 +564,9 @@ to the records. Things worth knowing before you judge the results:
   its id. Nothing is recorded or overwritten, and the book you imported for
   stays Wanted. If the file really belongs to the book you imported it for,
   open the book it is attached to and use **Fix match** to move it (#2937).
-  When the book holding the path has since been deleted, a download or manual
-  import takes it over automatically; adoption still refuses it.
+  When the book holding the path has since been deleted, a download, a manual
+  import, adopting the file on the Import page, or adding its author takes it
+  over automatically.
 - A folder holding both an ebook and an audiobook for the same book attaches
   both in a single scan — one file per format, so a second scan is not needed.
 - A PDF, TXT, RTF, CBZ or CBR sitting in a folder that also holds audio is treated as
@@ -621,7 +631,9 @@ How to work through the list:
   `Author - Title 1`, `Author - Title 2` and so on. Artist, Album Artist and
   Composer are all checked, so a narrator in Artist beside the author in Album
   Artist is not a conflict, and neither are credits such as Various Artists,
-  Unknown or Full Cast. Such files are also never attached by the scan to the
+  Unknown Author(s), Anonymous, Full Cast, or an audiobook publisher such as
+  Brilliance Audio, Recorded Books or Tantor Audio, however they are
+  punctuated. Such files are also never attached by the scan to the
   book their folder is named after. The row is named after the
   book the files name (the album tag, or the title in those track names), and
   suggestions come from the files' author first, scored on that title. Books
@@ -757,7 +769,11 @@ like everything else on that tab that names server paths.
   author's catalogue looks like. It is community data: expect occasional
   duplicates, language mix-ups, and box-set entries. The "primary" selector
   (Settings → Metadata Profiles → Library Defaults) offers OpenLibrary,
-  **DNB** (German National Library), and **Hardcover**.
+  **DNB** (German National Library), **Nasjonalbiblioteket** (National Library
+  of Norway: Norwegian books under their original titles, only used when chosen
+  as primary), and **Hardcover**. Switching the primary away from
+  Nasjonalbiblioteket switches it off entirely, so authors linked to it stop
+  syncing until you relink each one with "Link metadata" on their page.
 - **Hardcover** is an enricher by default — it improves search results,
   ratings, and series data, and powers import lists and the Discover wishlist
   row. **Without an API token (Settings → API Keys) Hardcover is silently
@@ -809,14 +825,29 @@ on the book page retries once on top of your edit; if the book keeps changing
 it asks you to try again. **Rebind** does the same when the book changes while
 the new record is being fetched.
 
+The same goes for the other writes that follow a provider lookup. When an
+Audiobookshelf import merges a book or an author with its upstream record and
+you edit it during the lookup, the merge is applied on top of your edit; if
+the row keeps changing, the merge waits for the next import. That protects the
+fields the merge does not take from upstream, such as monitoring, the narrator,
+the format and the quality, metadata and root folder profiles. The fields it
+does take from upstream follow the usual metadata conflict rules even when you
+just changed them: for a book the description, cover, original title, release
+date, language and ratings, and for an author the name, description, image,
+disambiguation and sort name. A **Refresh Metadata** on
+an author re-reads each book it matched by title just before updating it, so
+edits made while the refresh runs are kept. The scheduled author metadata
+refresh skips an author you edited while its profile was being fetched and
+picks it up on the next run.
+
 Which of those a given book actually came from is on the book page, under
 **Metadata source**. It names the provider, shows the identifier the book is
 bound to with a copy button, and lists any other provider ids the same book is
 known by. That is the thing to check before deciding a book needs re-binding,
 and the id is what to quote in a bug report. Hover or activate **Links** while
 confirming a book in the Add to library dialog or in the book header to open
-trustworthy upstream pages for OpenLibrary, Google Books, Hardcover, and DNB
-records.
+trustworthy upstream pages for OpenLibrary, Google Books, Hardcover, DNB and
+Nasjonalbiblioteket records.
 Calibre and Audiobookshelf ids remain visible only under **Metadata source**
 because they do not map to stable public pages.
 
@@ -969,6 +1000,8 @@ indeterminate row separately with its provider and the incomplete-evidence
 reason so it can be reviewed manually; these informational rows have no
 selection control and cannot be sent for removal.
 
+### Reviewing duplicate titles
+
 **Duplicate titles.** The same book often reaches the catalogue twice under
 slightly different titles — "The Martian" and "Martian", "Dune" and "Dune
 (Unabridged)". Open the author and choose **More → Review duplicates…** to see
@@ -984,6 +1017,48 @@ The Well of Ascension"). Nothing is changed automatically: the only action is
 without deleting anything. An excluded row stays in its group, struck through,
 with an **Include** button to undo it; a group leaves the report once fewer
 than two of its rows are still included.
+
+**The evidence on each row.** Under every title the review shows what Bindery
+already knows about that row, so you can decide without opening each book:
+whether it has files (ebook, audiobook, and the format, such as epub or m4b),
+its status (Wanted, In Library, Skipped), release year, language, ISBN, ASIN,
+and series with position. The rows are numbered, and above them the group
+lists what the rows agree or disagree on:
+
+| Marker | What it means |
+|--------|---------------|
+| Rows share an ISBN or ASIN | strong evidence they are one book |
+| Rows hold the same series position | strong evidence they are one book |
+| Rows hold different positions in one series | probably different books of that series |
+| Release years more than a year apart | possibly a different book, or an old and a new edition |
+| Different languages | possibly a translation rather than a duplicate |
+
+Languages are compared by meaning, so "en", "eng" and "English" agree, and
+series positions by number, so "1" and "1.0" agree. An unknown year, language
+(including "und" and "mul") or position never counts as a disagreement.
+
+**Which row to keep.** When exactly one row in a group has files, it is marked
+**Keep: has files**. If the rows also have no disagreement, and something
+positively ties each empty row to that one (a shared ISBN or ASIN, the same
+series position, or a title that is the same apart from punctuation, a leading
+article or an edition marker), the group offers **Exclude the empty rows in
+this group**, which shows you the rows it will exclude and asks you to confirm
+before it does anything. A title that only contains the other one, such as
+"Mistborn" and "Mistborn: The Hero of Ages", is not enough on its own. It is
+never offered when the rows disagree, or when more than one row has files,
+because then the files alone do not tell you which row is the real book. A row
+with files is never part of that suggestion, and if one of the empty rows is
+imported after you opened the page, Bindery skips it and tells you. You can
+still exclude a row with files with its own **Exclude** button, and Bindery
+asks first. Excluding never deletes a file.
+
+**Across the whole library.** On the **Books** page, **Review duplicates**
+opens a page listing the duplicate groups for every author, a page at a time,
+with the same evidence and the same buttons. It finds exactly the groups each
+author's own window would: titles are only compared with other titles by the
+same author. After you exclude rows, a group that no longer has two included
+rows drops off the list. On a shared install with per user libraries, each
+person sees only the authors they could open themselves.
 
 ## How author names are filed
 
@@ -1083,10 +1158,11 @@ Knowing the edges saves time:
   linked to another disk (`/books/Author -> /mnt/disk2/Author`), is written
   through on import and followed when serving a book, including when it
   points outside your library folders, because only you can create one.
-  Library Scan is the exception: it does not descend into any linked folder,
-  including a library folder that is itself a symlink, so books under a linked
-  author folder (or a linked library root) are not found by a scan. A bind
-  mount is not a link and scans normally. A linked *file* is
+  Library Scan follows a library or audiobook folder that is itself a symlink
+  and records the books under the path you configured, but it does not
+  descend into a linked folder *inside* it, so books under a linked author
+  folder are not found by a scan. A bind mount is not a link and scans
+  normally. A linked *file* is
   not a book file: imports place regular files only (a symlink inside a
   download never lands in your library, and a download folder that is itself
   a symlink is refused in every import mode, including the drop folder
