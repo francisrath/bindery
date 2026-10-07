@@ -154,8 +154,11 @@ describe('EditBookModal (#1237, #1446)', () => {
       fireEvent.change(select, { target: { value: 'new' } })
       expect(screen.getByLabelText('New series name')).toHaveFocus()
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
+      // Enter in the empty name field does nothing, as the disabled Save would.
+      fireEvent.keyDown(screen.getByLabelText('New series name'), { key: 'Enter' })
+      expect(api.createSeries).not.toHaveBeenCalled()
       fireEvent.change(screen.getByLabelText('New series name'), { target: { value: ' Ny serie ' } })
-      save()
+      fireEvent.keyDown(screen.getByLabelText('New series name'), { key: 'Enter' })
       await waitFor(() => expect(api.createSeries).toHaveBeenCalledWith({ title: 'Ny serie' }))
       expect(api.linkBookToSeries).toHaveBeenCalledWith(9, { bookId: 7, positionInSeries: '1', primarySeries: true })
       expect(api.removeBookFromSeries).toHaveBeenCalledWith(1, 7)

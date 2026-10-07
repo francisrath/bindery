@@ -69,6 +69,8 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
   const locked = book.lockedFields ?? []
   const { titleId, panelProps } = useModal({ onClose, canClose: !saving })
 
+  const canSave = !saving && title.trim() !== '' && !(seriesChoice === NEW_SERIES && !newSeriesName.trim())
+
   const save = async () => {
     const patch: Record<string, unknown> = {}
     if (title.trim() !== book.title) patch.title = title.trim()
@@ -231,7 +233,8 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
               <label className={labelCls} htmlFor="edit-book-new-series">
                 {t('bookDetail.edit.fieldNewSeries', 'New series name')}
               </label>
-              <input id="edit-book-new-series" type="text" value={newSeriesName} onChange={e => setNewSeriesName(e.target.value)} className={inputCls} autoFocus />
+              <input id="edit-book-new-series" type="text" value={newSeriesName} onChange={e => setNewSeriesName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && canSave) void save() }} className={inputCls} autoFocus />
             </div>
           )}
           {error && <p className="text-sm text-red-400">{error}</p>}
@@ -256,7 +259,7 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
             <button
               type="button"
               onClick={save}
-              disabled={saving || !title.trim() || (seriesChoice === NEW_SERIES && !newSeriesName.trim())}
+              disabled={!canSave}
               className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
             >
               {saving ? t('common.saving') : t('common.save')}
