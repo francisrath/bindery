@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, onTestFinished } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 const COMMON: Record<string, string> = {
@@ -15,6 +15,17 @@ vi.mock('react-i18next', () => ({
     },
   }),
 }))
+
+// Series changes are admin only (#468); a test switches to another user.
+const authState = { isAdmin: true }
+vi.mock('../auth/AuthContext', async importOriginal => ({
+  ...await importOriginal<typeof import('../auth/AuthContext')>(),
+  useIsAdmin: () => authState.isAdmin,
+}))
+const asAnotherUser = () => {
+  authState.isAdmin = false
+  onTestFinished(() => { authState.isAdmin = true })
+}
 
 vi.mock('../api/client', () => ({
   api: {
@@ -221,6 +232,15 @@ describe('EditBookModal (#1237, #1446)', () => {
       const select = await screen.findByLabelText('Series') as HTMLSelectElement
       await waitFor(() => expect(select.value).toBe('1'))
       expect((screen.getByLabelText('Position') as HTMLInputElement).value).toBe('4')
+    })
+
+    it('offers another user no series row, and Unlock all only for locked fields', async () => {
+      asAnotherUser()
+      render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} seriesExclusions={1} />)
+      expect(await screen.findByLabelText('Title')).toBeInTheDocument()
+      expect(api.listAuthorSeries).not.toHaveBeenCalled()
+      expect(screen.queryByLabelText('Series')).toBeNull()
+      expect(screen.queryByRole('button', { name: 'Unlock all fields' })).toBeNull()
     })
 
     it('hides the series row when the series cannot be loaded, and other edits still save', async () => {

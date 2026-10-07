@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/vavallee/bindery/internal/auth"
 	"github.com/vavallee/bindery/internal/db"
 	"github.com/vavallee/bindery/internal/models"
 )
@@ -67,10 +68,11 @@ func TestBookSeriesExclusionsEndpointAndUnlockAll(t *testing.T) {
 		}
 		return out
 	}
-	update := func(body string) {
+	update := func(role, body string) {
 		t.Helper()
 		rec := httptest.NewRecorder()
-		h.Update(rec, withURLParam(httptest.NewRequest(http.MethodPut, "/api/v1/book/"+id, bytes.NewBufferString(body)), "id", id))
+		req := httptest.NewRequest(http.MethodPut, "/api/v1/book/"+id, bytes.NewBufferString(body))
+		h.Update(rec, withURLParam(req.WithContext(auth.WithUserRole(req.Context(), role)), "id", id))
 		if rec.Code != http.StatusOK {
 			t.Fatalf("update %s: %d %s", body, rec.Code, rec.Body.String())
 		}
@@ -79,11 +81,17 @@ func TestBookSeriesExclusionsEndpointAndUnlockAll(t *testing.T) {
 	if got := list(); len(got) != 1 || got[0].SeriesID != s.ID || got[0].SeriesTitle != "Fjellserien" || got[0].Position != "2" {
 		t.Fatalf("exclusions = %+v, want Fjellserien at 2", got)
 	}
-	update(`{"title":"Fjellvinden (ny)"}`)
+	update(auth.RoleAdmin, `{"title":"Fjellvinden (ny)"}`)
 	if got := list(); len(got) != 1 {
 		t.Fatalf("an ordinary edit cleared the exclusions: %+v", got)
 	}
-	update(`{"lockedFields":[]}`)
+	// Series changes are admin only: another user's Unlock all unlocks the
+	// fields and leaves the book's series as they are.
+	update(auth.RoleUser, `{"lockedFields":[]}`)
+	if got := list(); len(got) != 1 {
+		t.Fatalf("a non admin's Unlock all cleared the exclusions: %+v", got)
+	}
+	update(auth.RoleAdmin, `{"lockedFields":[]}`)
 	if got := list(); len(got) != 0 {
 		t.Errorf("after Unlock all = %+v, want none", got)
 	}
@@ -118,7 +126,8 @@ func TestUnlockAllReportsAFailedExclusionClear(t *testing.T) {
 	}
 	id := strconv.FormatInt(book.ID, 10)
 	rec := httptest.NewRecorder()
-	h.Update(rec, withURLParam(httptest.NewRequest(http.MethodPut, "/api/v1/book/"+id, bytes.NewBufferString(`{"lockedFields":[]}`)), "id", id))
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/book/"+id, bytes.NewBufferString(`{"lockedFields":[]}`))
+	h.Update(rec, withURLParam(req.WithContext(auth.WithUserRole(req.Context(), auth.RoleAdmin)), "id", id))
 	if rec.Code != http.StatusInternalServerError {
 		t.Errorf("status = %d %s, want 500", rec.Code, rec.Body.String())
 	}

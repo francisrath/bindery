@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import BookDetailPage, { SearchResultsSection } from './BookDetailPage'
@@ -66,6 +66,17 @@ vi.mock('../api/client', async importOriginal => {
     },
   }
 })
+
+// Series changes are admin only (#468); a test switches to another user.
+const authState = { isAdmin: true }
+vi.mock('../auth/AuthContext', async importOriginal => ({
+  ...await importOriginal<typeof import('../auth/AuthContext')>(),
+  useIsAdmin: () => authState.isAdmin,
+}))
+const asAnotherUser = () => {
+  authState.isAdmin = false
+  onTestFinished(() => { authState.isAdmin = true })
+}
 
 vi.mock('../components/MediaBadge', () => ({
   default: ({ type }: { type?: string }) => <span data-testid={`badge-${type}`}>{type}</span>,
@@ -1109,6 +1120,26 @@ describe('BookDetailPage — header', () => {
     // The book already has a primary series, so the restored one is not.
     await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(8, { bookId: 42, positionInSeries: '2', primarySeries: false }))
     await waitFor(() => expect(api.getBookSeriesExclusions).toHaveBeenCalledTimes(2))
+  })
+
+  it('shows another user the book\'s series without the controls that need an admin', async () => {
+    asAnotherUser()
+    vi.mocked(api.listAuthorSeries).mockResolvedValue([
+      { id: 7, foreignSeriesId: 'ol:s7', title: 'Fjellserien', description: '', monitored: true,
+        books: [{ seriesId: 7, bookId: 42, positionInSeries: '1', primarySeries: true }] },
+      { id: 8, foreignSeriesId: 'ol:s8', title: 'Havserien', description: '', monitored: true,
+        books: [{ seriesId: 8, bookId: 42, positionInSeries: '', primarySeries: false }] },
+    ] as unknown as Awaited<ReturnType<typeof api.listAuthorSeries>>)
+    vi.mocked(api.getBookSeriesExclusions).mockResolvedValue([
+      { seriesForeignId: 'ol:s9', seriesId: 9, seriesTitle: 'Skogserien', position: '2' },
+    ])
+
+    renderBookDetailPage()
+    const heading = await screen.findByText(resolveKey('bookDetail.series.heading')!)
+    const section = heading.closest('section')!
+    expect(within(section).getAllByRole('listitem')).toHaveLength(2)
+    expect(within(section).queryAllByRole('button')).toHaveLength(0)
+    expect(screen.queryByText(resolveKey('bookDetail.series.keptOutExplainer')!)).toBeNull()
   })
 
   it('says so when restoring a series fails', async () => {

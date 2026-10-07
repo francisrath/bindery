@@ -313,8 +313,8 @@ DELETE /api/v1/series/{id}/books/{bookId}         take a book out of the series,
 Taking a book out of a series is remembered (#2554): a refresh that still
 reports the book in that series, under its own provider id or one merged into
 it, leaves it out. Adding the book back with `POST /series/{id}/books` forgets
-that, and so does unlocking all of the book's fields (`PUT /book/{id}` with
-`"lockedFields": []`). Adding a book as primary makes it the book's only
+that, and so does an admin unlocking all of the book's fields (`PUT /book/{id}`
+with `"lockedFields": []`; another user's unlock leaves the book's series alone). Adding a book as primary makes it the book's only
 primary series. `GET /book/{id}/series-exclusions` lists what was taken out.
 
 `GET /series` returns the bare array it always has. Pagination is opt-in

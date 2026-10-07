@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, Book, Series } from '../api/client'
 import { useModal } from './useModal'
+import { useIsAdmin } from '../auth/AuthContext'
 
 interface Props {
   book: Book
@@ -24,7 +25,7 @@ const NEW_SERIES = 'new'
 // Manual metadata editor (#1237, #1446). Only fields the user actually
 // changed are sent — the backend locks every submitted field against
 // metadata refresh, so sending unchanged values would spuriously lock them.
-export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, seriesExclusions = 0 }: Props) {
+export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, seriesExclusions: exclusions = 0 }: Props) {
   const { t } = useTranslation()
   const [title, setTitle] = useState(book.title)
   const [description, setDescription] = useState(book.description || '')
@@ -44,8 +45,12 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
   const [seriesChoice, setSeriesChoice] = useState<string>('')
   const [newSeriesName, setNewSeriesName] = useState('')
   const [position, setPosition] = useState('')
+  // Series changes are admin only, so other users get no series row.
+  const isAdmin = useIsAdmin()
+  const seriesExclusions = isAdmin ? exclusions : 0
 
   useEffect(() => {
+    if (!isAdmin) return
     let active = true
     // Only the author's own series are offered: filing a book under another
     // author's series is not a fix anyone means to make from here.
@@ -67,7 +72,7 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
       })
       .catch(() => { /* the series row stays hidden */ })
     return () => { active = false }
-  }, [book.authorId, book.id])
+  }, [book.authorId, book.id, isAdmin])
 
   const seriesChanged = useMemo(() => {
     if (allSeries === null) return false

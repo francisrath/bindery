@@ -9,6 +9,7 @@ import MoreMenu from '../components/MoreMenu'
 import Section from '../components/Section'
 import Switch from '../components/Switch'
 import { btn, btnSize, dangerLink } from '../components/buttons'
+import { useIsAdmin } from '../auth/AuthContext'
 import MediaBadge from '../components/MediaBadge'
 import CalibreDeliveryChip from '../components/CalibreDeliveryChip'
 import { bookStatusBadge } from '../components/bookStatus'
@@ -406,7 +407,10 @@ function BookDetailPageInner() {
       setSeriesBusy(false)
     }
   }
-  const restorable = keptOut.filter(e => e.seriesId > 0)
+  // Series changes are admin only (#468): other users see the book's series
+  // without the controls, and nothing to restore.
+  const isAdmin = useIsAdmin()
+  const restorable = isAdmin ? keptOut.filter(e => e.seriesId > 0) : []
 
   // #2525: the renamer reads one series per book. When a book sits in both its
   // real series and an umbrella "Universe" one, these are how the user says
@@ -1042,7 +1046,7 @@ function BookDetailPageInner() {
                 </span>
                 {s.primary ? (
                   <span className="text-xs text-slate-500 dark:text-zinc-500">{t('bookDetail.series.namesFiles')}</span>
-                ) : (
+                ) : isAdmin && (
                   <button
                     type="button"
                     className={`${btn.ghost} ${btnSize.sm}`}
@@ -1052,14 +1056,16 @@ function BookDetailPageInner() {
                     {t('bookDetail.series.useForNaming')}
                   </button>
                 )}
-                <button
-                  type="button"
-                  className={`${dangerLink} text-xs disabled:opacity-50`}
-                  disabled={seriesBusy}
-                  onClick={() => setRemoveSeries({ id: s.id, title: s.title })}
-                >
-                  {t('bookDetail.series.remove')}
-                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    className={`${dangerLink} text-xs disabled:opacity-50`}
+                    disabled={seriesBusy}
+                    onClick={() => setRemoveSeries({ id: s.id, title: s.title })}
+                  >
+                    {t('bookDetail.series.remove')}
+                  </button>
+                )}
               </li>
             ))}
           </ul>
