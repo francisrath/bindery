@@ -12,6 +12,8 @@ import Toggle from './Toggle'
 import SaveButton from './SaveButton'
 import CalibreDeliveryPanel from './CalibreDeliveryPanel'
 import { useSaveResult } from './useSaveResult'
+import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
+import { useModal } from '../../components/useModal'
 
 export default function CalibreTab() {
   const [settings, setSettings] = useState<Record<string, string>>({})
@@ -292,12 +294,12 @@ function CalibreSection({
             Directory containing <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">metadata.db</code>.
             Used by both the write integration and library import.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={settings['calibre.library_path'] ?? ''}
               onChange={e => setSettings(s => ({ ...s, 'calibre.library_path': e.target.value }))}
               placeholder="/data/calibre-library"
-              className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+              className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
             />
             <SaveButton
               result={libraryPathSaveResult}
@@ -340,12 +342,12 @@ function CalibreSection({
           <div>
             <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Binary path (optional)</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Leave blank to resolve <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">calibredb</code> on PATH. Set explicitly when running in a container that bundles Calibre at a pinned location.</p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 value={settings['calibre.binary_path'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.binary_path': e.target.value }))}
                 placeholder="/usr/bin/calibredb"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={binaryPathSaveResult}
@@ -392,12 +394,13 @@ function CalibreSection({
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               Base URL of the Bindery Bridge plugin&rsquo;s HTTP server running inside Calibre.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
+                {...urlInputAttrs}
                 value={settings['calibre.plugin_url'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.plugin_url': e.target.value }))}
                 placeholder="http://calibre.default.svc:8099"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={pluginUrlSaveResult}
@@ -419,13 +422,14 @@ function CalibreSection({
                 ? t('settings.calibre.transport.apiKeyPullHelp')
                 : <>Bearer token configured in the plugin&rsquo;s Calibre Preferences dialog.</>}
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
+                {...secretInputAttrs}
                 type="password"
                 value={settings['calibre.plugin_api_key'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.plugin_api_key': e.target.value }))}
                 placeholder="plugin api key"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={pluginKeySaveResult}
@@ -450,12 +454,12 @@ function CalibreSection({
               a share address is more reliable than a mapped drive letter, which the running Calibre may not see.
               Leave empty when both containers see the library at the same path.
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
                 value={settings['calibre.push_path_remap'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.push_path_remap': e.target.value }))}
                 placeholder="/books:/mnt/user/media/books"
-                className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+                className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
               />
               <SaveButton
                 result={pushRemapSaveResult}
@@ -647,12 +651,12 @@ function CalibreSection({
         <div>
           <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Ingest folder path</label>
           <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Mount the same path into both containers. CWA's docs use <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">/cwa-book-ingest</code>.</p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={settings['cwa.ingest_path'] ?? ''}
               onChange={e => setSettings(s => ({ ...s, 'cwa.ingest_path': e.target.value }))}
               placeholder="/cwa-book-ingest"
-              className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
+              className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600"
             />
             <SaveButton
               result={cwaPathSaveResult}
@@ -786,8 +790,8 @@ function CalibreRunsList({
 // CalibreRollbackModal shows the rollback preview, lets the admin confirm,
 // and surfaces the resulting per-action list. Apply uses amber styling
 // rather than red because rollback restores Bindery state — it does not
-// delete on-disk files.
-function CalibreRollbackModal({
+// delete on-disk files. Exported for its own test.
+export function CalibreRollbackModal({
   run,
   onClose,
   onApplied,
@@ -827,25 +831,30 @@ function CalibreRollbackModal({
   }
 
   const display = applied ?? preview
+  // An older server sends actions: null for a run with nothing to undo.
+  const actions = display?.actions ?? []
+  const nothingToRollBack = !!preview && !applied && (preview.actions ?? []).length === 0
   const closable = !applying
+  const { titleId, panelProps } = useModal({ onClose, canClose: closable })
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-2xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-zinc-100">
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div {...panelProps} className="w-full max-w-2xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl modal-max-h flex flex-col">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
+          <h3 id={titleId} className="text-base font-semibold text-slate-800 dark:text-zinc-100">
             {t('settings.calibre.runs.modalTitle', { runId: run.id })}
           </h3>
           <button
             onClick={closable ? onClose : undefined}
             disabled={!closable}
             className="text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-40"
+            aria-label={t('common.close')}
             title={closable ? '' : t('settings.calibre.runs.applying')}
           >
             ✕
           </button>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           <p className="text-xs text-slate-600 dark:text-zinc-400">{t('settings.calibre.runs.modalIntro')}</p>
 
           {previewLoading && (
@@ -889,13 +898,17 @@ function CalibreRollbackModal({
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-700 dark:text-zinc-300 mb-1">
                   {t('settings.calibre.runs.actionsHeading')}
                 </p>
-                {display.actions.length === 0 ? (
+                {nothingToRollBack ? (
+                  <p className="text-xs text-slate-500 dark:text-zinc-500" data-testid="calibre-rollback-nothing">
+                    {display.dryRun ? t('settings.calibre.runs.nothingToRollBackDryRun') : t('settings.calibre.runs.nothingToRollBack')}
+                  </p>
+                ) : actions.length === 0 ? (
                   <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.runs.noActions')}</p>
                 ) : (
                   <div className="max-h-64 overflow-y-auto rounded border border-slate-200 dark:border-zinc-800">
                     <table className="w-full text-xs">
                       <tbody>
-                        {display.actions.map(action => (
+                        {actions.map(action => (
                           <tr
                             key={`${action.entityType}-${action.externalId}-${action.localId}-${action.action}`}
                             className="border-t border-slate-200 dark:border-zinc-800"
@@ -931,7 +944,7 @@ function CalibreRollbackModal({
             </>
           )}
         </div>
-        <div className="px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end gap-2">
+        <div className="shrink-0 px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end gap-2">
           <button
             onClick={closable ? onClose : undefined}
             disabled={!closable}
@@ -942,7 +955,7 @@ function CalibreRollbackModal({
           {!applied && (
             <button
               onClick={apply}
-              disabled={applying || previewLoading || !!error}
+              disabled={applying || previewLoading || !!error || nothingToRollBack}
               className="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 rounded text-sm font-medium text-white disabled:opacity-50"
             >
               {applying ? t('settings.calibre.runs.applying') : t('settings.calibre.runs.applyRollback')}
@@ -974,20 +987,23 @@ export function CalibreSyncModal({
   const pct = total > 0 ? Math.min(100, (processed / total) * 100) : 0
   const running = !!progress?.running
   const { t } = useTranslation()
+  // Closing only hides the progress; the push carries on in the background.
+  const { titleId, panelProps } = useModal({ onClose })
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
-      <div className="w-full max-w-xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
-          <h3 className="text-base font-semibold text-slate-800 dark:text-zinc-100">{t('settings.calibre.pushAll.label')}</h3>
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div {...panelProps} className="w-full max-w-xl rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl modal-max-h flex flex-col">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-zinc-800">
+          <h3 id={titleId} className="text-base font-semibold text-slate-800 dark:text-zinc-100">{t('settings.calibre.pushAll.label')}</h3>
           <button
             onClick={onClose}
             className="text-slate-500 hover:text-slate-700 dark:text-zinc-400 dark:hover:text-zinc-200 disabled:opacity-40"
+            aria-label={t('settings.calibre.pushAll.close')}
             title={running ? t('settings.calibre.pushAll.closeRunningHint') : t('settings.calibre.pushAll.close')}
           >
             ✕
           </button>
         </div>
-        <div className="p-4 space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           {error && (
             <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
           )}
@@ -1082,7 +1098,7 @@ export function CalibreSyncModal({
             </>
           )}
         </div>
-        <div className="px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end">
+        <div className="shrink-0 px-4 py-3 border-t border-slate-200 dark:border-zinc-800 flex justify-end">
           {/* Closable while running: after the queueing, the run waits on
               Calibre, which can take as long as Calibre stays closed. The
               delivery queue carries on without the modal. */}

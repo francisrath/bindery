@@ -769,7 +769,11 @@ like everything else on that tab that names server paths.
   author's catalogue looks like. It is community data: expect occasional
   duplicates, language mix-ups, and box-set entries. The "primary" selector
   (Settings → Metadata Profiles → Library Defaults) offers OpenLibrary,
-  **DNB** (German National Library), and **Hardcover**.
+  **DNB** (German National Library), **Nasjonalbiblioteket** (National Library
+  of Norway: Norwegian books under their original titles, only used when chosen
+  as primary), and **Hardcover**. Switching the primary away from
+  Nasjonalbiblioteket switches it off entirely, so authors linked to it stop
+  syncing until you relink each one with "Link metadata" on their page.
 - **Hardcover** is an enricher by default — it improves search results,
   ratings, and series data, and powers import lists and the Discover wishlist
   row. **Without an API token (Settings → API Keys) Hardcover is silently
@@ -842,8 +846,8 @@ bound to with a copy button, and lists any other provider ids the same book is
 known by. That is the thing to check before deciding a book needs re-binding,
 and the id is what to quote in a bug report. Hover or activate **Links** while
 confirming a book in the Add to library dialog or in the book header to open
-trustworthy upstream pages for OpenLibrary, Google Books, Hardcover, and DNB
-records.
+trustworthy upstream pages for OpenLibrary, Google Books, Hardcover, DNB and
+Nasjonalbiblioteket records.
 Calibre and Audiobookshelf ids remain visible only under **Metadata source**
 because they do not map to stable public pages.
 
@@ -996,6 +1000,8 @@ indeterminate row separately with its provider and the incomplete-evidence
 reason so it can be reviewed manually; these informational rows have no
 selection control and cannot be sent for removal.
 
+### Reviewing duplicate titles
+
 **Duplicate titles.** The same book often reaches the catalogue twice under
 slightly different titles — "The Martian" and "Martian", "Dune" and "Dune
 (Unabridged)". Open the author and choose **More → Review duplicates…** to see
@@ -1011,6 +1017,48 @@ The Well of Ascension"). Nothing is changed automatically: the only action is
 without deleting anything. An excluded row stays in its group, struck through,
 with an **Include** button to undo it; a group leaves the report once fewer
 than two of its rows are still included.
+
+**The evidence on each row.** Under every title the review shows what Bindery
+already knows about that row, so you can decide without opening each book:
+whether it has files (ebook, audiobook, and the format, such as epub or m4b),
+its status (Wanted, In Library, Skipped), release year, language, ISBN, ASIN,
+and series with position. The rows are numbered, and above them the group
+lists what the rows agree or disagree on:
+
+| Marker | What it means |
+|--------|---------------|
+| Rows share an ISBN or ASIN | strong evidence they are one book |
+| Rows hold the same series position | strong evidence they are one book |
+| Rows hold different positions in one series | probably different books of that series |
+| Release years more than a year apart | possibly a different book, or an old and a new edition |
+| Different languages | possibly a translation rather than a duplicate |
+
+Languages are compared by meaning, so "en", "eng" and "English" agree, and
+series positions by number, so "1" and "1.0" agree. An unknown year, language
+(including "und" and "mul") or position never counts as a disagreement.
+
+**Which row to keep.** When exactly one row in a group has files, it is marked
+**Keep: has files**. If the rows also have no disagreement, and something
+positively ties each empty row to that one (a shared ISBN or ASIN, the same
+series position, or a title that is the same apart from punctuation, a leading
+article or an edition marker), the group offers **Exclude the empty rows in
+this group**, which shows you the rows it will exclude and asks you to confirm
+before it does anything. A title that only contains the other one, such as
+"Mistborn" and "Mistborn: The Hero of Ages", is not enough on its own. It is
+never offered when the rows disagree, or when more than one row has files,
+because then the files alone do not tell you which row is the real book. A row
+with files is never part of that suggestion, and if one of the empty rows is
+imported after you opened the page, Bindery skips it and tells you. You can
+still exclude a row with files with its own **Exclude** button, and Bindery
+asks first. Excluding never deletes a file.
+
+**Across the whole library.** On the **Books** page, **Review duplicates**
+opens a page listing the duplicate groups for every author, a page at a time,
+with the same evidence and the same buttons. It finds exactly the groups each
+author's own window would: titles are only compared with other titles by the
+same author. After you exclude rows, a group that no longer has two included
+rows drops off the list. On a shared install with per user libraries, each
+person sees only the authors they could open themselves.
 
 ## How author names are filed
 

@@ -223,7 +223,8 @@ describe('CalibreTab coverage', () => {
     const dialog = await screen.findByRole('dialog')
     expect(mocked.calibreSyncStart).toHaveBeenCalledTimes(1)
     expect(await within(dialog).findByText(/settings\.calibre\.pushAll\.done \{"pushed":1,"already":1/)).toBeInTheDocument()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'settings.calibre.pushAll.close' }))
+    // The header X carries the same name; the footer button is the last.
+    fireEvent.click(within(dialog).getAllByRole('button', { name: 'settings.calibre.pushAll.close' }).at(-1)!)
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
@@ -353,14 +354,19 @@ describe('CalibreTab coverage', () => {
     let dialog = await screen.findByRole('dialog')
     expect(await within(dialog).findByText(/settings\.calibre\.runs\.error .*run not found/)).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'settings.calibre.runs.applyRollback' })).toBeDisabled()
-    fireEvent.click(within(dialog).getByRole('button', { name: '✕' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: 'common.close' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
 
-    mocked.calibreRunRollbackPreview.mockResolvedValueOnce(rollbackResult({ actions: [], runId: 8 }))
+    // A preview with nothing to undo keeps Apply disabled (see
+    // CalibreRollbackModal.empty.test.tsx), so the apply failure needs one.
+    mocked.calibreRunRollbackPreview.mockResolvedValueOnce(rollbackResult({
+      actions: [{ entityType: 'book', externalId: 'c-9', localId: 19, action: 'delete', displayName: 'Emma', reason: '' }],
+      runId: 8,
+    }))
     mocked.calibreRunRollback.mockRejectedValueOnce('locked')
     fireEvent.click(screen.getAllByRole('button', { name: 'settings.calibre.runs.rollback' })[1])
     dialog = await screen.findByRole('dialog')
-    expect(await within(dialog).findByText('settings.calibre.runs.noActions')).toBeInTheDocument()
+    expect(await within(dialog).findByText('Emma')).toBeInTheDocument()
     fireEvent.click(within(dialog).getByRole('button', { name: 'settings.calibre.runs.applyRollback' }))
     expect(await within(dialog).findByText(/settings\.calibre\.runs\.error .*locked/)).toBeInTheDocument()
     expect(mocked.calibreRunRollback).toHaveBeenCalledWith(8)

@@ -1,6 +1,9 @@
 {
   "common": {
     "loading": "Loading…",
+    "serverUnavailable": "Bindery is not answering right now.",
+    "retry": "Retry",
+    "retrying": "Retrying…",
     "viewOnSource": "View on {{source}} ↗",
     "links": "Links",
     "gridView": "Grid view",
@@ -44,6 +47,7 @@
     "saved": "Saved ✓",
     "saveError": "Error",
     "more": "More",
+    "close": "Close",
     "confirm": "Confirm",
     "confirmTitle": "Are you sure?",
     "moreActions": "More",
@@ -90,7 +94,8 @@
     "request": "Request",
     "myRequests": "My requests",
     "requests": "Requests",
-    "requestsPending": "{{count}} pending requests"
+    "requestsPending": "{{count}} pending requests",
+    "toggleMenu": "Toggle menu"
   },
   "librarySearch": {
     "label": "Search library",
@@ -580,6 +585,40 @@
       "substring": "One title is the main title or subtitle of the other"
     }
   },
+  "duplicateReview": {
+    "pageTitle": "Duplicates",
+    "backToBooks": "← Books",
+    "groupCount": "{{count}} group(s)",
+    "pageDescription": "Titles by the same author that look like the same book, across your whole library. The row with files is marked to keep, and the evidence shows whether the rows agree. Nothing changes until you exclude a row.",
+    "groupLabel": "Duplicate group: {{title}}",
+    "signalsLabel": "Evidence across rows",
+    "agreementLabel": "Likely the same book:",
+    "conflictLabel": "May be different books:",
+    "signals": {
+      "shared-isbn": "Rows {{rows}} share ISBN {{values}}",
+      "shared-asin": "Rows {{rows}} share ASIN {{values}}",
+      "same-series-position": "Rows {{rows}} are both {{series}} #{{position}}",
+      "series-position-conflict": "Rows {{rows}} hold different positions in {{series}}: {{positions}}",
+      "year-conflict": "Rows {{rows}} were released years apart: {{values}}",
+      "language-conflict": "Rows {{rows}} are in different languages: {{values}}"
+    },
+    "keep": "Keep: has files",
+    "hasFiles": "Has files",
+    "noFiles": "No files",
+    "isbn": "ISBN {{isbn}}",
+    "isbnMore": "ISBN {{isbn}} (+{{count}})",
+    "asin": "ASIN {{asin}}",
+    "excludeEmpty": "Exclude the {{count}} empty row(s) in this group",
+    "excludeEmptyTitle": "Exclude {{count}} empty row(s)?",
+    "excludeEmptyBody": "Keep \"{{keep}}\", which has files, and exclude:\n{{rows}}\n\nExcluded rows leave Wanted and are no longer searched. You can include them again later.",
+    "excludeEmptyPartial": "{{count}} row(s) could not be excluded",
+    "excludeEmptySkipped": "{{count}} row(s) were skipped because they have files now. Review the group again.",
+    "excludeWithFilesTitle": "Exclude a row that has files?",
+    "excludeWithFilesBody": "\"{{title}}\" has files in your library. Excluding it hides it from Wanted and stops searches for it; the files stay on disk.",
+    "noSuggestionConflict": "The rows disagree, so nothing is suggested. Check the evidence before excluding a row.",
+    "noSuggestionFiles": "More than one row has files, so nothing is suggested.",
+    "noSuggestionEvidence": "Nothing ties every empty row to the row with files (no shared ISBN, ASIN, series position or matching title), so nothing is suggested."
+  },
   "books": {
     "title": "Books",
     "countLabel": "{{count}} books",
@@ -620,7 +659,9 @@
     "unexclude": "Un-exclude",
     "excluded": "Excluded",
     "showExcluded": "Show excluded",
-    "sortByColumn": "Sort by {{column}}"
+    "sortByColumn": "Sort by {{column}}",
+    "reviewDuplicates": "Review duplicates",
+    "reviewDuplicatesHint": "Find titles across the library that look like the same book; nothing changes until you exclude a row"
   },
   "wanted": {
     "title": "Wanted",
@@ -869,7 +910,11 @@
     "noReleases": "No monitored books releasing this month",
     "releasingIn": "Releasing in {{month}} {{year}}",
     "prevMonth": "Previous month",
-    "nextMonth": "Next month"
+    "nextMonth": "Next month",
+    "dayReleases_one": "{{date}}: {{count}} release",
+    "dayReleases_other": "{{date}}: {{count}} releases",
+    "releasingOn": "Releasing on {{date}}",
+    "showWholeMonth": "Show the whole month"
   },
   "settings": {
     "title": "Settings",
@@ -892,6 +937,15 @@
       "about": "About",
       "advanced": "Advanced"
     },
+    "sectionLabel": "Settings section",
+    "groups": {
+      "sources": "Sources",
+      "library": "Library",
+      "integrations": "Integrations",
+      "system": "System"
+    },
+    "previewBadge": "Preview",
+    "tabWithPreview": "{{tab}} (Preview)",
     "about": {
       "title": "About",
       "hint": "Build details for this Bindery instance. Include the version and commit when filing a bug report.",
@@ -950,6 +1004,8 @@
         "skipped": "{{count}} entries will be skipped (already rolled back or out of scope)",
         "actionsHeading": "Planned actions",
         "noActions": "Nothing to do.",
+        "nothingToRollBack": "Nothing to roll back. This import left nothing Bindery can undo.",
+        "nothingToRollBackDryRun": "Nothing to roll back. This was a dry run, so it never changed your library.",
         "applyRollback": "Apply rollback",
         "applying": "Applying…",
         "cancel": "Cancel",
@@ -1420,9 +1476,10 @@
       "telemetryDetail": "Sends install_id (random UUID), version, OS, architecture, deploy method, feature-usage counts, and coarse error counters (ERROR/WARN totals over the last 24h plus the 5 most frequent fixed error-message strings — never log details, titles, paths, or URLs) to getbindery.dev once per day. Disable at any time.",
       "metadataProvider": "Metadata Provider",
       "metadataProviderLabel": "Primary metadata provider",
-      "metadataProviderHint": "Selects the source used for author and book search, and decides what an author's catalogue looks like. DNB (Deutsche Nationalbibliothek) is recommended for German, Austrian, and Swiss catalogues — it covers German-language publications since 1913 where OpenLibrary coverage is thin. Hardcover is a curated catalogue: fewer translation editions, omnibus bundles, and non-book entries than OpenLibrary, at the cost of a thinner long tail. OpenLibrary remains the default. Whichever you pick, the other providers are still used as enrichers.",
+      "metadataProviderHint": "Selects the source used for author and book search, and decides what an author's catalogue looks like. DNB (Deutsche Nationalbibliothek) is recommended for German, Austrian, and Swiss catalogues — it covers German-language publications since 1913 where OpenLibrary coverage is thin. Nasjonalbiblioteket (the National Library of Norway) is recommended for Norwegian catalogues — it holds every Norwegian publication by legal deposit, under its original Norwegian title where OpenLibrary often has only the English translation. Hardcover is a curated catalogue: fewer translation editions, omnibus bundles, and non-book entries than OpenLibrary, at the cost of a thinner long tail. OpenLibrary remains the default. Whichever you pick, the other providers are still used as enrichers, except Nasjonalbiblioteket, which is only queried when it is the primary.",
       "metadataProviderOpenlibrary": "OpenLibrary (default)",
       "metadataProviderDnb": "DNB — Deutsche Nationalbibliothek (German/DACH)",
+      "metadataProviderNb": "Nasjonalbiblioteket — National Library of Norway (Norwegian)",
       "metadataProviderHardcover": "Hardcover (curated catalogue)",
       "metadataProviderHardcoverNoToken": "Hardcover — requires an API token (Settings → API Keys)",
       "metadataProviderRestartHint": "Takes effect after the next Bindery restart — the provider is wired at startup, so nothing changes until then. Authors already in your library stay linked to the provider they were added from; the new primary applies to authors you add afterwards. To move an existing author, use \"Link metadata\" on their page.",

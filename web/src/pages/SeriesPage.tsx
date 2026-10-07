@@ -69,19 +69,22 @@ export default function SeriesPage() {
   const [bookModalSeries, setBookModalSeries] = useState<Series | null>(null)
   const enhancedHardcoverApi = systemStatus?.enhancedHardcoverApi ?? false
 
+  // Keyed on the id alone, not the state object: opening a modal pushes an
+  // entry with new state (useModal), which must not refetch the list or
+  // re-expand the series the page was first opened on.
+  const navSeriesId = (location.state as { seriesId?: number } | null)?.seriesId
   useEffect(() => {
-    const state = location.state as { seriesId?: number } | null
     Promise.all([api.listSeries(), api.status()])
       .then(([list, status]) => {
         setSeriesList(list)
         setSystemStatus(status)
-        if (state?.seriesId) {
-          setExpanded(state.seriesId)
+        if (navSeriesId) {
+          setExpanded(navSeriesId)
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [location.state])
+  }, [navSeriesId])
 
   useEffect(() => {
     document.title = `${t('series.title')} · Bindery`
@@ -336,6 +339,7 @@ export default function SeriesPage() {
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
+          enterKeyHint="search"
           type="search"
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -343,7 +347,7 @@ export default function SeriesPage() {
           placeholder={t('series.searchPlaceholder')}
           className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600 placeholder-slate-400 dark:placeholder-zinc-600"
         />
-        <div role="group" aria-label={t('series.filterLabel')} className="flex gap-1 flex-wrap items-center">
+        <div role="group" aria-label={t('series.filterLabel')} className="flex gap-1 pointer-coarse:gap-y-5 flex-wrap items-center">
           {availableFilters.map(f => (
             <button
               key={f}
@@ -351,7 +355,7 @@ export default function SeriesPage() {
               aria-pressed={filter === f}
               onClick={() => selectFilter(f)}
               title={f === 'missing' && enhancedHardcoverApi ? t('series.filterMissingHint') : undefined}
-              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${filter === f ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+              className={`touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${filter === f ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
               {t(`series.filter.${f}`)}
             </button>
@@ -400,9 +404,12 @@ export default function SeriesPage() {
                   className="p-4 cursor-pointer hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 transition-colors"
                   onClick={() => toggleExpanded(series)}
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  {/* Below sm the name gets its own line and the badges wrap
+                      under it: beside them it was cut to about nine
+                      characters on a phone. */}
+                  <div className="flex flex-wrap sm:flex-nowrap items-start justify-between gap-x-3 gap-y-1">
                     <div className="min-w-0">
-                      <h3 className="font-semibold truncate">{series.title}</h3>
+                      <h3 className="font-semibold [overflow-wrap:anywhere] sm:truncate">{series.title}</h3>
                       {series.description && (
                         <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1 line-clamp-2">{series.description}</p>
                       )}
@@ -422,7 +429,7 @@ export default function SeriesPage() {
                 </div>
 
                 {/* Actions row */}
-                <div className="px-4 pb-3 flex items-center gap-3 flex-wrap" onClick={e => e.stopPropagation()}>
+                <div className="px-4 pb-3 flex items-center gap-3 pointer-coarse:gap-y-5 flex-wrap" onClick={e => e.stopPropagation()}>
                   {/* This flag is a shortlist marker, not a schedule. Nothing
                       reads series.monitored except this page: no job checks a
                       monitored series for new books, and Fill gaps ignores it.
@@ -434,6 +441,7 @@ export default function SeriesPage() {
                     onChange={() => toggleMonitor(series)}
                     label={series.monitored ? t('series.shortlist.remove') : t('series.shortlist.add')}
                     title={t('series.shortlist.hint')}
+                    className="touch-target"
                   >
                     {series.monitored ? t('series.shortlist.on') : t('series.shortlist.off')}
                   </Switch>
@@ -441,7 +449,7 @@ export default function SeriesPage() {
                     <button
                       onClick={() => openHardcoverLink(series)}
                       disabled={linking === series.id}
-                      className={`text-xs px-2.5 py-1 rounded font-medium border disabled:opacity-50 ${
+                      className={`touch-target text-xs px-2.5 py-1 rounded font-medium border disabled:opacity-50 ${
                         series.hardcoverLink
                           ? 'border-sky-500/40 bg-sky-500/10 text-sky-700 dark:text-sky-300'
                           : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
@@ -457,7 +465,7 @@ export default function SeriesPage() {
                   )}
                   <button
                     onClick={() => setEditingSeries(series)}
-                    className="text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700"
+                    className="touch-target text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700"
                   >
                     {t('series.rename')}
                   </button>
@@ -471,7 +479,7 @@ export default function SeriesPage() {
                   {isOpen && (
                     <button
                       onClick={() => setBookModalSeries(series)}
-                      className="text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700"
+                      className="touch-target text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700"
                     >
                       {t('series.addBook')}
                     </button>
@@ -480,7 +488,7 @@ export default function SeriesPage() {
                     <button
                       onClick={() => applySeriesGenres(series)}
                       disabled={applyingGenres === series.id}
-                      className="text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 disabled:opacity-50"
+                      className="touch-target text-xs px-2.5 py-1 rounded font-medium bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 disabled:opacity-50"
                       title={series.genreOverrideSet
                         ? (series.genreOverride?.length
                           ? t('series.genre.activeHint', { genres: series.genreOverride.join(', ') })
@@ -494,7 +502,7 @@ export default function SeriesPage() {
                   )}
                   <button
                     onClick={() => deleteSeries(series)}
-                    className={`${btn.danger} ${btnSize.sm}`}
+                    className={`touch-target ${btn.danger} ${btnSize.sm}`}
                   >
                     {t('common.delete')}
                   </button>
@@ -502,7 +510,7 @@ export default function SeriesPage() {
                     <button
                       onClick={() => fillGaps(series)}
                       disabled={filling === series.id}
-                      className="ml-auto text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded font-medium"
+                      className="touch-target ml-auto text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded font-medium"
                     >
                       {filling === series.id ? t('series.fill.queuing') : t('series.fill.button')}
                     </button>
@@ -527,7 +535,7 @@ export default function SeriesPage() {
                           #{entry.positionInSeries || '?'}
                         </span>
                         {entry.book?.imageUrl ? (
-                          <img
+                          <img loading="lazy" decoding="async"
                             src={entry.book.imageUrl}
                             alt={entry.book.title}
                             className="w-8 h-10 object-cover rounded flex-shrink-0"
@@ -638,7 +646,7 @@ export default function SeriesPage() {
                                 #{book.position || '?'}
                               </span>
                               {book.imageUrl ? (
-                                <img src={book.imageUrl} alt={book.title} className="w-8 h-10 object-cover rounded flex-shrink-0" />
+                                <img loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-8 h-10 object-cover rounded flex-shrink-0" />
                               ) : (
                                 <div className="w-8 h-10 bg-slate-200 dark:bg-zinc-800 rounded flex-shrink-0" />
                               )}
