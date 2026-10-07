@@ -182,4 +182,12 @@ describe('EditBookModal (#1237, #1446)', () => {
       expect(screen.queryByLabelText('Series')).toBeNull()
     })
   })
+
+  it('offers Unlock all when the book was only taken out of series, and reloads its series after (#2554)', async () => {
+    const onSeriesSaved = vi.fn()
+    render(<EditBookModal book={BOOK} onClose={onClose} onSaved={onSaved} onSeriesSaved={onSeriesSaved} seriesExclusions={1} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Unlock all fields' }))
+    await waitFor(() => expect(api.updateBook).toHaveBeenCalledWith(7, { lockedFields: [] }))
+    expect(onSeriesSaved).toHaveBeenCalled()
+  })
 })

@@ -58,6 +58,8 @@ vi.mock('../api/client', async importOriginal => {
       toggleExcluded: vi.fn(),
       enrichAudiobook: vi.fn(),
       listAuthorSeries: vi.fn(),
+      getBookSeriesExclusions: vi.fn(),
+      linkBookToSeries: vi.fn(),
       bookCalibreState: vi.fn().mockResolvedValue({ state: 'off' }),
       setPrimarySeriesForBook: vi.fn(),
       removeBookFromSeries: vi.fn(),
@@ -232,6 +234,7 @@ beforeEach(() => {
   vi.mocked(api.toggleExcluded).mockImplementation(async () => makeBook({ excluded: true }))
   vi.mocked(api.enrichAudiobook).mockImplementation(async () => makeBook())
   vi.mocked(api.listAuthorSeries).mockResolvedValue([])
+  vi.mocked(api.getBookSeriesExclusions).mockResolvedValue([])
   // jsdom has no clipboard by default.
   Object.defineProperty(navigator, 'clipboard', {
     value: { writeText: vi.fn().mockResolvedValue(undefined) },
@@ -1074,6 +1077,38 @@ describe('BookDetailPage — header', () => {
     renderBookDetailPage()
     await screen.findByText('Discworld #3')
     expect(screen.queryByText(resolveKey('bookDetail.series.heading')!)).toBeNull()
+  })
+
+  it('lists the series the book was taken out of and restores one where it was (#2554)', async () => {
+    vi.mocked(api.listAuthorSeries).mockResolvedValue([
+      {
+        id: 7,
+        foreignSeriesId: 'ol:s7',
+        title: 'Discworld',
+        description: '',
+        monitored: true,
+        books: [{ seriesId: 7, bookId: 42, positionInSeries: '3', primarySeries: true }],
+      },
+    ] as unknown as Awaited<ReturnType<typeof api.listAuthorSeries>>)
+    vi.mocked(api.getBookSeriesExclusions).mockResolvedValue([
+      { seriesForeignId: 'ol:s8', seriesId: 8, seriesTitle: 'Rincewind', position: '2' },
+      // A series that no longer exists has nothing to restore to.
+      { seriesForeignId: 'ol:gone', seriesId: 0, seriesTitle: '', position: '' },
+    ])
+    vi.mocked(api.linkBookToSeries).mockResolvedValue({} as never)
+
+    renderBookDetailPage()
+    // One membership, so the section is there only for the kept-out series.
+    expect(await screen.findByText(resolveKey('bookDetail.series.keptOutExplainer')!)).toBeInTheDocument()
+    expect(screen.queryByText(resolveKey('bookDetail.series.explainer')!)).toBeNull()
+    const keptOut = screen.getByRole('list', { name: resolveKey('bookDetail.series.keptOutHeading')! })
+    expect(within(keptOut).getAllByRole('listitem')).toHaveLength(1)
+    expect(within(keptOut).getByText('Rincewind #2')).toBeInTheDocument()
+
+    fireEvent.click(within(keptOut).getByRole('button', { name: resolveKey('bookDetail.series.restore')! }))
+    // The book already has a primary series, so the restored one is not.
+    await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(8, { bookId: 42, positionInSeries: '2', primarySeries: false }))
+    await waitFor(() => expect(api.getBookSeriesExclusions).toHaveBeenCalledTimes(2))
   })
 
   it('names the series the renamer uses and lets you change it', async () => {

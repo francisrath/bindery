@@ -9,6 +9,9 @@ interface Props {
   onSaved: (book: Book) => void
   // Called after the book's series changed, so the page reloads its series.
   onSeriesSaved?: () => void
+  // How many series the user took the book out of (#2554). Unlock all fields
+  // forgets those too, so it is offered when there are any.
+  seriesExclusions?: number
 }
 
 // The series a book is filed under for naming: its primary membership, or its
@@ -20,7 +23,7 @@ const NEW_SERIES = 'new'
 // Manual metadata editor (#1237, #1446). Only fields the user actually
 // changed are sent — the backend locks every submitted field against
 // metadata refresh, so sending unchanged values would spuriously lock them.
-export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }: Props) {
+export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, seriesExclusions = 0 }: Props) {
   const { t } = useTranslation()
   const [title, setTitle] = useState(book.title)
   const [description, setDescription] = useState(book.description || '')
@@ -127,6 +130,7 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
     try {
       const updated = await api.updateBook(book.id, { lockedFields: [] })
       onSaved(updated)
+      if (seriesExclusions > 0) onSeriesSaved?.()
       onClose()
     } catch (e) {
       setError(e instanceof Error ? e.message : t('bookDetail.edit.saveFailed', 'Save failed'))
@@ -241,13 +245,13 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-2">
-          {locked.length > 0 && (
+          {(locked.length > 0 || seriesExclusions > 0) && (
             <button
               type="button"
               onClick={unlockAll}
               disabled={saving}
               className="text-xs px-3 py-2 text-amber-700 dark:text-amber-400 hover:underline disabled:opacity-50"
-              title={t('bookDetail.edit.unlockAllHint', 'Let metadata refresh manage every field again')}
+              title={t('bookDetail.edit.unlockAllHint', 'Let metadata refresh manage every field and the book\'s series again')}
             >
               {t('bookDetail.edit.unlockAll', 'Unlock all fields')}
             </button>

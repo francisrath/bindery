@@ -788,6 +788,51 @@ func (r *SeriesRepo) AliasForeignIDs(ctx context.Context, seriesIDs []int64) ([]
 	return out, rows.Err()
 }
 
+// BookSeriesExclusion is a series the user took a book out of (#2554), with
+// the series it names now (following merge aliases; 0 and "" when it no
+// longer exists) and the position the book had in it.
+type BookSeriesExclusion struct {
+	SeriesForeignID string `json:"seriesForeignId"`
+	SeriesID        int64  `json:"seriesId"`
+	SeriesTitle     string `json:"seriesTitle"`
+	Position        string `json:"position"`
+}
+
+// ListBookSeriesExclusions lists the series a book is kept out of.
+func (r *SeriesRepo) ListBookSeriesExclusions(ctx context.Context, bookID int64) ([]BookSeriesExclusion, error) {
+	rows, err := r.exec.QueryContext(ctx, `
+		SELECT e.series_foreign_id, COALESCE(s.id, 0), COALESCE(s.title, ''), e.position_in_series
+		FROM book_series_exclusions e
+		LEFT JOIN series s ON s.id = (
+			SELECT id FROM series WHERE foreign_id = e.series_foreign_id
+			UNION ALL SELECT series_id FROM series_aliases WHERE foreign_id = e.series_foreign_id
+			LIMIT 1)
+		WHERE e.book_id = ?
+		ORDER BY COALESCE(s.title, e.series_foreign_id)`, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("list series exclusions for book %d: %w", bookID, err)
+	}
+	defer rows.Close()
+	out := []BookSeriesExclusion{}
+	for rows.Next() {
+		var e BookSeriesExclusion
+		if err := rows.Scan(&e.SeriesForeignID, &e.SeriesID, &e.SeriesTitle, &e.Position); err != nil {
+			return nil, err
+		}
+		out = append(out, e)
+	}
+	return out, rows.Err()
+}
+
+// ClearBookSeriesExclusions forgets every series the user took the book out
+// of, so refreshes file it as the provider reports again.
+func (r *SeriesRepo) ClearBookSeriesExclusions(ctx context.Context, bookID int64) error {
+	if _, err := r.exec.ExecContext(ctx, `DELETE FROM book_series_exclusions WHERE book_id = ?`, bookID); err != nil {
+		return fmt.Errorf("clear series exclusions for book %d: %w", bookID, err)
+	}
+	return nil
+}
+
 // ErrSeriesAlias reports a foreign id that names a series through a merge
 // alias and so cannot be given to another series.
 var ErrSeriesAlias = errors.New("series foreign id is an alias")
@@ -918,16 +963,20 @@ func (r *SeriesRepo) RemoveBookFromSeries(ctx context.Context, seriesID, bookID 
 		return false, fmt.Errorf("remove book %d from series %d: %w", bookID, seriesID, err)
 	}
 	defer func() { _ = tx.Rollback() }()
+	// Record the exclusion, with the position the book had, before the
+	// membership it is read from goes.
+	if _, err := tx.ExecContext(ctx, `INSERT OR REPLACE INTO book_series_exclusions (book_id, series_foreign_id, position_in_series)
+		SELECT sb.book_id, s.foreign_id, sb.position_in_series
+		FROM series_books sb JOIN series s ON s.id = sb.series_id
+		WHERE sb.series_id = ? AND sb.book_id = ? AND s.foreign_id != ''`, seriesID, bookID); err != nil {
+		return false, fmt.Errorf("record book %d left series %d: %w", bookID, seriesID, err)
+	}
 	res, err := tx.ExecContext(ctx, `DELETE FROM series_books WHERE series_id = ? AND book_id = ?`, seriesID, bookID)
 	if err != nil {
 		return false, fmt.Errorf("remove book %d from series %d: %w", bookID, seriesID, err)
 	}
 	if n, _ := res.RowsAffected(); n == 0 {
 		return false, nil
-	}
-	if _, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO book_series_exclusions (book_id, series_foreign_id)
-		SELECT ?, foreign_id FROM series WHERE id = ? AND foreign_id != ''`, bookID, seriesID); err != nil {
-		return false, fmt.Errorf("record book %d left series %d: %w", bookID, seriesID, err)
 	}
 	if err := tx.Commit(); err != nil {
 		return false, fmt.Errorf("remove book %d from series %d: %w", bookID, seriesID, err)

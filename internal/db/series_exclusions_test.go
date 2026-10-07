@@ -90,3 +90,47 @@ func TestUpsertBookLinkKeepsOnePrimary(t *testing.T) {
 		t.Errorf("primary series = %d, want 1", n)
 	}
 }
+
+// The exclusion keeps the position the book had, and lists under the series'
+// current name: after a merge, the series it was merged into.
+func TestListBookSeriesExclusions(t *testing.T) {
+	f := newMergeFixture(t, 1)
+	target, src := f.newSeries("s:t", "Fjellserien"), f.newSeries("s:s", "Serien om fjellet")
+	gone := f.newSeries("s:gone", "Borte")
+	f.link(src, 1, "4", true)
+	f.link(gone, 1, "", false)
+	for _, s := range []int64{src, gone} {
+		if _, err := f.series.RemoveBookFromSeries(f.ctx, s, f.books[0]); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := f.series.Merge(f.ctx, target, []int64{src}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.series.Delete(f.ctx, gone); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := f.series.ListBookSeriesExclusions(f.ctx, f.books[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	// By name; a series that no longer exists sorts by its id.
+	want := []BookSeriesExclusion{
+		{SeriesForeignID: "s:s", SeriesID: target, SeriesTitle: "Fjellserien", Position: "4"},
+		{SeriesForeignID: "s:gone", SeriesID: 0, SeriesTitle: "", Position: ""},
+	}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Errorf("exclusions = %+v, want %+v", got, want)
+	}
+
+	if err := f.series.ClearBookSeriesExclusions(f.ctx, f.books[0]); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := f.series.ListBookSeriesExclusions(f.ctx, f.books[0]); len(got) != 0 {
+		t.Errorf("after clearing = %+v, want none", got)
+	}
+	if created, err := f.series.LinkBookIfMissing(f.ctx, target, f.books[0], "4", true); err != nil || !created {
+		t.Errorf("automatic link after clearing = %v, %v; want linked again", created, err)
+	}
+}

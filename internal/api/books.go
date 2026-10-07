@@ -578,6 +578,14 @@ func (h *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, err)
 		return
 	}
+	// Unlocking every field hands the book back to metadata refresh, and that
+	// includes its series: forget the series the user took it out of (#2554).
+	if req.LockedFields != nil && len(book.LockedFields) == 0 && h.series != nil {
+		if err := h.series.ClearBookSeriesExclusions(r.Context(), book.ID); err != nil {
+			writeServerError(w, r, err)
+			return
+		}
+	}
 
 	// Fire an immediate indexer search when this write leaves the book wanted
 	// and monitored and it was not both before (e.g. "Delete file" flips
