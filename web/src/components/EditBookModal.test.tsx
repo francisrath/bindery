@@ -19,7 +19,6 @@ vi.mock('react-i18next', () => ({
 vi.mock('../api/client', () => ({
   api: {
     updateBook: vi.fn(),
-    listSeries: vi.fn(),
     listAuthorSeries: vi.fn(),
     createSeries: vi.fn(),
     linkBookToSeries: vi.fn(),
@@ -48,7 +47,6 @@ describe('EditBookModal (#1237, #1446)', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(api.updateBook).mockResolvedValue({ ...BOOK, title: 'Changed' } as never)
-    vi.mocked(api.listSeries).mockResolvedValue([])
     vi.mocked(api.listAuthorSeries).mockResolvedValue([])
   })
 
@@ -102,8 +100,7 @@ describe('EditBookModal (#1237, #1446)', () => {
     const onSeriesSaved = vi.fn()
 
     beforeEach(() => {
-      vi.mocked(api.listSeries).mockResolvedValue([A, B] as never)
-      vi.mocked(api.listAuthorSeries).mockResolvedValue([A] as never)
+      vi.mocked(api.listAuthorSeries).mockResolvedValue([A, B] as never)
       vi.mocked(api.linkBookToSeries).mockResolvedValue({} as never)
       vi.mocked(api.removeBookFromSeries).mockResolvedValue(undefined as never)
       vi.mocked(api.createSeries).mockResolvedValue({ id: 9, title: 'Ny serie' } as never)
@@ -116,6 +113,12 @@ describe('EditBookModal (#1237, #1446)', () => {
       return select
     }
     const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    it('offers only the author\'s series', async () => {
+      const select = await open()
+      expect(api.listAuthorSeries).toHaveBeenCalledWith(3)
+      expect([...select.options].map(o => o.textContent)).toEqual(['No series', 'Fjellserien', 'Havserien', 'New series…'])
+    })
 
     it('shows the primary series and position, and saving untouched makes no series call', async () => {
       await open()
@@ -167,7 +170,7 @@ describe('EditBookModal (#1237, #1446)', () => {
     })
 
     it('hides the series row when the series cannot be loaded, and other edits still save', async () => {
-      vi.mocked(api.listSeries).mockRejectedValue(new Error('down'))
+      vi.mocked(api.listAuthorSeries).mockRejectedValue(new Error('down'))
       render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} />)
       fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Changed' } })
       save()

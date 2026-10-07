@@ -41,13 +41,16 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
 
   useEffect(() => {
     let active = true
-    Promise.all([api.listSeries(), book.authorId ? api.listAuthorSeries(book.authorId) : Promise.resolve([] as Series[])])
-      .then(([list, authorSeries]) => {
+    // Only the author's own series are offered: filing a book under another
+    // author's series is not a fix anyone means to make from here.
+    const load = book.authorId ? api.listAuthorSeries(book.authorId) : Promise.resolve([] as Series[])
+    load
+      .then(authorSeries => {
         if (!active) return
         const mine = authorSeries.flatMap(s =>
           (s.books ?? []).filter(b => b.bookId === book.id).map(b => ({ id: s.id, position: b.positionInSeries, primary: b.primarySeries === true })))
         const current = mine.find(m => m.primary) ?? (mine.length === 1 ? mine[0] : null)
-        setAllSeries([...list].sort((a, b) => a.title.localeCompare(b.title)))
+        setAllSeries([...authorSeries].sort((a, b) => a.title.localeCompare(b.title)))
         setMembership(current ? { id: current.id, position: current.position } : null)
         setSeriesChoice(current ? String(current.id) : '')
         setPosition(current?.position ?? '')
