@@ -231,7 +231,7 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved }:
               <label className={labelCls} htmlFor="edit-book-new-series">
                 {t('bookDetail.edit.fieldNewSeries', 'New series name')}
               </label>
-              <input id="edit-book-new-series" type="text" value={newSeriesName} onChange={e => setNewSeriesName(e.target.value)} className={inputCls} />
+              <input id="edit-book-new-series" type="text" value={newSeriesName} onChange={e => setNewSeriesName(e.target.value)} className={inputCls} autoFocus />
             </div>
           )}
           {error && <p className="text-sm text-red-400">{error}</p>}

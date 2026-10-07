@@ -152,6 +152,7 @@ describe('EditBookModal (#1237, #1446)', () => {
     it('creates a new series and files the book there', async () => {
       const select = await open()
       fireEvent.change(select, { target: { value: 'new' } })
+      expect(screen.getByLabelText('New series name')).toHaveFocus()
       expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
       fireEvent.change(screen.getByLabelText('New series name'), { target: { value: ' Ny serie ' } })
       save()
