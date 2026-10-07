@@ -803,6 +803,11 @@ func (r *SeriesRepo) LinkBook(ctx context.Context, seriesID, bookID int64, posit
 // LinkBookIfMissing inserts a series_books row and reports whether it created
 // the membership. Callers that record rollback ownership should only claim
 // ownership when this returns true.
+//
+// It is how every automatic path (author sync and refresh, imports, list
+// sync, series fill) files a book under a series, so it is also where a
+// book the user took out of that series stays out (#2554): the exclusion is
+// checked inside the INSERT, by the series' foreign id and its merge aliases.
 func (r *SeriesRepo) LinkBookIfMissing(ctx context.Context, seriesID, bookID int64, position string, primary bool) (bool, error) {
 	primaryInt := 0
 	if primary {
@@ -810,8 +815,9 @@ func (r *SeriesRepo) LinkBookIfMissing(ctx context.Context, seriesID, bookID int
 	}
 	result, err := r.db.ExecContext(ctx,
 		`INSERT OR IGNORE INTO series_books (series_id, book_id, position_in_series, primary_series)
-		 VALUES (?, ?, ?, ?)`,
-		seriesID, bookID, position, primaryInt)
+		 SELECT ?, ?, ?, ?
+		 WHERE NOT EXISTS (`+bookExcludedFromSeriesSQL+`)`,
+		seriesID, bookID, position, primaryInt, seriesID, bookID)
 	if err != nil {
 		return false, fmt.Errorf("link book %d to series %d: %w", bookID, seriesID, err)
 	}
@@ -851,22 +857,82 @@ func (r *SeriesRepo) UpdateBookLinkPosition(ctx context.Context, seriesID, bookI
 	return nil
 }
 
+// bookExcludedFromSeriesSQL is true when the user took the book out of the
+// series (#2554), recorded under the series' foreign id or any id merged into
+// it. Takes the series id, then the book id.
+const bookExcludedFromSeriesSQL = `SELECT 1 FROM book_series_exclusions e
+	JOIN series s ON s.id = ?
+	WHERE e.book_id = ?
+	  AND (e.series_foreign_id = s.foreign_id
+	       OR e.series_foreign_id IN (SELECT a.foreign_id FROM series_aliases a WHERE a.series_id = s.id))`
+
+// UpsertBookLink files a book under a series at a position because the user
+// said so: adding it on the series page, or setting its series in the edit
+// dialog. It clears any record of the user having taken the book out of that
+// series, and when the link is primary it demotes the book's other series,
+// so the book keeps exactly one primary series (#2525).
 func (r *SeriesRepo) UpsertBookLink(ctx context.Context, seriesID, bookID int64, position string, primary bool) error {
-	primaryInt := 0
-	if primary {
-		primaryInt = 1
-	}
-	_, err := r.db.ExecContext(ctx, `
-		INSERT INTO series_books (series_id, book_id, position_in_series, primary_series)
-		VALUES (?, ?, ?, ?)
-		ON CONFLICT(series_id, book_id) DO UPDATE SET
-			position_in_series = excluded.position_in_series,
-			primary_series = excluded.primary_series`,
-		seriesID, bookID, strings.TrimSpace(position), primaryInt)
+	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("upsert book %d in series %d: %w", bookID, seriesID, err)
 	}
+	defer func() { _ = tx.Rollback() }()
+	steps := []struct {
+		query string
+		args  []any
+	}{
+		{`DELETE FROM book_series_exclusions WHERE book_id = ? AND series_foreign_id IN (
+			SELECT foreign_id FROM series WHERE id = ?
+			UNION SELECT foreign_id FROM series_aliases WHERE series_id = ?)`, []any{bookID, seriesID, seriesID}},
+		{`INSERT INTO series_books (series_id, book_id, position_in_series, primary_series)
+		VALUES (?, ?, ?, ?)
+		ON CONFLICT(series_id, book_id) DO UPDATE SET
+			position_in_series = excluded.position_in_series,
+			primary_series = excluded.primary_series`, []any{seriesID, bookID, strings.TrimSpace(position), boolToInt(primary)}},
+	}
+	if primary {
+		steps = append(steps, struct {
+			query string
+			args  []any
+		}{`UPDATE series_books SET primary_series = 0 WHERE book_id = ? AND series_id != ?`, []any{bookID, seriesID}})
+	}
+	for _, st := range steps {
+		if _, err := tx.ExecContext(ctx, st.query, st.args...); err != nil {
+			return fmt.Errorf("upsert book %d in series %d: %w", bookID, seriesID, err)
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("upsert book %d in series %d: %w", bookID, seriesID, err)
+	}
 	return nil
+}
+
+// RemoveBookFromSeries takes a book out of a series because the user said so,
+// and records that under the series' foreign id (#2554), so a refresh or an
+// import that still reports the book in that series does not put it back.
+// Rollbacks and rebinds use UnlinkBook, which records nothing. Reports false
+// when the book was not in the series.
+func (r *SeriesRepo) RemoveBookFromSeries(ctx context.Context, seriesID, bookID int64) (bool, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return false, fmt.Errorf("remove book %d from series %d: %w", bookID, seriesID, err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	res, err := tx.ExecContext(ctx, `DELETE FROM series_books WHERE series_id = ? AND book_id = ?`, seriesID, bookID)
+	if err != nil {
+		return false, fmt.Errorf("remove book %d from series %d: %w", bookID, seriesID, err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return false, nil
+	}
+	if _, err := tx.ExecContext(ctx, `INSERT OR IGNORE INTO book_series_exclusions (book_id, series_foreign_id)
+		SELECT ?, foreign_id FROM series WHERE id = ? AND foreign_id != ''`, bookID, seriesID); err != nil {
+		return false, fmt.Errorf("record book %d left series %d: %w", bookID, seriesID, err)
+	}
+	if err := tx.Commit(); err != nil {
+		return false, fmt.Errorf("remove book %d from series %d: %w", bookID, seriesID, err)
+	}
+	return true, nil
 }
 
 func (r *SeriesRepo) UnlinkBook(ctx context.Context, seriesID, bookID int64) error {
