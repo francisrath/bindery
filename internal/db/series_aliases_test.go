@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -117,18 +116,23 @@ func TestSeriesAliasDroppedWithTarget(t *testing.T) {
 	}
 }
 
-// The maintainer's condition for #2554: the alias-aware resolver is the only
-// place a series is looked up by provider foreign id. Any other query of that
-// shape could find nothing for a merged-away id and let the caller create the
-// series again.
+// The condition for #2554: a series is only ever looked up by provider
+// foreign id through the alias-aware resolver. Any other query of that shape
+// would find nothing for a merged-away id and let its caller create the series
+// again. So every SQL string in this package that touches the series table and
+// compares foreign_id, in a WHERE, a JOIN, an IN or an UPDATE, must also
+// consult series_aliases.
 func TestSeriesForeignIDLookupsGoThroughResolver(t *testing.T) {
-	lookup := regexp.MustCompile(`(?is)FROM\s+series\s+(?:AS\s+\w+\s+|\w+\s+)?WHERE[^;]*?\bforeign_id\s*=`)
-	const resolver = "const seriesByForeignIDSQL = `SELECT id FROM series WHERE foreign_id = ?"
+	literal := regexp.MustCompile("(?s)`[^`]*`|\"(?:[^\"\\\\]|\\\\.)*\"")
+	seriesTable := regexp.MustCompile(`(?i)\b(?:FROM|JOIN|UPDATE|INTO)\s+series(?:[\s),]|$)`)
+	assignment := regexp.MustCompile(`(?i)\bSET\s+foreign_id\s*=`)
+	compares := regexp.MustCompile(`(?i)\bforeign_id\s*(?:=|!=|<>|\bIN\b|\bLIKE\b|\bIS\b)`)
+
 	files, err := filepath.Glob("*.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var hits []string
+	checked := 0
 	for _, f := range files {
 		if strings.HasSuffix(f, "_test.go") {
 			continue
@@ -138,18 +142,19 @@ func TestSeriesForeignIDLookupsGoThroughResolver(t *testing.T) {
 			t.Fatal(err)
 		}
 		src := string(b)
-		for _, loc := range lookup.FindAllStringIndex(src, -1) {
-			line := 1 + strings.Count(src[:loc[0]], "\n")
-			if strings.HasPrefix(src[max(0, loc[0]-len("const seriesByForeignIDSQL = `SELECT id ")):], resolver) {
+		for _, loc := range literal.FindAllStringIndex(src, -1) {
+			sql := src[loc[0]:loc[1]]
+			if !seriesTable.MatchString(sql) || !compares.MatchString(assignment.ReplaceAllString(sql, "")) {
 				continue
 			}
-			hits = append(hits, fmt.Sprintf("%s:%d", f, line))
-		}
-		if f == "series.go" && !strings.Contains(src, resolver) {
-			t.Fatal("seriesByForeignIDSQL is gone or reshaped; update this test with it")
+			checked++
+			if !strings.Contains(sql, "series_aliases") {
+				t.Errorf("%s:%d compares series foreign_id without series_aliases: %s",
+					f, 1+strings.Count(src[:loc[0]], "\n"), strings.Join(strings.Fields(sql), " "))
+			}
 		}
 	}
-	if len(hits) > 0 {
-		t.Errorf("series looked up by foreign_id outside seriesByForeignIDSQL at %v", hits)
+	if checked == 0 {
+		t.Fatal("matched no series foreign_id query at all; the patterns no longer find the resolver")
 	}
 }

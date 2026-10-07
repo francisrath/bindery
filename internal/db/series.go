@@ -756,6 +756,34 @@ func (r *SeriesRepo) refuseAlias(ctx context.Context, foreignID string) error {
 	return nil
 }
 
+// AliasForeignIDs returns the provider ids merged into any of seriesIDs
+// (#2554), for a caller that matches provider refs against a set of series by
+// foreign id and must treat a merged-away id as the series it now names.
+func (r *SeriesRepo) AliasForeignIDs(ctx context.Context, seriesIDs []int64) ([]string, error) {
+	if len(seriesIDs) == 0 {
+		return nil, nil
+	}
+	args := make([]any, len(seriesIDs))
+	for i, id := range seriesIDs {
+		args[i] = id
+	}
+	rows, err := r.exec.QueryContext(ctx,
+		`SELECT foreign_id FROM series_aliases WHERE series_id IN (?`+strings.Repeat(",?", len(seriesIDs)-1)+`) ORDER BY foreign_id`, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list series aliases: %w", err)
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		out = append(out, id)
+	}
+	return out, rows.Err()
+}
+
 // ErrSeriesAlias reports a foreign id that names a series through a merge
 // alias and so cannot be given to another series.
 var ErrSeriesAlias = errors.New("series foreign id is an alias")

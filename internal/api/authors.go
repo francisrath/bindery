@@ -2126,10 +2126,24 @@ func (h *AuthorHandler) runCatalogueSync(ctx context.Context, author *models.Aut
 				for _, id := range pinIDs {
 					pinSet[id] = struct{}{}
 				}
+				var pinned []int64
 				for _, s := range ownSeries {
-					if _, ok := pinSet[s.ID]; ok && s.ForeignID != "" {
-						monitoredSeriesForeignIDs[s.ForeignID] = struct{}{}
+					if _, ok := pinSet[s.ID]; ok {
+						pinned = append(pinned, s.ID)
+						if s.ForeignID != "" {
+							monitoredSeriesForeignIDs[s.ForeignID] = struct{}{}
+						}
 					}
+				}
+				// A provider can still report a pinned series under an id
+				// merged into it (#2554); that book belongs to the pinned
+				// series too, so it is monitored at creation as well.
+				aliases, err := h.series.AliasForeignIDs(ctx, pinned)
+				if err != nil {
+					slog.Warn("failed to load merged series ids for series-mode fetch", "author", author.Name, "error", err)
+				}
+				for _, id := range aliases {
+					monitoredSeriesForeignIDs[id] = struct{}{}
 				}
 			}
 		}

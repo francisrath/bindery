@@ -93,7 +93,7 @@ The format dropdown beside **add all** sets the media type of every book the fil
 
 ## Merging Series
 
-One series can end up as several rows, when a provider names it in more than one way or a provider fix renames it. **Merge into this series…** on the series you want to keep folds the others into it:
+One series can end up as several rows, when a provider names it in more than one way or a provider fix renames it. **Merge…** on the series you want to keep opens a dialog to pick the others and fold them into it:
 
 - Their books join it. A book already in it keeps its position there; a source fills a position it left empty.
 - The series becomes a book's primary series where a merged one was.

@@ -47,3 +47,47 @@ func TestExistingBookSeriesLinker_FollowsMergeAliases(t *testing.T) {
 		t.Errorf("series rows = %d (%v), want 1: the refresh recreated the merged series", n, err)
 	}
 }
+
+// In series monitor mode a new book is monitored when the provider reports it
+// in a pinned series. Reported under an id merged into the pinned series
+// (#2554), it is in that series too, so it is monitored at creation as well.
+func TestCatalogueSync_MonitorsBooksReportedUnderAMergedSeriesID(t *testing.T) {
+	f := newSeriesLinkFixture(t, true)
+	ctx := context.Background()
+	f.author.MonitorMode = models.AuthorMonitorModeSeries
+	if err := f.authors.Update(ctx, f.author); err != nil {
+		t.Fatal(err)
+	}
+	first := f.addImportedBook(t, "OL1W", "Fjellvinden")
+	target := &models.Series{ForeignID: "hc-series:900", Title: "Fjellserien"}
+	source := &models.Series{ForeignID: "ol-series:fjellserien-trilogien", Title: "Fjellserien-trilogien"}
+	for _, s := range []*models.Series{target, source} {
+		if err := f.series.CreateOrGet(ctx, s); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := f.series.LinkBook(ctx, target.ID, first.ID, "1", true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.series.Merge(ctx, target.ID, []int64{source.ID}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.authors.SetMonitoredSeriesIDs(ctx, f.author.ID, []int64{target.ID}); err != nil {
+		t.Fatal(err)
+	}
+
+	later := seriesWork("OL2W", "Havets stemme", "2")
+	later.SeriesRefs[0].ForeignID, later.SeriesRefs[0].Title = source.ForeignID, source.Title
+	refreshCatalogue(t, f.handler(&stubMetaProvider{works: []models.Book{later}}), f.author)
+
+	got, err := f.books.GetByForeignID(ctx, "OL2W")
+	if err != nil || got == nil {
+		t.Fatalf("new book not created: %v", err)
+	}
+	if !got.Monitored {
+		t.Error("a new book in the pinned series, reported under a merged-away id, was not monitored")
+	}
+	if links := linksForBook(t, f, got.ID); len(links) != 1 || links[0].seriesTitle != "Fjellserien" {
+		t.Errorf("links = %+v, want only Fjellserien", links)
+	}
+}
