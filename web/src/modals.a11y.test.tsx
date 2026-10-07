@@ -14,6 +14,7 @@ import EditBookModal from './components/EditBookModal'
 import FixMatchModal from './components/FixMatchModal'
 import HardcoverSeriesLinkModal from './components/HardcoverSeriesLinkModal'
 import MergeAuthorsModal from './components/MergeAuthorsModal'
+import MergeSeriesModal from './components/MergeSeriesModal'
 import RebindModal from './components/RebindModal'
 import RenameFilesModal from './components/RenameFilesModal'
 import SeriesNameModal from './components/SeriesNameModal'
@@ -56,6 +57,7 @@ const MODALS: Array<[string, (onClose: () => void) => ReactElement]> = [
   ['components/FixMatchModal.tsx', onClose => <FixMatchModal sourceBookId={1} path="/b/a.epub" format="ebook" onClose={onClose} onReassigned={noop} />],
   ['components/HardcoverSeriesLinkModal.tsx', onClose => <HardcoverSeriesLinkModal series={series} initialResults={[]} onClose={onClose} onLinked={noop} />],
   ['components/MergeAuthorsModal.tsx', onClose => <MergeAuthorsModal authors={[author]} onClose={onClose} onMerged={noop} />],
+  ['components/MergeSeriesModal.tsx', onClose => <MergeSeriesModal target={series} series={[series]} onClose={onClose} onMerged={noop} />],
   ['components/RebindModal.tsx', onClose => <RebindModal book={book} onClose={onClose} onSuccess={noop} />],
   ['components/RenameFilesModal.tsx', onClose => <RenameFilesModal scope="book" id={1} label="A Book" onClose={onClose} />],
   ['components/SeriesNameModal.tsx', onClose => <SeriesNameModal title="Rename series" submitLabel="Save" onClose={onClose} onSubmit={noop} />],

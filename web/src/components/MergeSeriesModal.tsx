@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from './useConfirmDialog'
 import { api, Series, SeriesMergePlan } from '../api/client'
+import { useModal } from './useModal'
 
 interface Props {
   target: Series
@@ -66,15 +67,18 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
     await run(false)
   }
 
+  const { titleId, panelProps } = useModal({ onClose, canClose: !busy })
+
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
+    <div className="modal-overlay fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
       {confirmDialog}
       <div
-        className="bg-slate-100 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded-lg w-full max-w-xl shadow-2xl max-h-[90vh] flex flex-col"
+        {...panelProps}
+        className="bg-slate-100 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded-lg w-full max-w-xl shadow-2xl modal-max-h flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="p-4 border-b border-slate-200 dark:border-zinc-800">
-          <h3 className="text-lg font-semibold">{t('series.merge.title', { title: target.title })}</h3>
+          <h3 id={titleId} className="text-lg font-semibold">{t('series.merge.title', { title: target.title })}</h3>
           <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1">{t('series.merge.description')}</p>
         </div>
 
