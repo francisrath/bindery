@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"context"
 	"encoding/xml"
+	"errors"
 	"io"
 	"log/slog"
 	"net/url"
@@ -139,7 +140,7 @@ func embeddedCover(filePath string) []byte {
 // audioCover returns the picture in an audio file's tags (an ID3 APIC frame,
 // an MP4 covr atom, a FLAC picture block).
 func audioCover(filePath string) []byte {
-	f, err := os.Open(filePath) // #nosec G304 -- a book file the importer is attaching
+	f, err := openRegular(filePath)
 	if err != nil {
 		return nil
 	}
@@ -163,11 +164,19 @@ func audioCover(filePath string) []byte {
 // the manifest item with properties="cover-image" (EPUB 3), else the item
 // named by <meta name="cover"> (EPUB 2).
 func epubCover(filePath string) []byte {
-	zr, err := zip.OpenReader(filePath)
+	f, err := openRegular(filePath)
 	if err != nil {
 		return nil
 	}
-	defer func() { _ = zr.Close() }()
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil {
+		return nil
+	}
+	zr, err := zip.NewReader(f, info.Size())
+	if err != nil {
+		return nil
+	}
 	opfPath, err := epubOPFPath(zr)
 	if err != nil {
 		return nil
@@ -239,13 +248,42 @@ func opfCoverHref(r io.Reader) string {
 }
 
 func readCapped(filePath string) []byte {
-	f, err := os.Open(filePath) // #nosec G304 -- a fixed cover filename inside a book folder
+	f, err := openRegular(filePath)
 	if err != nil {
 		return nil
 	}
 	defer f.Close()
 	return readCappedFrom(f)
 }
+
+// openRegular opens filePath only when it is a regular file, never through a
+// link: a cover taken from a file is shown to everyone who can see the book,
+// so a cover.jpg or a track that is a link to some other image on the server
+// must not become one (the rule #2961 set for serving library files). The
+// handle is checked to be the file Lstat saw, so a link swapped in between is
+// refused too. A link in a parent folder is followed, as it is for serving:
+// those are operator configuration.
+func openRegular(filePath string) (*os.File, error) {
+	li, err := os.Lstat(filePath)
+	if err != nil {
+		return nil, err
+	}
+	if !li.Mode().IsRegular() {
+		return nil, errNotRegularFile
+	}
+	f, err := os.Open(filePath) // #nosec G304 -- a book file or a fixed cover name inside its folder, checked regular above
+	if err != nil {
+		return nil, err
+	}
+	info, err := f.Stat()
+	if err != nil || !info.Mode().IsRegular() || !os.SameFile(li, info) {
+		_ = f.Close()
+		return nil, errNotRegularFile
+	}
+	return f, nil
+}
+
+var errNotRegularFile = errors.New("not a regular file")
 
 // readCappedFrom reads at most covers.MaxBytes; anything larger is not used.
 func readCappedFrom(r io.Reader) []byte {

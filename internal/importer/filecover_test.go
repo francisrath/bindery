@@ -146,6 +146,41 @@ func TestReadFileCover(t *testing.T) {
 	}
 }
 
+// A cover read from the library is shown to everyone who can see the book,
+// so a link is never followed to one (as #2961 does for serving files): not a
+// folder's cover.jpg, not a track, not the book file itself.
+func TestReadFileCover_DoesNotFollowLinks(t *testing.T) {
+	dir := t.TempDir()
+	elsewhere := filepath.Join(t.TempDir(), "private.jpg")
+	if err := os.WriteFile(elsewhere, fakeImage("private"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	tagged := filepath.Join(t.TempDir(), "elsewhere.mp3")
+	writeTaggedMP3(t, tagged, fakeImage("elsewhere-track"))
+	epub := filepath.Join(t.TempDir(), "elsewhere.epub")
+	writeCoverEpub(t, epub, true, fakeImage("elsewhere-epub"))
+
+	folder := filepath.Join(dir, "book")
+	if err := os.MkdirAll(folder, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	link := func(target, name string) string {
+		p := filepath.Join(folder, name)
+		if err := os.Symlink(target, p); err != nil {
+			t.Skipf("symlinks unavailable: %v", err)
+		}
+		return p
+	}
+	link(elsewhere, "cover.jpg")
+	link(tagged, "01.mp3")
+	if got := readFileCover(folder); got != nil {
+		t.Errorf("folder of links: got %q, want no cover", got)
+	}
+	if got := readFileCover(link(epub, "book.epub")); got != nil {
+		t.Errorf("linked epub: got %q, want no cover", got)
+	}
+}
+
 // End to end through an ebook import: a book with no cover gets the EPUB's.
 func TestTryImportInternal_FillsCoverFromEpub(t *testing.T) {
 	t.Parallel()
