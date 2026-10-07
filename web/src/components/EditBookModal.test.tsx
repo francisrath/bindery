@@ -173,6 +173,33 @@ describe('EditBookModal (#1237, #1446)', () => {
       expect(api.linkBookToSeries).not.toHaveBeenCalled()
     })
 
+    it('takes the book out of every series it is in with No series', async () => {
+      vi.mocked(api.listAuthorSeries).mockResolvedValue([
+        A, { ...B, books: [{ seriesId: 2, bookId: 7, positionInSeries: '2', primarySeries: false }] },
+      ] as never)
+      const select = await open()
+      fireEvent.change(select, { target: { value: '' } })
+      save()
+      await waitFor(() => expect(api.removeBookFromSeries).toHaveBeenCalledTimes(2))
+      expect(api.removeBookFromSeries).toHaveBeenCalledWith(1, 7)
+      expect(api.removeBookFromSeries).toHaveBeenCalledWith(2, 7)
+    })
+
+    it('shows the series the book is named under when none is primary, and saving untouched changes nothing', async () => {
+      vi.mocked(api.listAuthorSeries).mockResolvedValue([
+        { ...A, books: [{ seriesId: 1, bookId: 7, positionInSeries: '', primarySeries: false }] },
+        { ...B, books: [{ seriesId: 2, bookId: 7, positionInSeries: '2', primarySeries: false }] },
+      ] as never)
+      render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} />)
+      const select = await screen.findByLabelText('Series') as HTMLSelectElement
+      // The server names it by the one with a position.
+      await waitFor(() => expect(select.value).toBe('2'))
+      save()
+      await waitFor(() => expect(onClose).toHaveBeenCalled())
+      expect(api.removeBookFromSeries).not.toHaveBeenCalled()
+      expect(api.linkBookToSeries).not.toHaveBeenCalled()
+    })
+
     it('files a book that is in no series under the one picked', async () => {
       vi.mocked(api.listAuthorSeries).mockResolvedValue([{ ...A, books: [] }, B] as never)
       render(<EditBookModal book={IN_SERIES} onClose={onClose} onSaved={onSaved} onSeriesSaved={onSeriesSaved} />)

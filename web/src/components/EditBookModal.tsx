@@ -14,8 +14,9 @@ interface Props {
   seriesExclusions?: number
 }
 
-// The series a book is filed under for naming: its primary membership, or its
-// only one.
+// The series a book is filed under for naming, picked as the server does
+// (GetPrimarySeriesForBook): primary first, then one with a position, then the
+// lowest id.
 interface Membership { id: number; position: string }
 
 const NEW_SERIES = 'new'
@@ -38,6 +39,8 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
   // other fields still works.
   const [allSeries, setAllSeries] = useState<Series[] | null>(null)
   const [membership, setMembership] = useState<Membership | null>(null)
+  // Every series the book is in, so No series can take it out of all of them.
+  const [memberOf, setMemberOf] = useState<number[]>([])
   const [seriesChoice, setSeriesChoice] = useState<string>('')
   const [newSeriesName, setNewSeriesName] = useState('')
   const [position, setPosition] = useState('')
@@ -52,9 +55,13 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
         if (!active) return
         const mine = authorSeries.flatMap(s =>
           (s.books ?? []).filter(b => b.bookId === book.id).map(b => ({ id: s.id, position: b.positionInSeries, primary: b.primarySeries === true })))
-        const current = mine.find(m => m.primary) ?? (mine.length === 1 ? mine[0] : null)
+        const current = [...mine].sort((a, b) =>
+          Number(b.primary) - Number(a.primary) ||
+          Number(a.position.trim() === '') - Number(b.position.trim() === '') ||
+          a.id - b.id)[0] ?? null
         setAllSeries([...authorSeries].sort((a, b) => a.title.localeCompare(b.title)))
         setMembership(current ? { id: current.id, position: current.position } : null)
+        setMemberOf(mine.map(m => m.id))
         setSeriesChoice(current ? String(current.id) : '')
         setPosition(current?.position ?? '')
       })
@@ -106,7 +113,8 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
   }
 
   // Files the book under the chosen series as its primary one, at the given
-  // position, and takes it out of the series it was in before. The server
+  // position, and takes it out of the series it was in before, or with No
+  // series out of every series it is in. The server
   // demotes the book's other series and remembers the removal, so a refresh
   // does not put it back (#2554).
   const saveSeries = async () => {
@@ -119,8 +127,9 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
     if (target !== null) {
       await api.linkBookToSeries(target, { bookId: book.id, positionInSeries: position.trim(), primarySeries: true })
     }
-    if (membership && membership.id !== target) {
-      await api.removeBookFromSeries(membership.id, book.id)
+    const leave = target === null ? memberOf : membership && membership.id !== target ? [membership.id] : []
+    for (const id of leave) {
+      await api.removeBookFromSeries(id, book.id)
     }
   }
 
