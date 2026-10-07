@@ -726,7 +726,7 @@ describe('SeriesPage', () => {
 
     expect(within(dialog).queryByText('Dune')).not.toBeInTheDocument()
     fireEvent.click(await within(dialog).findByLabelText(/Dune Messiah/))
-    fireEvent.change(within(dialog).getByLabelText('Position'), { target: { value: '2' } })
+    fireEvent.change(within(dialog).getByLabelText('Position (optional)'), { target: { value: '2' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add' }))
 
     await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(30, {
