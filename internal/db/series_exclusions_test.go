@@ -56,6 +56,53 @@ func TestBookSeriesExclusionFollowsMerge(t *testing.T) {
 	}
 }
 
+// A book taken out of a duplicate but still in the series it is merged into
+// is in that series: the merge drops the exclusion instead of leaving the
+// book listed as kept out of a series it is in. One kept out of the
+// duplicate only still stays out.
+func TestMergeDropsExclusionsForBooksInTheTarget(t *testing.T) {
+	f := newMergeFixture(t, 2)
+	target, src := f.newSeries("s:t", "T"), f.newSeries("s:s", "S")
+	f.link(target, 1, "1", true)
+	f.link(src, 1, "1", true)
+	f.link(src, 2, "2", true)
+	for _, b := range f.books {
+		if _, err := f.series.RemoveBookFromSeries(f.ctx, src, b); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := f.series.Merge(f.ctx, target, []int64{src}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := f.series.ListBookSeriesExclusions(f.ctx, f.books[0]); err != nil || len(got) != 0 {
+		t.Errorf("book in the target: exclusions = %+v, %v; want none", got, err)
+	}
+	if got, err := f.series.ListBookSeriesExclusions(f.ctx, f.books[1]); err != nil || len(got) != 1 || got[0].SeriesID != target {
+		t.Errorf("book only in the duplicate: exclusions = %+v, %v; want it kept out of the target", got, err)
+	}
+}
+
+// A hand-made series' id is not kept as an alias, so what was kept out of it
+// goes with it.
+func TestMergeDropsAHandMadeSeriesExclusions(t *testing.T) {
+	f := newMergeFixture(t, 1)
+	target := f.newSeries("s:t", "T")
+	manual, err := f.series.CreateManual(f.ctx, "Handmade")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.link(manual.ID, 1, "1", true)
+	if _, err := f.series.RemoveBookFromSeries(f.ctx, manual.ID, f.books[0]); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.series.Merge(f.ctx, target, []int64{manual.ID}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if n := f.count(`SELECT COUNT(*) FROM book_series_exclusions`); n != 0 {
+		t.Errorf("exclusions = %d, want 0", n)
+	}
+}
+
 // Removing a book that is not in the series records nothing.
 func TestRemoveBookFromSeriesNotMember(t *testing.T) {
 	f := newMergeFixture(t, 1)
