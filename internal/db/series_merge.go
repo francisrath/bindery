@@ -194,7 +194,7 @@ func (r *SeriesRepo) planMerge(ctx context.Context, targetID int64, sourceIDs []
 			ps.Kept = append(ps.Kept, SeriesMergeBook{BookID: m.bookID, Title: kept.title, Position: pos, Primary: kept.primary})
 		}
 		plan.Sources = append(plan.Sources, ps)
-		if src.foreignID != "" {
+		if keepAsAlias(src.foreignID) {
 			plan.Aliases = append(plan.Aliases, src.foreignID)
 		}
 		plan.Aliases = append(plan.Aliases, src.aliases...)
@@ -293,7 +293,7 @@ func (r *SeriesRepo) applyMerge(ctx context.Context, plan *SeriesMergePlan) erro
 		// gone, so an alias never equals a live foreign id.
 		add("repoint aliases", `UPDATE series_aliases SET series_id = ? WHERE series_id = ?`, t, src.ID)
 		add("delete the merged series", `DELETE FROM series WHERE id = ?`, src.ID)
-		if src.ForeignID != "" {
+		if keepAsAlias(src.ForeignID) {
 			add("alias the merged series' id", `INSERT INTO series_aliases (foreign_id, series_id) VALUES (?, ?)`, src.ForeignID, t)
 		}
 	}
@@ -304,4 +304,10 @@ func (r *SeriesRepo) applyMerge(ctx context.Context, plan *SeriesMergePlan) erro
 		}
 	}
 	return nil
+}
+
+// keepAsAlias reports whether a merged series' foreign id is worth keeping:
+// only a provider's id can come back on a refresh.
+func keepAsAlias(foreignID string) bool {
+	return foreignID != "" && !strings.HasPrefix(foreignID, manualSeriesPrefix)
 }

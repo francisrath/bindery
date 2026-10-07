@@ -227,6 +227,30 @@ func TestSeriesMergeChains(t *testing.T) {
 	}
 }
 
+// A hand-made series' synthetic id never comes back from a provider, so
+// merging one leaves no alias behind, in the plan or in the table.
+func TestSeriesMergeDropsManualID(t *testing.T) {
+	f := newMergeFixture(t, 0)
+	target := f.newSeries("s:t", "T")
+	manual, err := f.series.CreateManual(f.ctx, "Handmade")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := f.series.PlanMerge(f.ctx, target, []int64{manual.ID}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Aliases) != 0 {
+		t.Errorf("plan aliases = %v, want none", plan.Aliases)
+	}
+	if _, err := f.series.Merge(f.ctx, target, []int64{manual.ID}, ""); err != nil {
+		t.Fatal(err)
+	}
+	if n := f.count(`SELECT COUNT(*) FROM series_aliases`); n != 0 {
+		t.Errorf("series_aliases rows = %d, want 0", n)
+	}
+}
+
 func TestSeriesMergeRejectsBadRequests(t *testing.T) {
 	f := newMergeFixture(t, 0)
 	target, src := f.newSeries("s:t", "T"), f.newSeries("s:s", "S")

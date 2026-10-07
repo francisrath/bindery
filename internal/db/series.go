@@ -335,9 +335,13 @@ func (r *SeriesRepo) SetGenreOverride(ctx context.Context, id int64, genres []st
 	return nil
 }
 
+// manualSeriesPrefix starts the synthetic foreign id of a hand-made series.
+// No provider ever sends one back, so a merge does not keep it as an alias.
+const manualSeriesPrefix = "manual:series:"
+
 func (r *SeriesRepo) CreateManual(ctx context.Context, title string) (*models.Series, error) {
 	s := &models.Series{
-		ForeignID:   fmt.Sprintf("manual:series:%d", time.Now().UTC().UnixNano()),
+		ForeignID:   fmt.Sprintf(manualSeriesPrefix+"%d", time.Now().UTC().UnixNano()),
 		Title:       strings.TrimSpace(title),
 		Description: "",
 	}
