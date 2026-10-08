@@ -534,6 +534,12 @@
     "grabbed": "Grabbed"
   },
   "bookDetail": {
+    "cover": {
+      "upload": "Omslag uploaden",
+      "change": "Omslag wijzigen",
+      "uploading": "Uploaden…",
+      "uploadFailed": "De omslag kon niet worden geüpload"
+    },
     "back": "← Books",
     "notFound": "Book not found",
     "loadFailed": "Failed to load",

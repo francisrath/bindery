@@ -566,6 +566,12 @@
     }
   },
   "bookDetail": {
+    "cover": {
+      "upload": "Subir portada",
+      "change": "Cambiar portada",
+      "uploading": "Subiendo…",
+      "uploadFailed": "No se pudo subir la portada"
+    },
     "back": "← Books",
     "notFound": "Book not found",
     "loadFailed": "Failed to load",

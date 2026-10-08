@@ -534,6 +534,12 @@
     "grabbed": "Grabbed"
   },
   "bookDetail": {
+    "cover": {
+      "upload": "Cover hochladen",
+      "change": "Cover ändern",
+      "uploading": "Wird hochgeladen…",
+      "uploadFailed": "Das Cover konnte nicht hochgeladen werden"
+    },
     "back": "← Books",
     "notFound": "Book not found",
     "loadFailed": "Failed to load",

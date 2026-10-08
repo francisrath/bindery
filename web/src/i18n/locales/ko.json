@@ -887,6 +887,12 @@
     "notMonitored": "모니터링 안 함"
   },
   "bookDetail": {
+    "cover": {
+      "upload": "표지 업로드",
+      "change": "표지 변경",
+      "uploading": "업로드 중…",
+      "uploadFailed": "표지를 업로드할 수 없습니다"
+    },
     "back": "← 도서",
     "notFound": "도서를 찾을 수 없음",
     "loadFailed": "불러오기 실패",

@@ -560,6 +560,12 @@
     }
   },
   "bookDetail": {
+    "cover": {
+      "upload": "Mag-upload ng pabalat",
+      "change": "Palitan ang pabalat",
+      "uploading": "Nag-a-upload…",
+      "uploadFailed": "Hindi ma-upload ang pabalat"
+    },
     "back": "← Books",
     "notFound": "Book not found",
     "loadFailed": "Failed to load",

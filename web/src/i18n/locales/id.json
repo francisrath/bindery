@@ -560,6 +560,12 @@
     }
   },
   "bookDetail": {
+    "cover": {
+      "upload": "Unggah sampul",
+      "change": "Ganti sampul",
+      "uploading": "Mengunggah…",
+      "uploadFailed": "Tidak dapat mengunggah sampul"
+    },
     "back": "← Books",
     "notFound": "Book not found",
     "loadFailed": "Failed to load",
