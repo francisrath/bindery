@@ -2110,6 +2110,12 @@
     "copyPath": "Copy file path to clipboard",
     "download": "Download",
     "rebind": "Re-bind",
+    "cover": {
+      "upload": "Upload cover",
+      "change": "Change cover",
+      "uploading": "Uploading…",
+      "uploadFailed": "Could not upload the cover"
+    },
     "edit": {
       "button": "Edit",
       "hint": "Manually edit metadata; edited fields are locked against refresh",

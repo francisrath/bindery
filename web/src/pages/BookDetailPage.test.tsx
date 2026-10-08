@@ -53,6 +53,7 @@ vi.mock('../api/client', async importOriginal => {
       listIndexers: vi.fn(),
       grab: vi.fn(),
       updateBook: vi.fn(),
+      uploadBookCover: vi.fn(),
       deleteBook: vi.fn(),
       deleteBookFile: vi.fn(),
       toggleExcluded: vi.fn(),
@@ -1502,6 +1503,26 @@ describe('BookDetailPage metadata source (#1707)', () => {
       'href',
       'https://openlibrary.org/works/OL27448W',
     )
+  })
+
+  it('uploads a cover picked from the book page (#3017)', async () => {
+    const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'cover.png', { type: 'image/png' })
+    vi.mocked(api.uploadBookCover).mockResolvedValue(makeBook({ imageUrl: '/api/v1/images?url=covers%3A%2F%2Fabc' }))
+    renderBookDetailPage()
+    const input = await screen.findByLabelText('Upload cover')
+    fireEvent.change(input, { target: { files: [file] } })
+    await waitFor(() => expect(api.uploadBookCover).toHaveBeenCalledWith(42, file))
+    expect(await screen.findByRole('img', { name: makeBook().title })).toHaveAttribute('src', '/api/v1/images?url=covers%3A%2F%2Fabc')
+    // With a cover in place the same control offers to change it.
+    expect(screen.getByLabelText('Change cover')).toBeInTheDocument()
+  })
+
+  it('says why a cover upload was refused', async () => {
+    vi.mocked(api.uploadBookCover).mockRejectedValue(new Error('send a JPEG, PNG, WebP or GIF image'))
+    renderBookDetailPage()
+    fireEvent.change(await screen.findByLabelText('Upload cover'), { target: { files: [new File(['x'], 'notes.txt')] } })
+    expect(await screen.findByText('send a JPEG, PNG, WebP or GIF image')).toBeInTheDocument()
+    expect(screen.getByLabelText('Upload cover')).not.toBeDisabled()
   })
 
   it('keeps an ambiguous numeric Hardcover id visible without linking it', async () => {

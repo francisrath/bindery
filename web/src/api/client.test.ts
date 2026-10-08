@@ -233,3 +233,53 @@ describe('matchDownload (#1589)', () => {
     expect(res).toEqual({ imported: false, retryQueued: false, located: false })
   })
 })
+
+// jsdom's Blob cannot be sent by Node's fetch (a browser's File can), so the
+// tests hand uploadBookCover bytes carrying the one Blob property it reads.
+const imageBytes = (bytes: number[], type = '') =>
+  Object.assign(new Uint8Array(bytes), { type }) as unknown as Blob
+
+describe('uploadBookCover (#3017)', () => {
+  beforeEach(() => {
+    document.cookie = 'bindery_csrf=; Max-Age=0; path=/'
+    window.history.pushState(null, '', '/')
+  })
+
+  it('POSTs the image as the body with its own type and the CSRF token', async () => {
+    let seen: { type: string | null; csrf: string | null; size: number } | null = null
+    server.use(
+      http.get(apiUrl('/auth/csrf'), () => HttpResponse.json({ csrfToken: 't' })),
+      http.post(apiUrl('/book/42/cover'), async ({ request }) => {
+        seen = {
+          type: request.headers.get('Content-Type'),
+          csrf: request.headers.get('X-CSRF-Token'),
+          size: (await request.arrayBuffer()).byteLength,
+        }
+        return HttpResponse.json({ id: 42, imageUrl: '/api/v1/images?url=covers%3A%2F%2Fabc' })
+      }),
+    )
+
+    const { api, initCSRF } = await loadClient()
+    await initCSRF()
+
+    const res = await api.uploadBookCover(42, imageBytes([1, 2, 3], 'image/webp'))
+
+    expect(seen).toEqual({ type: 'image/webp', csrf: 't', size: 3 })
+    expect(res.imageUrl).toBe('/api/v1/images?url=covers%3A%2F%2Fabc')
+  })
+
+  it('sends a typeless blob as octet-stream for the server to sniff', async () => {
+    let type: string | null = null
+    server.use(
+      http.get(apiUrl('/auth/csrf'), () => HttpResponse.json({ csrfToken: 't' })),
+      http.post(apiUrl('/book/42/cover'), ({ request }) => {
+        type = request.headers.get('Content-Type')
+        return HttpResponse.json({ id: 42 })
+      }),
+    )
+    const { api, initCSRF } = await loadClient()
+    await initCSRF()
+    await api.uploadBookCover(42, imageBytes([1]))
+    expect(type).toBe('application/octet-stream')
+  })
+})

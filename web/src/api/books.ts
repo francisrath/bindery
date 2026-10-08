@@ -247,6 +247,9 @@ export const booksApi = {
   getBook: (id: number) => request<Book>(`/book/${id}`),
   updateBook: (id: number, data: Partial<Book>) => request<Book>(`/book/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   getBookSeriesExclusions: (id: number) => request<BookSeriesExclusion[]>(`/book/${id}/series-exclusions`),
+  // The image is the request body; the server sniffs and caps it (#3017).
+  uploadBookCover: (id: number, image: Blob) =>
+    request<Book>(`/book/${id}/cover`, { method: 'POST', body: image, headers: { 'Content-Type': image.type || 'application/octet-stream' } }),
   deleteBook: (id: number, deleteFiles = false) =>
     request<void>(`/book/${id}${deleteFiles ? '?deleteFiles=true' : ''}`, { method: 'DELETE' }),
   deleteBookFile: (id: number, queryParams = '') => request<Book>(`/book/${id}/file${queryParams}`, { method: 'DELETE' }),

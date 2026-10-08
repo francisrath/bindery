@@ -460,6 +460,22 @@ function BookDetailPageInner() {
     }
   }
 
+  // Sets the cover from an image the user picks (#3017). It replaces the
+  // current cover, and refresh only fills an empty one, so it stays.
+  const [uploadingCover, setUploadingCover] = useState(false)
+  const uploadCover = async (file: File | undefined) => {
+    if (!book || !file) return
+    setUploadingCover(true)
+    setError(null)
+    try {
+      setBook(await api.uploadBookCover(book.id, file))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : t('bookDetail.cover.uploadFailed', 'Could not upload the cover'))
+    } finally {
+      setUploadingCover(false)
+    }
+  }
+
   const saveField = async (patch: Partial<Book>) => {
     if (!book) return
     setSaving(true)
@@ -902,6 +918,18 @@ function BookDetailPageInner() {
               <CoverPlaceholder id={book.id} title={book.title} className="aspect-[2/3] rounded-lg" />
             }
           />
+          <label className={`mt-2 block text-center text-xs text-accent-text hover:underline cursor-pointer has-[:focus-visible]:underline ${uploadingCover ? 'opacity-50 pointer-events-none' : ''}`}>
+            {uploadingCover
+              ? t('bookDetail.cover.uploading', 'Uploading…')
+              : book.imageUrl ? t('bookDetail.cover.change', 'Change cover') : t('bookDetail.cover.upload', 'Upload cover')}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              disabled={uploadingCover}
+              onChange={e => { void uploadCover(e.target.files?.[0]); e.target.value = '' }}
+            />
+          </label>
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
