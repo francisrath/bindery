@@ -59,5 +59,8 @@ func (h *BookHandler) UploadCover(w http.ResponseWriter, r *http.Request) {
 	}
 	book.ImageURL = ref
 	cleanBookDescription(book)
+	// The same shape GET /book/{id} answers with: the stored reference is
+	// rewritten to the image route a browser can load.
+	proxyBookImages(book)
 	writeJSON(w, http.StatusOK, book)
 }

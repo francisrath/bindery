@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -38,7 +39,8 @@ func coverFixture(t *testing.T) (*BookHandler, *models.Book, func(body []byte) *
 
 func TestUploadCover_StoresAndSetsCover(t *testing.T) {
 	h, book, post := coverFixture(t)
-	if rec := post(pngBytes); rec.Code != http.StatusOK {
+	rec := post(pngBytes)
+	if rec.Code != http.StatusOK {
 		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
 	}
 	got, err := h.books.GetByID(t.Context(), book.ID)
@@ -50,6 +52,15 @@ func TestUploadCover_StoresAndSetsCover(t *testing.T) {
 	}
 	if _, ct, ok := h.coverStore.Resolve(got.ImageURL); !ok || ct != "image/png" {
 		t.Errorf("stored cover resolves = %v, content type %q", ok, ct)
+	}
+	// The response is shaped like GET /book/{id}: a URL the browser can load,
+	// not the stored reference.
+	var resp models.Book
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if want := ProxyImageURL(got.ImageURL); resp.ImageURL != want {
+		t.Errorf("response imageUrl = %q, want %q", resp.ImageURL, want)
 	}
 }
 
