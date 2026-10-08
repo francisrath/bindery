@@ -74,7 +74,14 @@ const (
 type Scanner struct {
 	// covers stores cover art read from book files; nil disables it. See
 	// WithCoverStore.
-	covers       *covers.Store
+	covers *covers.Store
+	// noFileCover remembers files read for a cover that had none, keyed by
+	// path, so the library scan's backfill does not reread them every scan.
+	// See fillCoverFromFile.
+	noFileCover sync.Map
+	// readCover reads a file's cover art; nil uses readFileCover. Tests set
+	// it to count reads.
+	readCover    func(string) []byte
 	downloads    *db.DownloadRepo
 	clients      *db.DownloadClientRepo
 	books        *db.BookRepo

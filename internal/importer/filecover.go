@@ -42,8 +42,24 @@ func (s *Scanner) fillCoverFromFile(ctx context.Context, book *models.Book, file
 	if s.covers == nil || book == nil || book.ImageURL != "" {
 		return
 	}
-	art := readFileCover(filePath)
+	// A file already found to have no art is skipped while it is unchanged.
+	// The record is in memory, so each such file is read once per process;
+	// persisting it is the next step if one pass after a restart matters.
+	stamp, stamped := fileStampOf(filePath)
+	if stamped {
+		if prev, ok := s.noFileCover.Load(filePath); ok && prev.(fileStamp) == stamp {
+			return
+		}
+	}
+	read := s.readCover
+	if read == nil {
+		read = readFileCover
+	}
+	art := read(filePath)
 	if art == nil {
+		if stamped {
+			s.noFileCover.Store(filePath, stamp)
+		}
 		return
 	}
 	ref, err := s.covers.PutBytes(art)
@@ -51,8 +67,14 @@ func (s *Scanner) fillCoverFromFile(ctx context.Context, book *models.Book, file
 		slog.Debug("file cover not stored", "bookID", book.ID, "path", filePath, "error", err)
 		return
 	}
-	if err := s.books.SetImageURL(ctx, book.ID, ref); err != nil {
+	filled, err := s.books.FillImageURL(ctx, book.ID, ref)
+	if err != nil {
 		slog.Warn("failed to persist cover from file", "bookID", book.ID, "error", err)
+		return
+	}
+	if !filled {
+		// A provider cover arrived since the book was read; it wins.
+		slog.Debug("book got a cover meanwhile, file cover not used", "bookID", book.ID)
 		return
 	}
 	book.ImageURL = ref
@@ -87,6 +109,21 @@ func (s *Scanner) backfillFileCovers(ctx context.Context) {
 			}
 		}
 	}
+}
+
+// fileStamp identifies a version of a file or folder: a changed size or
+// modification time means it may have art now.
+type fileStamp struct {
+	size    int64
+	modTime int64
+}
+
+func fileStampOf(filePath string) (fileStamp, bool) {
+	info, err := os.Stat(filePath)
+	if err != nil {
+		return fileStamp{}, false
+	}
+	return fileStamp{info.Size(), info.ModTime().UnixNano()}, true
 }
 
 // readFileCover returns the cover image for a book file, or nil. filePath is a

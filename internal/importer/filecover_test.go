@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/vavallee/bindery/internal/covers"
 	"github.com/vavallee/bindery/internal/models"
@@ -262,6 +263,68 @@ func TestBackfillFileCovers(t *testing.T) {
 	}
 	if got, _ := bookRepo.GetByID(ctx, noFile.ID); got.ImageURL != "" {
 		t.Errorf("book without a file: image_url = %q, want none", got.ImageURL)
+	}
+}
+
+// A file found to have no art is not read again by the next backfill while
+// it is unchanged, and is read again once it changes.
+func TestBackfillFileCovers_SkipsUnchangedFilesWithoutArt(t *testing.T) {
+	t.Parallel()
+	libraryDir := t.TempDir()
+	book := &models.Book{ForeignID: "nb:noart", Title: "Fjellvinden", SortTitle: "fjellvinden",
+		Status: models.BookStatusWanted, MediaType: models.MediaTypeAudiobook}
+	s, _, bookRepo, _, ctx := languageFixture(t, libraryDir, book)
+	s.WithCoverStore(covers.NewStore(t.TempDir()))
+	track := filepath.Join(libraryDir, "Fjellvinden.mp3")
+	writeTaggedMP3(t, track, nil)
+	if err := bookRepo.AddBookFile(ctx, book.ID, models.MediaTypeAudiobook, track); err != nil {
+		t.Fatal(err)
+	}
+	reads := 0
+	s.readCover = func(p string) []byte { reads++; return readFileCover(p) }
+
+	s.backfillFileCovers(ctx)
+	s.backfillFileCovers(ctx)
+	if reads != 1 {
+		t.Fatalf("reads = %d after two scans of an unchanged file, want 1", reads)
+	}
+	// The file gains art: its stamp changes, so it is read again.
+	writeTaggedMP3(t, track, fakeImage("later"))
+	later := time.Now().Add(time.Minute)
+	if err := os.Chtimes(track, later, later); err != nil {
+		t.Fatal(err)
+	}
+	s.backfillFileCovers(ctx)
+	if reads != 2 {
+		t.Errorf("reads = %d after the file changed, want 2", reads)
+	}
+	if got, _ := bookRepo.GetByID(ctx, book.ID); !strings.HasPrefix(got.ImageURL, covers.Scheme) {
+		t.Errorf("image_url = %q, want the cover the file gained", got.ImageURL)
+	}
+}
+
+// A provider cover that lands after the book was read is not overwritten by
+// the file's art.
+func TestFillCoverFromFile_KeepsACoverThatArrivedMeanwhile(t *testing.T) {
+	t.Parallel()
+	libraryDir := t.TempDir()
+	book := &models.Book{ForeignID: "nb:race", Title: "Fjellvinden", SortTitle: "fjellvinden",
+		Status: models.BookStatusWanted, MediaType: models.MediaTypeAudiobook}
+	s, _, bookRepo, _, ctx := languageFixture(t, libraryDir, book)
+	s.WithCoverStore(covers.NewStore(t.TempDir()))
+	track := filepath.Join(libraryDir, "Fjellvinden.mp3")
+	writeTaggedMP3(t, track, fakeImage("file"))
+
+	stale := *book // read before the provider cover arrived: no cover
+	if err := bookRepo.SetImageURL(ctx, book.ID, "https://covers.example/fjellvinden.jpg"); err != nil {
+		t.Fatal(err)
+	}
+	s.fillCoverFromFile(ctx, &stale, track)
+	if got, _ := bookRepo.GetByID(ctx, book.ID); got.ImageURL != "https://covers.example/fjellvinden.jpg" {
+		t.Errorf("image_url = %q, want the provider cover kept", got.ImageURL)
+	}
+	if stale.ImageURL != "" {
+		t.Errorf("in-memory book took the file cover %q although it was not written", stale.ImageURL)
 	}
 }
 
