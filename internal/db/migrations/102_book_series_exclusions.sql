@@ -4,7 +4,11 @@
 -- (its id becomes an alias) or deleted and recreated by a later refresh.
 -- Linking the book back by hand clears it, and so does unlocking all of the
 -- book's fields. The position the book had is kept so it can be restored.
-CREATE TABLE book_series_exclusions (
+--
+-- IF NOT EXISTS so the table can be created again without failing: this
+-- migration ran on custom builds before it merged, and should it be
+-- renumbered, the renumbered copy must not stop those databases starting.
+CREATE TABLE IF NOT EXISTS book_series_exclusions (
     book_id            INTEGER  NOT NULL REFERENCES books(id) ON DELETE CASCADE,
     series_foreign_id  TEXT     NOT NULL,
     position_in_series TEXT     NOT NULL DEFAULT '',

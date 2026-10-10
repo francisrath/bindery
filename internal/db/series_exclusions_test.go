@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -248,5 +249,24 @@ func TestBookSeriesExclusionFailures(t *testing.T) {
 	}
 	if err := f.series.ClearBookSeriesExclusions(f.ctx, f.books[0]); err == nil {
 		t.Error("clear succeeded although the delete failed")
+	}
+}
+
+// Migration 102 ran on custom builds before it merged. Should it be
+// renumbered, running it again over the table it created must not fail
+// startup.
+func TestMigration102IsSafeToRunAgain(t *testing.T) {
+	database, err := OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { database.Close() })
+	content, err := migrationsFS.ReadFile("migrations/102_book_series_exclusions.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	up, _, _ := strings.Cut(string(content), "-- +migrate Down")
+	if _, err := database.Exec(up); err != nil {
+		t.Fatalf("running 102 over an existing table: %v", err)
 	}
 }
