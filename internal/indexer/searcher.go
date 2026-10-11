@@ -540,7 +540,11 @@ func stripPossessivePrefix(title, author string) string {
 // Significant means >=3 chars of letters/digits; shorter tokens (typically
 // initials like "R." or "R") are treated as optional and dropped, so the
 // compact dotted form decomposes exactly like the spaced "J. R. R. Tolkien".
-// German umlauts are transliterated by the normalization. Returns nil for
+// Umlauts are KEPT (textutil.FoldForKeyword, not NormalizeRelease): "Müller"
+// yields "müller", which keywordPattern matches as mueller, muller or müller,
+// while the ASCII "Mueller" yields "mueller" and means that spelling only. A
+// token is a keyword, not a release string; see conflictingTitleAuthor for the
+// one place that compares one to a release word. Returns nil for
 // empty / all-initials input — the caller should fall back to surname-only
 // behaviour.
 func authorTokens(author string) []string {
@@ -548,7 +552,7 @@ func authorTokens(author string) []string {
 		return nil
 	}
 	var out []string
-	for _, w := range strings.Fields(NormalizeRelease(author)) {
+	for _, w := range strings.Fields(textutil.FoldForKeyword(author)) {
 		if len(w) >= 3 {
 			out = append(out, w)
 		}
@@ -898,10 +902,10 @@ func filterRelevantDetailed(results []newznab.SearchResult, title, author string
 	// untouched.
 	fullElided := newznab.SigWordsElided(title)
 	primaryElided := newznab.SigWordsElided(primaryTitle(title))
-	fullIdentity := titleIdentityWords(title)
-	primaryIdentity := titleIdentityWords(primaryTitle(title))
-	fullIdentityElided := titleIdentityWords(newznab.ElideApostrophes(title))
-	primaryIdentityElided := titleIdentityWords(newznab.ElideApostrophes(primaryTitle(title)))
+	fullIdentity := titleIdentityKeywords(title)
+	primaryIdentity := titleIdentityKeywords(primaryTitle(title))
+	fullIdentityElided := titleIdentityKeywords(newznab.ElideApostrophes(title))
+	primaryIdentityElided := titleIdentityKeywords(newznab.ElideApostrophes(primaryTitle(title)))
 	authorKws := newznab.SigWords(author)
 	// A "Series N: Title" name also gets the book's own title as a reading,
 	// because releases name the book, not its series position ("The Mining
@@ -914,7 +918,7 @@ func filterRelevantDetailed(results []newznab.SearchResult, title, author string
 	if len(seriesKws) < 2 || sameKws(seriesKws, fullKws) || sameKws(seriesKws, primaryKws) {
 		seriesTitle, seriesKws = "", nil
 	}
-	seriesIdentity := titleIdentityWords(seriesTitle)
+	seriesIdentity := titleIdentityKeywords(seriesTitle)
 
 	authorTokenSets := latinAliasTokenSets(author, aliases)
 
@@ -1388,9 +1392,11 @@ func protocolForType(t string) string {
 //     forms given were not right, and guessing at a marker is how false drops
 //     get shipped. They can be added by someone who reads the language.
 //
-// Umlauts need only their ASCII-expanded form: NormalizeRelease transliterates
-// ä/ö/ü before matching and WordBoundaryRegex makes the ae/oe/ue flexible, so
-// "ungekuerzt" alone matches "Ungekürzt", "Ungekuerzt" and "Ungekurzt".
+// Umlauts are listed here in their ASCII-expanded form, which is what
+// NormalizeRelease produces, and releaseLanguageTagKeywords restores the real
+// umlaut for the regex: only a keyword with an ä/ö/ü is allowed to match the
+// compact spelling (#3123), so "ungekürzt" is what matches "Ungekürzt",
+// "Ungekuerzt" and "Ungekurzt".
 //
 // Every code produced here must also be selectable in the profile editor, or
 // the filter can drop a language no operator is able to allow.
@@ -1421,6 +1427,14 @@ var releaseLanguageTags = map[string]string{
 	"hindi":   "hin",
 }
 
+// releaseLanguageTagKeywords gives the markers whose ASCII form in
+// releaseLanguageTags began as a German umlaut, in the keyword alphabet that
+// lets the compact spelling match. The map keys stay ASCII because
+// benignTrailingToken looks tags up by release-alphabet token.
+var releaseLanguageTagKeywords = map[string]string{
+	"hoerbuch": "hörbuch", "ungekuerzt": "ungekürzt", "gekuerzt": "gekürzt",
+}
+
 // releaseLanguageCodes returns the distinct language codes indicated by
 // markers in the normalized release title. Empty means the release carries no
 // recognisable language tag.
@@ -1431,7 +1445,11 @@ func releaseLanguageCodes(norm string) []string {
 		if seen[code] {
 			continue
 		}
-		if WordBoundaryRegex(tag).MatchString(norm) {
+		kw := tag
+		if k, ok := releaseLanguageTagKeywords[tag]; ok {
+			kw = k
+		}
+		if WordBoundaryRegex(kw).MatchString(norm) {
 			seen[code] = true
 			out = append(out, code)
 		}

@@ -234,7 +234,9 @@ type BookListFilter struct {
 	Search string
 	// Status restricts to books with that status. As a special case, "wanted"
 	// additionally requires monitored = 1 (an unmonitored book is not wanted),
-	// matching the old client-side filter. Empty disables the filter.
+	// matching the old client-side filter. "imported" (In Library) also matches a
+	// wanted book that has at least one tracked file, so a partially owned dual
+	// format book shows under both (#3132). Empty disables the filter.
 	Status string
 	// MediaType is "ebook" (matches ebook/both/unset, mirroring the UI default)
 	// or "audiobook" (matches audiobook/both). Any other value disables it.
@@ -352,12 +354,20 @@ func (r *BookRepo) ListPageFiltered(ctx context.Context, f BookListFilter, limit
 		}
 		searchOrder, rankArgs = bookSearchRank(folded)
 	}
-	if f.Status != "" {
+	switch f.Status {
+	case "":
+	case models.BookStatusImported:
+		// In Library means "owns at least one format", not "owns every format
+		// it wants" (#3132). See InLibraryPredicate for the rule. With a format
+		// chip active the wanted branch must own that format, so Audiobook plus
+		// In Library does not list a book that only has an ebook.
+		where += " AND " + InLibraryPredicate("books", f.MediaType)
+	case models.BookStatusWanted:
+		where += " AND books.status = ? AND books.monitored = 1"
+		args = append(args, f.Status)
+	default:
 		where += " AND books.status = ?"
 		args = append(args, f.Status)
-		if f.Status == models.BookStatusWanted {
-			where += " AND books.monitored = 1"
-		}
 	}
 	switch f.MediaType {
 	case "ebook":

@@ -4,13 +4,30 @@ import (
 	"strings"
 
 	"github.com/vavallee/bindery/internal/indexer/newznab"
+	"github.com/vavallee/bindery/internal/textutil"
 )
 
 // titleIdentityWords keeps numbers as well as significant words: dropping "12"
 // lets "12 More Rules for Life" satisfy "12 Rules for Life".
+//
+// This is the RELEASE side: words in the release alphabet, umlauts expanded,
+// meant to be joined into a haystack. The requested title's own words come
+// from titleIdentityKeywords, which keeps the umlaut so the phrase match
+// against this haystack knows which digraphs may be compact (#3123).
 func titleIdentityWords(s string) []string {
+	return identityWords(NormalizeRelease(s))
+}
+
+// titleIdentityKeywords is titleIdentityWords for the requested title: the same
+// words, but umlauts kept (textutil.FoldForKeyword) so ContainsPhrase can make
+// exactly those digraphs optional. Not for use as a haystack.
+func titleIdentityKeywords(s string) []string {
+	return identityWords(textutil.FoldForKeyword(s))
+}
+
+func identityWords(folded string) []string {
 	var words []string
-	for _, word := range strings.Fields(NormalizeRelease(s)) {
+	for _, word := range strings.Fields(folded) {
 		if isAllDigits(word) || len(newznab.SigWords(word)) != 0 {
 			words = append(words, word)
 		}
@@ -62,7 +79,9 @@ func conflictingTitleAuthor(release, title string, authorSets [][]string) bool {
 			return false
 		}
 		// A surname-only credit is not evidence of a conflicting author.
-		if words[0] == tokens[len(tokens)-1] && (len(words) == 1 || benignTrailingToken(words[1], nil)) {
+		// words come from the release, in its alphabet; the token is a
+		// keyword that may hold a kept umlaut, so expand it before comparing.
+		if words[0] == textutil.TransliterateUmlauts(tokens[len(tokens)-1]) && (len(words) == 1 || benignTrailingToken(words[1], nil)) {
 			return false
 		}
 	}

@@ -24,6 +24,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 
 	"github.com/vavallee/bindery/internal/httpsec"
+	"github.com/vavallee/bindery/internal/textutil"
 	"github.com/vavallee/bindery/internal/useragent"
 )
 
@@ -745,6 +746,11 @@ func wordsPresentInAll(words, combined []string) bool {
 		if IsVolumeMarker(w) {
 			w = "vol"
 		}
+		// The haystacks are in the release alphabet, where an umlaut is
+		// already its digraph. SigWords keeps the umlaut on the keyword (see
+		// SigWords), so expand it here or "müller" is never found in
+		// "mueller". Plain Contains, so no compact-spelling flex, as before.
+		w = textutil.TransliterateUmlauts(w)
 		found := false
 		for _, c := range combined {
 			if strings.Contains(c, w) {

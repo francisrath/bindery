@@ -1118,6 +1118,12 @@ same author. After you exclude rows, a group that no longer has two included
 rows drops off the list. On a shared install with per user libraries, each
 person sees only the authors they could open themselves.
 
+A title filed with its article last ("Trace of Death, A") counts as the same
+title as "A Trace of Death", both here and when a refresh decides whether a
+book is already in your library, so a refresh no longer adds a second row for
+it. Pairs that already exist are never merged for you. They stay as two rows
+and appear here as a group, and you choose which to exclude.
+
 ## How author names are filed
 
 One value decides the order of the Authors list, the order of the OPDS author

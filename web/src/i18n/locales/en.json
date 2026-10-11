@@ -408,6 +408,8 @@
     "noMatch": "No authors match \"{{query}}\"",
     "colName": "Name",
     "colBooks": "Books",
+    "booksInLibrary": "{{have}} of {{total}} in library",
+    "booksInLibraryHint": "A book counts once at least one of its files is in your library.",
     "colRating": "Rating",
     "colMonitored": "Monitored",
     "noDescription": "No description available",

@@ -1,0 +1,2 @@
+### Added
+- **Books you have, per author, on the Authors list** (#3092). The Books column in the table view now reads as have / total, for example 5 / 12, and each card in the grid view says how many of the author's books are in your library. A book counts as in your library once at least one of its files is on disk, the same rule as the Books page and the In library number on the author's page. An author with no books shows a dash instead of 0 / 0.

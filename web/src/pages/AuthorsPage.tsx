@@ -618,7 +618,14 @@ export default function AuthorsPage() {
                         <span className="text-slate-800 dark:text-zinc-200 truncate hover:text-emerald-500">{author.authorName}</span>
                       </Link>
                     </td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap">{author.statistics?.bookCount ?? '—'}</td>
+                    <td
+                      className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap tabular-nums"
+                      title={author.statistics && author.statistics.bookCount > 0
+                        ? `${t('authors.booksInLibrary', '{{have}} of {{total}} in library', { have: author.statistics.availableBookCount, total: author.statistics.bookCount })}. ${t('authors.booksInLibraryHint', 'A book counts once at least one of its files is in your library.')}`
+                        : undefined}
+                    >
+                      {author.statistics && author.statistics.bookCount > 0 ? `${author.statistics.availableBookCount} / ${author.statistics.bookCount}` : '—'}
+                    </td>
                     {anyRating && (
                       <td className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap">
                         {author.averageRating > 0 ? `★ ${author.averageRating.toFixed(2)}` : '—'}
@@ -676,6 +683,11 @@ export default function AuthorsPage() {
                     <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1 line-clamp-2">
                       {author.description || t('authors.noDescription')}
                     </p>
+                    {author.statistics && author.statistics.bookCount > 0 && (
+                      <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 tabular-nums">
+                        {t('authors.booksInLibrary', '{{have}} of {{total}} in library', { have: author.statistics.availableBookCount, total: author.statistics.bookCount })}
+                      </p>
+                    )}
                   </div>
                 </Link>
               </div>
