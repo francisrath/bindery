@@ -242,19 +242,64 @@ func TestCheckQbittorrentDownloads_ImportsMultiDiscTorrent(t *testing.T) {
 func checkQbitMultiDisc(t *testing.T, state models.DownloadState) {
 	s, dl, dlRepo, _, ctx := multiDiscFixture(t, "hardlink")
 	folder, _ := multiDiscTorrent(t)
-	savePath := filepath.Dir(folder)
-
-	const hash = "0ddba11e0ddba11e0ddba11e0ddba11e0ddba11e"
-	var files []map[string]any
-	for _, rel := range []string{
+	got := pollQbitTorrent(t, s, dl, dlRepo, ctx, state, filepath.Dir(folder), folder, []string{
 		"Fjellvinden/Fjellvinden CD1/01 Spor 01.mp3", "Fjellvinden/Fjellvinden CD1/02 Spor 02.mp3",
 		"Fjellvinden/Fjellvinden CD2/01 Spor 01.mp3", "Fjellvinden/Fjellvinden CD2/02 Spor 02.mp3",
-	} {
+	})
+	if got.Status != models.StateImported {
+		t.Fatalf("status = %q (%s), want imported", got.Status, got.ErrorMessage)
+	}
+	placed := relFiles(t, importedAudiobookDir(t, s))
+	if placed["Fjellvinden CD1/01 Spor 01.mp3"] != "disc one track one" || placed["Fjellvinden CD2/01 Spor 01.mp3"] != "disc two track one" {
+		t.Errorf("placed %v, want both discs' tracks under their disc folders", placed)
+	}
+}
+
+// A torrent added without a root folder reports content_path equal to its
+// save path, which holds other downloads too. That must stay per-file (#903),
+// so the repeated track names still block, from both poller call sites, and
+// nothing from the save root, such as another book, reaches the library.
+func TestCheckQbittorrentDownloads_NoRootFolderStaysPerFile(t *testing.T) {
+	for _, state := range []models.DownloadState{models.StateDownloading, models.StateImportFailed} {
+		t.Run(string(state), func(t *testing.T) {
+			s, dl, dlRepo, _, ctx := multiDiscFixture(t, "hardlink")
+			folder, _ := multiDiscTorrent(t)
+			// The discs sit directly in the save root, next to another book.
+			other := filepath.Join(folder, "Annen bok", "annen.mp3")
+			if err := os.MkdirAll(filepath.Dir(other), 0o750); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(other, []byte("another book"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			got := pollQbitTorrent(t, s, dl, dlRepo, ctx, state, folder, folder, []string{
+				"Fjellvinden CD1/01 Spor 01.mp3", "Fjellvinden CD1/02 Spor 02.mp3",
+				"Fjellvinden CD2/01 Spor 01.mp3", "Fjellvinden CD2/02 Spor 02.mp3",
+			})
+			if got.Status != models.StateImportBlocked {
+				t.Fatalf("status = %q (%s), want the per-file collision block", got.Status, got.ErrorMessage)
+			}
+			if placed := relFiles(t, importedAudiobookDir(t, s)); len(placed) != 0 {
+				t.Errorf("placed %v from the shared save root, want nothing", placed)
+			}
+		})
+	}
+}
+
+// pollQbitTorrent runs one qBittorrent poll over a completed torrent with the
+// given save and content paths and file list (relative to the save path), for
+// a download in state, and returns the download afterwards.
+func pollQbitTorrent(t *testing.T, s *Scanner, book *models.Download, dlRepo *db.DownloadRepo, ctx context.Context,
+	state models.DownloadState, savePath, contentPath string, rels []string) *models.Download {
+	t.Helper()
+	const hash = "0ddba11e0ddba11e0ddba11e0ddba11e0ddba11e"
+	var files []map[string]any
+	for _, rel := range rels {
 		files = append(files, map[string]any{"name": rel, "size": 18})
 	}
 	srv := httptest.NewServer(qbittorrentMatrixHandler(t, map[string]any{
 		"hash": hash, "name": "Fjellvinden", "progress": 1.0, "state": "uploading",
-		"category": "audiobooks", "amount_left": 0, "save_path": savePath, "content_path": folder,
+		"category": "audiobooks", "amount_left": 0, "save_path": savePath, "content_path": contentPath,
 	}, files))
 	t.Cleanup(srv.Close)
 
@@ -265,9 +310,9 @@ func checkQbitMultiDisc(t *testing.T, state models.DownloadState) {
 		t.Fatal(err)
 	}
 	torrentHash := hash
-	dl = &models.Download{GUID: "guid-fjellvinden", Title: "Fjellvinden", NZBURL: "magnet:?xt=urn:btih:" + hash,
+	dl := &models.Download{GUID: "guid-fjellvinden", Title: "Fjellvinden", NZBURL: "magnet:?xt=urn:btih:" + hash,
 		Status: state, Protocol: "torrent", TorrentID: &torrentHash,
-		DownloadClientID: &client.ID, BookID: dl.BookID}
+		DownloadClientID: &client.ID, BookID: book.BookID}
 	if err := dlRepo.Create(ctx, dl); err != nil {
 		t.Fatal(err)
 	}
@@ -278,11 +323,68 @@ func checkQbitMultiDisc(t *testing.T, state models.DownloadState) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Status != models.StateImported {
+	return got
+}
+
+// Deluge and rTorrent always report the torrent's own folder, so their import
+// paths mark it and a multi-disc torrent keeps its disc folders.
+func TestDelugeAndRtorrent_ImportMultiDiscTorrent(t *testing.T) {
+	for name, tryImport := range map[string]func(*Scanner, context.Context, *models.Download, string, []string){
+		"deluge":   (*Scanner).tryImportDeluge,
+		"rtorrent": (*Scanner).tryImportRtorrent,
+	} {
+		t.Run(name, func(t *testing.T) {
+			s, dl, dlRepo, _, ctx := multiDiscFixture(t, "hardlink")
+			folder, files := multiDiscTorrent(t)
+
+			tryImport(s, ctx, dl, folder, files)
+
+			if got, _ := dlRepo.GetByID(ctx, dl.ID); got.Status != models.StateImported {
+				t.Fatalf("status = %q (%s), want imported", got.Status, got.ErrorMessage)
+			}
+			if placed := relFiles(t, importedAudiobookDir(t, s)); placed["Fjellvinden CD2/01 Spor 01.mp3"] != "disc two track one" {
+				t.Errorf("placed %v, want the disc folders kept", placed)
+			}
+		})
+	}
+}
+
+// A flat multi-file torrent in its own folder used to go per file, taking only
+// the audio. It is now placed whole, as from Transmission: the cover and nfo
+// come along, and move mode removes the emptied source folder.
+func TestFlatTorrentOwnFolder_PlacedWhole(t *testing.T) {
+	s, dl, dlRepo, _, ctx := multiDiscFixture(t, "move")
+	folder := filepath.Join(t.TempDir(), "Fjellvinden")
+	var audio []string
+	for name, body := range map[string]string{
+		"01 Spor 01.mp3": "track one", "02 Spor 02.mp3": "track two",
+		"cover.jpg": "cover", "Fjellvinden.nfo": "nfo",
+	} {
+		p := filepath.Join(folder, name)
+		if err := os.MkdirAll(folder, 0o750); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if filepath.Ext(name) == ".mp3" {
+			audio = append(audio, p)
+		}
+	}
+	sort.Strings(audio)
+
+	s.tryImportInternal(withTorrentOwnFolder(ctx, true), dl, folder, "", "", "", nil, audio)
+
+	if got, _ := dlRepo.GetByID(ctx, dl.ID); got.Status != models.StateImported {
 		t.Fatalf("status = %q (%s), want imported", got.Status, got.ErrorMessage)
 	}
 	placed := relFiles(t, importedAudiobookDir(t, s))
-	if placed["Fjellvinden CD1/01 Spor 01.mp3"] != "disc one track one" || placed["Fjellvinden CD2/01 Spor 01.mp3"] != "disc two track one" {
-		t.Errorf("placed %v, want both discs' tracks under their disc folders", placed)
+	for _, name := range []string{"01 Spor 01.mp3", "02 Spor 02.mp3", "cover.jpg", "Fjellvinden.nfo"} {
+		if _, ok := placed[name]; !ok {
+			t.Errorf("%s not placed (placed: %v)", name, placed)
+		}
+	}
+	if _, err := os.Stat(folder); !os.IsNotExist(err) {
+		t.Errorf("source folder still there after a move (err=%v)", err)
 	}
 }
