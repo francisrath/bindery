@@ -38,3 +38,33 @@ func TestDailyQuotaRefreshStopsBeforeProviderCalls(t *testing.T) {
 		t.Fatalf("continued walking authors: %d checks", p.checks)
 	}
 }
+
+type rejectedRefreshProvider struct {
+	metadata.Provider
+	checks int
+}
+
+func (p *rejectedRefreshProvider) CheckQuota(context.Context) error {
+	p.checks++
+	return &metadata.TokenRejectedError{Provider: "Hardcover"}
+}
+
+func TestTokenRejectedRefreshStopsBeforeProviderCalls(t *testing.T) {
+	database, err := db.OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+	authors := db.NewAuthorRepo(database)
+	for _, name := range []string{"First", "Second"} {
+		if err := authors.Create(context.Background(), &models.Author{Name: name, ForeignID: "hc:" + name, Monitored: true}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	p := &rejectedRefreshProvider{}
+	s := &Scheduler{authors: authors, meta: metadata.NewAggregator(p)}
+	s.refreshMetadata()
+	if p.checks != 1 {
+		t.Fatalf("continued walking authors: %d checks", p.checks)
+	}
+}

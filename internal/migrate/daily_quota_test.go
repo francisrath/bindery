@@ -146,3 +146,37 @@ func TestDailyQuotaFailedCatalogueReadCountsOnce(t *testing.T) {
 		t.Fatalf("errors=%d skipped=%d, want 1 and 0", res.Errors, res.Skipped)
 	}
 }
+
+func TestTokenRejectedTripsImportBreakerAndSaysWhy(t *testing.T) {
+	rejected := &metadata.TokenRejectedError{Provider: "Hardcover"}
+	p := &primaryOutage{}
+	p.observe("goodreads", metadata.SearchOutcome{Primary: "hardcover", PrimaryFailed: true, FirstErr: fmt.Errorf("lookup: %w", rejected)})
+	if !p.down() || !strings.Contains(p.reason(), "Hardcover rejected the API token") {
+		t.Fatalf("down %v reason %s", p.down(), p.reason())
+	}
+	// A rejected enricher alone must not stop an import the primary can serve.
+	q := &primaryOutage{}
+	held := metadata.SearchOutcome{Primary: "openlibrary", Answered: []string{"openlibrary"}, FailedProviders: []string{"hardcover"}, FirstErr: fmt.Errorf("hardcover: %w", rejected)}
+	for range primaryOutageThreshold + 1 {
+		q.observe("csv", held)
+	}
+	if q.down() {
+		t.Fatal("rejected enricher tripped the breaker")
+	}
+}
+
+func TestTokenRejectedStopsCSVAtFirstRow(t *testing.T) {
+	database := newTestDB(t)
+	p := &dailyProvider{}
+	calls := 0
+	p.searchAuthorsFn = func(context.Context, string) ([]models.Author, error) {
+		calls++
+		p.held = &metadata.TokenRejectedError{Provider: "Hardcover"}
+		return nil, p.held
+	}
+	_, err := ImportCSVAuthors(context.Background(), strings.NewReader("name\nFirst\nSecond\nThird\n"), db.NewAuthorRepo(database), db.NewSettingsRepo(database), metadata.NewAggregator(p), nil)
+	var rejected *metadata.TokenRejectedError
+	if !errors.As(err, &rejected) || calls != 1 {
+		t.Fatalf("calls %d err %v", calls, err)
+	}
+}

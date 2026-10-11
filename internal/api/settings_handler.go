@@ -314,6 +314,7 @@ func isSecretSetting(key string) bool {
 	// 1. Explicit one-offs that don't match the patterns below.
 	switch key {
 	case "auth.hardcover_daily_holds",
+		"auth.hardcover_rejected_holds",
 		SettingAuthAPIKey,
 		SettingAuthSessionSecret,
 		SettingAuthSessionSecretPrevious,
@@ -679,6 +680,10 @@ func (h *SettingsHandler) TestHardcover(w http.ResponseWriter, r *http.Request) 
 
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
+	// A user retesting after fixing the token on Hardcover's side must reach
+	// Hardcover even while a rejected token hold is live (#3101). A daily quota
+	// hold still answers without a request.
+	ctx = hardcover.WithRejectedTokenProbe(ctx)
 
 	client := hardcover.New().WithDailyQuota(h.dailyQuota).WithToken(token)
 	series, err := client.SearchSeries(ctx, "Dune", 3)

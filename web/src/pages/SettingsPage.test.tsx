@@ -448,6 +448,14 @@ describe('SettingsPage', () => {
     else expect(screen.queryByText('settings.general.hardcoverPausedUntil')).not.toBeInTheDocument()
   })
 
+  it.each([true, false])('shows the rejected Hardcover token notice only when set (%s)', async rejected => {
+    renderSettings({ status: { ...defaultStatus, hardcoverTokenRejected: rejected } })
+    await openApiKeysTab()
+    await screen.findByText('Hardcover API Token')
+    if (rejected) expect(await screen.findByText('settings.general.hardcoverTokenRejected')).toBeInTheDocument()
+    else expect(screen.queryByText('settings.general.hardcoverTokenRejected')).not.toBeInTheDocument()
+  })
+
   it('adds a write-only Hardcover token field with API link', async () => {
     renderSettings()
     await openApiKeysTab()

@@ -42,9 +42,8 @@ func refusedBindReason(o metadata.SearchOutcome, foreignID string) string {
 // verdict on the row, which may well match once the primary is back, so it
 // says to retry rather than to fix anything.
 func primaryDownReason(o metadata.SearchOutcome) string {
-	var daily *metadata.DailyQuotaError
-	if errors.As(o.FirstErr, &daily) {
-		return daily.Error()
+	if hold := metadata.ProviderHold(o.FirstErr); hold != nil {
+		return hold.Error()
 	}
 	return fmt.Sprintf("primary metadata provider %s did not answer, run the import again once it responds", o.Primary)
 }
