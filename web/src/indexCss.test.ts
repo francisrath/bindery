@@ -21,9 +21,9 @@ beforeAll(async () => {
 // @media or @layer.
 function depthAt(source: string, index: number): number {
   let depth = 0
-  for (let i = 0; i < index; i++) {
-    if (source[i] === '{') depth += 1
-    else if (source[i] === '}') depth -= 1
+  for (const ch of source.slice(0, index)) {
+    if (ch === '{') depth += 1
+    else if (ch === '}') depth -= 1
   }
   return depth
 }
