@@ -905,6 +905,18 @@ func (c *Client) query(ctx context.Context, q string, vars map[string]any, out i
 			continue
 		}
 
+		if rejected := tokenRejectionError(status, raw); rejected != nil {
+			// Every later call with this token would get the same answer, so
+			// record it and let every caller stop instead of asking per row.
+			return c.dailyQuota.rejectToken(ctx, c.token, rejected)
+		}
+		if status == http.StatusOK {
+			// Hardcover accepted the token (whatever the GraphQL layer says
+			// next), so a hold left by an earlier rejection is stale.
+			if err := c.dailyQuota.clearRejected(ctx, c.token); err != nil {
+				slog.Warn("clear Hardcover rejected token hold", "error", err)
+			}
+		}
 		if status != http.StatusOK {
 			statusErr := classifyHTTPError(status, raw)
 			if status >= http.StatusInternalServerError {
@@ -1076,6 +1088,36 @@ func classifyHTTPError(status int, raw []byte) error {
 	default:
 		return fmt.Errorf("HTTP %d (upstream returned a non-JSON response, likely an error page, so this is a Hardcover-side failure rather than a token problem)", status)
 	}
+}
+
+// tokenRejectionError returns the classified "token rejected" error when the
+// response means Hardcover refused the credential itself, else nil. It is narrower than
+// isTokenRejection on purpose: that classifier words an error for the user, this
+// one starts a pause for every call, so it only takes the answers that no
+// change to the query could fix. 401 counts. A 403 counts only when its body
+// is an authentication failure (invalid_token, unauthorized, invalid_grant, or
+// the "Unable to verify token" text), not insufficient_scope, access_denied or
+// invalid_request, which can describe the one query. 5xx never counts.
+func tokenRejectionError(status int, raw []byte) error {
+	envelope, parsed := parseHardcoverError(raw)
+	if !isTokenRejection(status, envelope, parsed) {
+		return nil
+	}
+	if status == http.StatusUnauthorized && !parsed && len(bytes.TrimSpace(raw)) > 0 {
+		// Hardcover answers a bad token with a JSON body (invalid_token). A 401
+		// carrying an HTML or plain text page came from something in front of
+		// it, a proxy or a CDN, which says nothing about the token. Pausing on
+		// it would lock a valid token out for an hour, so it stays an ordinary
+		// failed call.
+		return nil
+	}
+	if status == http.StatusForbidden {
+		switch strings.ToLower(strings.TrimSpace(envelope.Error)) {
+		case "invalid_request", "access_denied", "insufficient_scope":
+			return nil
+		}
+	}
+	return classifyHTTPError(status, raw)
 }
 
 // parseHardcoverError decodes the error envelope, reporting whether the body

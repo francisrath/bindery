@@ -746,6 +746,30 @@ Scheduled jobs can run again on their next scheduled pass. This does not add
 automatic edition-hydration recovery or request accounting.
 Different tokens have separate holds, even if they belong to the same account.
 
+### Hardcover rejected token pause
+
+When Hardcover answers a request with a JSON 401 (a 401 page that is HTML or plain
+text came from a proxy or CDN and does not count), or with a 403 whose body is an
+authentication failure (`invalid_token`, `unauthorized`, `invalid_grant` or
+"Unable to verify token"), Bindery stops sending requests with that token. A
+bulk import, a discovery sweep, a catalogue sync, a list sync and the scheduled
+refresh stop at the first rejection instead of asking once per row, and the
+import result carries "Hardcover rejected the API token". Server errors (5xx),
+a 403 that only describes one query (`insufficient_scope`, `access_denied`,
+`invalid_request`) and GraphQL errors inside a 200 response do not start a pause.
+
+The pause is keyed to the token in the same way as the daily quota hold, so it
+survives a restart and saving a different token in **Settings → API Keys** lifts
+it at once. It also ends after one hour without a save: the next request is
+sent as a probe and either clears the hold (Hardcover accepted the token) or
+renews it. That is one request an hour for a token that stays bad. **Test
+connection** always sends its request, so a token fixed on Hardcover's side can
+be retested immediately, and a success lifts the pause. The pause applies to
+every Hardcover call, including when Hardcover is only an enricher, a cover or
+ISBN source or the list syncer. The hold is stored with the quota holds as a
+private setting and is hidden from generic settings endpoints; a corrupt row is
+logged and ignored.
+
 ### Enhanced Hardcover series data deployment note
 
 **Schema:** enhanced series data uses migration `035`, which creates `series_hardcover_links` and backfills links for existing series whose foreign ID already points at Hardcover. Take a normal SQLite backup before upgrading, then let Bindery apply the migration on startup.
