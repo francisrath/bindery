@@ -28,6 +28,8 @@ func TestNewAuthorDiscoverer_MapsErrors(t *testing.T) {
 	}{
 		{name: "success", created: 3},
 		{name: "daily quota", err: &metadata.DailyQuotaError{}, wantBackoff: true},
+		{name: "rejected token", err: &metadata.TokenRejectedError{Provider: "Hardcover"}, wantBackoff: true},
+		{name: "rejected token, wrapped", err: fmt.Errorf("author works: %w", &metadata.TokenRejectedError{Provider: "Hardcover"}), wantBackoff: true},
 		{name: "ordinary error", err: errors.New("provider 500")},
 		{name: "hardcover rate limit, wrapped", err: fmt.Errorf("author works: %w", hardcover.ErrRateLimited), wantBackoff: true},
 		{name: "openlibrary rate limit, wrapped", err: fmt.Errorf("author works: %w", openlibrary.ErrRateLimited), wantBackoff: true},

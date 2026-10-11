@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { act, cleanup, render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import AuthorDetailPage from './AuthorDetailPage'
 import { api, ApiError } from '../api/client'
@@ -1378,12 +1378,15 @@ describe('AuthorDetailPage: manual refresh', () => {
     expect(screen.queryByRole('heading', { name: /Standalone/ })).toBeNull()
   })
 
-  it('gives up waiting after a minute and shows whatever the server has', async () => {
+  // Refresh frees its button after a minute, but a large catalogue outlasts
+  // that (#3058): the reload still sees the sync running, so the page keeps
+  // watching it and shows the result when it ends.
+  it('frees the button after a minute and keeps watching a longer sync', async () => {
     renderAuthorDetailPage(oldBooks, 'grid', { description: 'Old bio' })
     await screen.findByRole('heading', { name: 'Ancillary Justice' })
 
     vi.useFakeTimers()
-    serveSyncFinishingAt(Date.now() + 10 * 60 * 1000)
+    serveSyncFinishingAt(Date.now() + 3 * 60 * 1000)
     vi.mocked(api.refreshAuthor).mockResolvedValue(undefined)
 
     fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
@@ -1391,9 +1394,14 @@ describe('AuthorDetailPage: manual refresh', () => {
     expect(screen.getByRole('button', { name: 'Refreshing…' })).toBeDisabled()
     await advance(2000)
     expect(screen.getByRole('button', { name: 'Refresh' })).toBeEnabled()
+    expect(screen.getByRole('status')).toHaveTextContent('Fetching this author’s catalogue')
+
+    await advance(2 * 60 * 1000 + 10000)
+    expect(screen.getByRole('heading', { name: 'Translation State' })).toBeInTheDocument()
+    expect(screen.queryByRole('status')).toBeNull()
 
     const calls = vi.mocked(api.getAuthor).mock.calls.length
-    await advance(10000)
+    await advance(30000)
     expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(calls)
   })
 
@@ -1830,5 +1838,217 @@ describe('AuthorDetailPage — selection (#2456, #2457)', () => {
     fireEvent.click(checkboxFor('Row One'))
     fireEvent.click(rowForTitle('Row Two'))
     await waitFor(() => expect(seen).toBe('/book/902'))
+  })
+})
+
+// An author whose catalogue sync is still running when the page opens, which
+// is every author straight after an add, must not read as having no books
+// (#3058).
+describe('AuthorDetailPage: sync running on load', () => {
+  const books = [makeBook({ id: 1, title: 'Fjellvinden', status: 'wanted' })]
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    installLocalStorageMock()
+    vi.mocked(api.listAuthorSeries).mockResolvedValue([])
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  // One act per second, so React renders between ticks as it does in a
+  // browser (a single long act batches every update to its end).
+  async function advance(ms: number) {
+    for (let left = ms; left > 0; left -= 1000) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(Math.min(1000, left))
+      })
+    }
+  }
+
+  // Serves the author as syncing with no books until finishAt, then synced
+  // with the books it found.
+  function serveSyncFinishingAt(finishAt: number, found: Book[]) {
+    const synced = () => Date.now() >= finishAt
+    vi.mocked(api.getAuthor).mockImplementation(async () => ({ ...author, syncInProgress: !synced() }))
+    vi.mocked(api.listAllBooks).mockImplementation(async () => (synced() ? found : []))
+  }
+
+  function renderPage() {
+    return render(
+      <MemoryRouter initialEntries={['/author/42']}>
+        <Routes>
+          <Route path="/author/:id" element={<AuthorDetailPage />} />
+        </Routes>
+      </MemoryRouter>,
+    )
+  }
+
+  it('shows the sync instead of the empty state, then the books when it ends', async () => {
+    serveSyncFinishingAt(Date.now() + 5 * 60 * 1000, books)
+    renderPage()
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Fetching this author’s catalogue')
+    expect(screen.queryByText('No books tracked for this author yet.')).toBeNull()
+
+    // No time limit: a catalogue that takes five minutes is still picked up.
+    await advance(5 * 60 * 1000 + 10000)
+    expect(screen.getByRole('heading', { name: 'Fjellvinden' })).toBeInTheDocument()
+    expect(screen.queryByRole('status')).toBeNull()
+
+    const calls = vi.mocked(api.getAuthor).mock.calls.length
+    await advance(30000)
+    expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(calls)
+  })
+
+  it('backs off to one poll every ten seconds', async () => {
+    serveSyncFinishingAt(Date.now() + 60 * 60 * 1000, books)
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(2 * 60 * 1000)
+    const before = vi.mocked(api.getAuthor).mock.calls.length
+    await advance(60 * 1000)
+    expect(vi.mocked(api.getAuthor).mock.calls.length - before).toBe(6)
+  })
+
+  it('keeps polling through a failed poll', async () => {
+    serveSyncFinishingAt(Date.now() + 5000, books)
+    vi.mocked(api.getAuthor)
+      .mockResolvedValueOnce({ ...author, syncInProgress: true })
+      .mockRejectedValueOnce(new Error('network'))
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(15000)
+    expect(screen.getByRole('heading', { name: 'Fjellvinden' })).toBeInTheDocument()
+  })
+
+  it('shows the empty state once a sync ends having found nothing', async () => {
+    serveSyncFinishingAt(Date.now() + 1000, [])
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(3000)
+    expect(screen.getByText('No books tracked for this author yet.')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).toBeNull()
+  })
+
+  it('keeps the spinner a circle on a narrow screen (shrink-0)', async () => {
+    serveSyncFinishingAt(Date.now() + 60 * 1000, books)
+    renderPage()
+    const status = await screen.findByRole('status')
+    expect(status.querySelector('span[aria-hidden="true"]')).toHaveClass('shrink-0')
+  })
+
+  it('keeps polling when the reload after the sync ends fails, until one succeeds', async () => {
+    // Poll 1 sees the sync end; the next two getAuthor calls (the reload) fail.
+    let calls = 0
+    vi.mocked(api.getAuthor).mockImplementation(async () => {
+      calls++
+      if (calls === 1) return { ...author, syncInProgress: true }
+      if (calls === 2) return { ...author, syncInProgress: false }
+      if (calls <= 4) throw new Error('boom')
+      return { ...author, syncInProgress: false }
+    })
+    vi.mocked(api.listAllBooks).mockResolvedValue(books)
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(60 * 1000)
+    expect(screen.getByRole('heading', { name: 'Fjellvinden' })).toBeInTheDocument()
+    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.queryByText('boom')).toBeNull()
+  })
+
+  it('gives up after a few failed reloads: the error shows, the fetching state does not, polling stops', async () => {
+    let calls = 0
+    vi.mocked(api.getAuthor).mockImplementation(async () => {
+      calls++
+      if (calls === 1) return { ...author, syncInProgress: true }
+      if (calls % 2 === 0) return { ...author, syncInProgress: false }
+      throw new Error('boom')
+    })
+    vi.mocked(api.listAllBooks).mockResolvedValue(books)
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(5 * 60 * 1000)
+    expect(screen.getByText('boom')).toBeInTheDocument()
+    expect(screen.queryByRole('status')).toBeNull()
+    const seen = vi.mocked(api.getAuthor).mock.calls.length
+    await advance(60 * 1000)
+    expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(seen)
+  })
+
+  it('gives up after a few failed polls in a row', async () => {
+    vi.mocked(api.getAuthor)
+      .mockResolvedValueOnce({ ...author, syncInProgress: true })
+      .mockRejectedValue(new Error('network'))
+    vi.mocked(api.listAllBooks).mockResolvedValue([])
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(5 * 60 * 1000)
+    expect(screen.queryByRole('status')).toBeNull()
+    const seen = vi.mocked(api.getAuthor).mock.calls.length
+    expect(seen).toBe(4)
+    await advance(60 * 1000)
+    expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(seen)
+  })
+
+  it.each([404, 403])('stops at once on a %i: the author is gone or not this user\'s', async status => {
+    vi.mocked(api.getAuthor)
+      .mockResolvedValueOnce({ ...author, syncInProgress: true })
+      .mockRejectedValue(new ApiError(status, { error: 'nope' }, 'Not Found'))
+    vi.mocked(api.listAllBooks).mockResolvedValue([])
+    renderPage()
+    await screen.findByRole('status')
+
+    await advance(3000)
+    expect(screen.queryByRole('status')).toBeNull()
+    const seen = vi.mocked(api.getAuthor).mock.calls.length
+    expect(seen).toBe(2)
+    await advance(60 * 1000)
+    expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(seen)
+  })
+
+  describe('in a hidden tab', () => {
+    function setHidden(hidden: boolean) {
+      Object.defineProperty(document, 'hidden', { configurable: true, get: () => hidden })
+      document.dispatchEvent(new Event('visibilitychange'))
+    }
+    afterEach(() => { Reflect.deleteProperty(document, 'hidden') })
+
+    it('stops polling while hidden and catches up when the tab returns (#2360)', async () => {
+      serveSyncFinishingAt(Date.now() + 60 * 60 * 1000, books)
+      renderPage()
+      await screen.findByRole('status')
+
+      await act(async () => { setHidden(true) })
+      const hiddenAt = vi.mocked(api.getAuthor).mock.calls.length
+      await advance(2 * 60 * 1000)
+      expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(hiddenAt)
+
+      await act(async () => { setHidden(false) })
+      expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(hiddenAt + 1)
+    })
+  })
+
+  it('says books appear when it finishes only while there are none yet', async () => {
+    serveSyncFinishingAt(Date.now() + 60 * 1000, books)
+    renderPage()
+    expect(await screen.findByRole('status')).toHaveTextContent('Books appear here when it finishes')
+
+    // A scheduled refresh over an author who already has books.
+    vi.mocked(api.getAuthor).mockImplementation(async () => ({ ...author, syncInProgress: true }))
+    vi.mocked(api.listAllBooks).mockImplementation(async () => books)
+    cleanup()
+    renderPage()
+    await screen.findByRole('heading', { name: 'Fjellvinden' })
+    expect(screen.getByRole('status')).not.toHaveTextContent('Books appear here when it finishes')
+    expect(screen.getByRole('status')).toHaveTextContent('Fetching this author’s catalogue')
   })
 })

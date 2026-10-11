@@ -488,6 +488,8 @@
       "completedAt": "Refreshed {{when}}"
     },
     "booksHeading": "Books",
+    "syncing": "Fetching this author’s catalogue. Books appear here when it finishes, which can take a few minutes for a large catalogue.",
+    "syncingMore": "Fetching this author’s catalogue. Any new books appear here when it finishes.",
     "filteredCount": "{{shown}} of {{total}}",
     "groupBySeries": "Group by series",
     "showFlatList": "Show flat list",
@@ -1401,6 +1403,7 @@
       "deleteBackupTitle": "Delete backup"
     },
     "general": {
+      "hardcoverTokenRejected": "Hardcover rejected the API token, so Hardcover requests are paused. Save a working token below, or use Test connection once it is fixed on Hardcover.",
       "hardcoverPausedUntil": "Hardcover is paused until {{time}} because its daily quota was reached. Retry interrupted imports after this time.",
       "appearance": "Appearance",
       "theme": "Theme",

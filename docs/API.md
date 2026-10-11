@@ -117,7 +117,9 @@ The same response carries `"syncInProgress": true` while a catalogue sync for
 the author is running in this process, and omits it otherwise. The author page
 polls it after **Refresh metadata** to show the result once the sync is done,
 and `POST /api/v1/author/{id}/refresh` answers **409 Conflict** while it is set
-instead of starting a second sync (#2601).
+instead of starting a second sync (#2601). It is also set from the moment
+`POST /api/v1/author` answers, for the catalogue sync the add starts, so a page
+opened straight after the add sees it (#3058).
 
 `POST /api/v1/author` accepts an optional `monitorNewItems` (#2541), the same
 field `PUT /api/v1/author/{id}` takes: `all` (the default) lets a refresh add
@@ -765,7 +767,7 @@ POST   /api/v1/backup                             snapshot the SQLite database (
 GET    /api/v1/backup                             list stored backups (admin)
 DELETE /api/v1/backup/{filename}                  delete one backup (admin)
 POST   /api/v1/backup/{filename}/restore          stage a backup for the next restart (admin, X-Confirm-Restore: true)
-GET    /api/v1/system/status                      version, commit, build date, newest published release, image cache size, Hardcover feature state
+GET    /api/v1/system/status                      version, commit, build date, newest published release, image cache size, Hardcover feature state; `hardcoverPausedUntil` while the daily quota holds, `hardcoverTokenRejected` while Hardcover has refused the saved token
 POST   /api/v1/library/scan                       start a library scan in the background (202; {"queued": true} when one is already running)
 GET    /api/v1/library/duplicate-candidates      read-only duplicate title groups across every author, paginated (#2999)
 GET    /api/v1/library/scan/status                summary of the last library scan, paths included (admin)

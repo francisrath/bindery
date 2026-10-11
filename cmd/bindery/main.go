@@ -955,13 +955,7 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			cacheBytes, _ := imageProxyHandler.CacheSize()
 			hardcoverState := api.HardcoverFeatureStateFor(r.Context(), settingsRepo, cfg.EnhancedHardcoverAPI)
-			var pausedUntil string
-			var exhausted *metadata.DailyQuotaError
-			if err := hcClient.CheckQuota(r.Context()); errors.As(err, &exhausted) {
-				pausedUntil = exhausted.ResetAt.UTC().Format(time.RFC3339)
-			} else if err != nil {
-				slog.Warn("read Hardcover pause status", "error", err)
-			}
+			pausedUntil, tokenRejected := hardcoverHoldStatus(hcClient.CheckQuota(r.Context()))
 			_ = json.NewEncoder(w).Encode(struct {
 				Version   string `json:"version"`
 				Commit    string `json:"commit"`
@@ -975,6 +969,7 @@ func main() {
 				EnhancedHardcoverAPI            bool   `json:"enhancedHardcoverApi"`
 				HardcoverTokenConfigured        bool   `json:"hardcoverTokenConfigured"`
 				HardcoverPausedUntil            string `json:"hardcoverPausedUntil,omitempty"`
+				HardcoverTokenRejected          bool   `json:"hardcoverTokenRejected,omitempty"`
 				EnhancedHardcoverDisabledReason string `json:"enhancedHardcoverDisabledReason,omitempty"`
 			}{
 				Version:                         version,
@@ -985,6 +980,7 @@ func main() {
 				EnhancedHardcoverAPI:            hardcoverState.EnhancedHardcoverAPI,
 				HardcoverTokenConfigured:        hardcoverState.HardcoverTokenConfigured,
 				HardcoverPausedUntil:            pausedUntil,
+				HardcoverTokenRejected:          tokenRejected,
 				EnhancedHardcoverDisabledReason: hardcoverState.EnhancedHardcoverDisabledReason,
 			})
 		})

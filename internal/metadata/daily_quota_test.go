@@ -77,3 +77,47 @@ func TestDailyQuotaISBNEnricherHoldKeepsOtherProviders(t *testing.T) {
 		t.Fatalf("fallback answer: book %v err %v calls %d", book, err, fallback.getByISBNCalls)
 	}
 }
+
+func TestTokenRejectedIsItsOwnHold(t *testing.T) {
+	rejected := &TokenRejectedError{Provider: "Hardcover", Cause: errors.New("token rejected (HTTP 401)")}
+	daily := &DailyQuotaError{ResetAt: time.Now().Add(time.Hour)}
+	for name, err := range map[string]error{
+		"bare":    rejected,
+		"wrapped": fmt.Errorf("lookup: %w", rejected),
+		"joined":  errors.Join(rejected, errors.New("persist failed")),
+	} {
+		var asDaily *DailyQuotaError
+		if !IsProviderHold(err) || errors.As(err, &asDaily) || !errors.Is(ProviderHold(err), rejected) {
+			t.Errorf("%s: hold %v daily %v", name, IsProviderHold(err), errors.As(err, &asDaily))
+		}
+		if errors.Is(err, ErrRateLimited) || IsProviderUnavailable(err) {
+			t.Errorf("%s: must not read as a throttle or an outage", name)
+		}
+	}
+	if !IsProviderHold(daily) || ProviderHold(errors.New("other")) != nil || IsProviderHold(nil) {
+		t.Fatal("ProviderHold misclassifies")
+	}
+	held := &TokenRejectedError{Provider: "Hardcover"}
+	if msg := held.Error(); !strings.Contains(msg, "Hardcover rejected the API token") || strings.Contains(msg, "reset") {
+		t.Fatal(msg)
+	}
+}
+
+func TestTokenRejectedStopsPrimaryButNotEnricher(t *testing.T) {
+	ctx := context.Background()
+	rejected := &TokenRejectedError{Provider: "Hardcover"}
+	primary := &mockProvider{name: "hardcover", getByISBNErr: fmt.Errorf("lookup: %w", rejected)}
+	fallback := &mockProvider{name: "openlibrary"}
+	if _, _, err := NewAggregator(primary, fallback).GetBookByISBNWithOutcome(ctx, "9780441172719"); !errors.Is(err, rejected) || fallback.getByISBNCalls != 0 {
+		t.Fatalf("primary: err %v fallback calls %d", err, fallback.getByISBNCalls)
+	}
+	found := &models.Book{ForeignID: "OL1W", Title: "Dune", Description: strings.Repeat("d", 60)}
+	ol := &mockProvider{name: "openlibrary", getByISBN: found}
+	held := &mockProvider{name: "hardcover", getByISBNErr: fmt.Errorf("lookup: %w", rejected)}
+	if book, _, err := NewAggregator(ol, held).GetBookByISBNWithOutcome(ctx, "9780441172719"); err != nil || book == nil {
+		t.Fatalf("enricher hold stopped the lookup: %v %v", book, err)
+	}
+	if err := NewAggregator(&quotaProvider{&mockProvider{name: "hardcover"}, rejected}).CheckQuota(ctx); !errors.Is(err, rejected) {
+		t.Fatalf("CheckQuota: %v", err)
+	}
+}

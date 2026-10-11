@@ -93,18 +93,22 @@
   textarea {
     font-size: 16px;
   }
-
-  /* The forms plugin draws the select arrow 1.5em wide, 0.5rem from the right
-     edge, and the px-* utilities on each select leave it less room than that,
-     so the value ran under it. Reserve the arrow's width plus a small gap,
-     scaled to the select's own font size. */
-  select:not([multiple]):not([size]) {
-    padding-right: calc(1.5em + 0.75rem);
-  }
 }
 
-/* A select is as wide as its longest option, and on touch screens room is
-   also kept for the arrow, so a long one ran past a 320px screen (Default
+/* The forms plugin draws a select's arrow as a background image, 1.5em wide
+   and 0.5rem from the edge. The px-* utility every select carries left 8-12px
+   of right padding, so a select as wide as its longest option drew the arrow
+   over the end of it, on touch screens (#3070, #3081) and on desktop alike
+   (#3148). Reserve the arrow's width plus a small gap, in em so it stays
+   right for an 11px select as for a 16px one. Unlayered so it beats the px-*
+   utilities; the left padding is still theirs. A select drawn without the
+   arrow (bg-none, as the pager's "…" is) needs no room for it. */
+select:not([multiple]):not([size]):not(.bg-none) {
+  padding-right: calc(1.5em + 0.75rem);
+}
+
+/* A select is as wide as its longest option, and room is also kept for the
+   arrow, so a long one ran past a 320px screen (Default
    monitor mode in Settings, Metadata, made the page 349px wide). Capping it
    at its container lets the value truncate instead. In the base layer so a
    max-w-* utility still wins, and it changes nothing for a select that

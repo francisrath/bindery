@@ -62,11 +62,10 @@ type primaryOutage struct {
 // provider order with the primary first, so FirstErr is the primary's error
 // whenever PrimaryFailed is set.
 func (p *primaryOutage) observe(source string, o metadata.SearchOutcome) {
-	var daily *metadata.DailyQuotaError
 	switch {
 	// Only the primary's hold stops the import. A held enricher's error can be
 	// FirstErr while the primary answered, and that lookup is fine.
-	case o.PrimaryFailed && errors.As(o.FirstErr, &daily):
+	case o.PrimaryFailed && metadata.IsProviderHold(o.FirstErr):
 		p.streak, p.last = primaryOutageThreshold, o
 	case o.Primary != "" && slices.Contains(o.Answered, o.Primary):
 		p.streak = 0

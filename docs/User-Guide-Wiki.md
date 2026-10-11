@@ -937,9 +937,12 @@ add works, the author page says how many and why.
 current data: the bio, the photo, the book list and, when the default media
 type is audiobook or both, the Audible catalogue. The page waits for the
 refresh to finish and then shows the result, so a bio, photo or new book added
-upstream shows up on the first click. The page waits up to a minute; a refresh
-that takes longer carries on in the background, and reloading the page later
-shows it. Clicking Refresh again while a refresh for that author is still
+upstream shows up on the first click. The Refresh button is freed after a
+minute; a refresh that takes longer carries on in the background, and the page
+keeps watching it and shows the result when it ends. The same goes for the
+sync that adding an author starts: until it ends, the author page says the
+catalogue is being fetched rather than that the author has no books, which for
+a large catalogue can take a few minutes. Clicking Refresh again while a refresh for that author is still
 running waits for that one instead of starting another. If the refresh
 already running was a scheduled, bulk or Refresh all one, which read the
 cached copy, the page waits for it to finish and then runs its own refresh.

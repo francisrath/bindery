@@ -170,6 +170,11 @@ export default function ApiKeysTab() {
                 {t('settings.general.hardcoverPausedUntil', { time: new Date(systemStatus.hardcoverPausedUntil).toLocaleString() })}
               </p>
             )}
+            {systemStatus?.hardcoverTokenRejected && (
+              <p role="alert" className="text-sm text-red-700 dark:text-red-400">
+                {t('settings.general.hardcoverTokenRejected')}
+              </p>
+            )}
             <div>
               <div className="flex items-center justify-between gap-3 mb-1">
                 <label className="block text-xs text-slate-600 dark:text-zinc-400">
