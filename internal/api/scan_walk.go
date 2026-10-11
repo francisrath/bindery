@@ -3,7 +3,9 @@ package api
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
+	"strings"
 
 	"github.com/vavallee/bindery/internal/importer"
 )
@@ -66,6 +68,12 @@ func enumerateImportUnits(root string, limit int, skip func(path string, isDir b
 			return // skip unreadable directories rather than abort the whole scan
 		}
 		entriesSeen += len(entries)
+		// A .binderyignore folder is left out, as in the library scan
+		// (importer.SkipLibraryDir). It is found among the entries already
+		// read rather than with a second filesystem lookup per folder.
+		if !isRoot && slices.ContainsFunc(entries, func(e os.DirEntry) bool { return e.Name() == importer.LibraryIgnoreFile }) {
+			return
+		}
 
 		var subdirs, audioFiles, ebookFiles []string
 		for _, e := range entries {
@@ -73,10 +81,10 @@ func enumerateImportUnits(root string, limit int, skip func(path string, isDir b
 			full := filepath.Join(dir, name)
 			switch {
 			case e.IsDir():
-				// Hidden and .binderyignore folders are not library content,
-				// as in the library scan: a torrent client's ".torrents"
-				// copies under the folder being imported stay out of it.
-				if !importer.SkipLibraryDir(full) {
+				// Hidden folders are not library content, as in the library
+				// scan: a torrent client's ".torrents" copies under the
+				// folder being imported stay out of it.
+				if !strings.HasPrefix(name, ".") {
 					subdirs = append(subdirs, full)
 				}
 			case importer.IsAudioFile(full):
