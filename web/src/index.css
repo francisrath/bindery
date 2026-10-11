@@ -94,14 +94,17 @@
 }
 
 /* The forms plugin draws a select's arrow as a background image, 1.5em wide
-   and 0.5rem from the edge, and reserves 2.5rem of right padding for it. The
-   px-* utility every select carries replaced that with 8-12px, so a select as
-   wide as its longest option drew the arrow over the end of it (#3148; on
-   touch screens, at 16px, first in #3070). Unlayered so it beats the px-*
-   utilities; the left padding is still theirs. A select drawn without the
-   arrow (bg-none, as the pager's "…" is) needs no room for it. */
+   and 0.5rem from the edge. The px-* utility every select carries left 8-12px
+   of right padding, so a select as wide as its longest option drew the arrow
+   over the end of it (#3148; on touch screens, at 16px, first in #3070).
+   Reserve exactly the arrow's footprint: the chevron sits in the middle of
+   it, so the text still clears it, and in em it stays right for an 11px
+   select as for a 16px one, where a flat 2.5rem squeezed the small ones in
+   fixed-width columns. Unlayered so it beats the px-* utilities; the left
+   padding is still theirs. A select drawn without the arrow (bg-none, as the
+   pager's "…" is) needs no room for it. */
 select:not([multiple]):not([size]):not(.bg-none) {
-  padding-right: 2.5rem;
+  padding-right: calc(1.5em + 0.5rem);
 }
 
 /* A select is as wide as its longest option, and on touch screens that

@@ -57,7 +57,7 @@ describe('index.css', () => {
     const prelude = /select:not\(\[multiple\]\):not\(\[size\]\):not\(\.bg-none\)\s*\{/g
     const rules = [...built.matchAll(prelude)].filter(m => depthAt(built, m.index) === 0)
     expect(rules).toHaveLength(1)
-    expect(block(built.slice(rules[0].index), prelude)).toMatch(/padding-right:\s*2\.5rem/)
+    expect(block(built.slice(rules[0].index), prelude)).toMatch(/padding-right:\s*calc\(1\.5em \+ 0?\.5rem\)/)
   })
 
   it('caps a select at the width of its container', () => {
