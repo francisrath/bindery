@@ -3,8 +3,11 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strconv"
 	"testing"
 
@@ -74,6 +77,9 @@ func TestUploadCover_RejectsBadUploads(t *testing.T) {
 		"not an image": {[]byte("<html>hello</html>"), http.StatusUnsupportedMediaType},
 		"empty":        {nil, http.StatusUnsupportedMediaType},
 		"too large":    {append(append([]byte{}, pngBytes...), make([]byte, covers.MaxBytes)...), http.StatusRequestEntityTooLarge},
+		// One byte over the cap gets past the request reader, which allows
+		// that byte so it can tell, and is refused by the store's own cap.
+		"one byte over": {append(append([]byte{}, pngBytes...), make([]byte, covers.MaxBytes+1-len(pngBytes))...), http.StatusRequestEntityTooLarge},
 	} {
 		t.Run(name, func(t *testing.T) {
 			h, book, post := coverFixture(t)
@@ -116,5 +122,43 @@ func TestUploadCover_OtherUsersBook(t *testing.T) {
 	}
 	if got, _ := f.books.GetByID(ctx, book.ID); got.ImageURL != "" {
 		t.Errorf("another user's book got a cover: %q", got.ImageURL)
+	}
+}
+
+// errReader fails the read partway, as a dropped connection does.
+type errReader struct{}
+
+func (errReader) Read([]byte) (int, error) { return 0, errors.New("connection reset") }
+
+// A body that cannot be read is a 400, and the book keeps its cover.
+func TestUploadCover_UnreadableBody(t *testing.T) {
+	h, book, _ := coverFixture(t)
+	id := strconv.FormatInt(book.ID, 10)
+	req := withURLParam(httptest.NewRequest(http.MethodPost, "/api/v1/book/"+id+"/cover", errReader{}), "id", id)
+	rec := httptest.NewRecorder()
+	h.UploadCover(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status %d, want 400: %s", rec.Code, rec.Body.String())
+	}
+	if got, _ := h.books.GetByID(t.Context(), book.ID); got.ImageURL != book.ImageURL {
+		t.Errorf("image_url changed to %q", got.ImageURL)
+	}
+}
+
+// A store that cannot write (its folder is a file here, as a full or
+// read-only volume would fail too) is a server error, and the book keeps its
+// cover.
+func TestUploadCover_StoreWriteFails(t *testing.T) {
+	h, book, post := coverFixture(t)
+	notADir := filepath.Join(t.TempDir(), "covers")
+	if err := os.WriteFile(notADir, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	h.WithCoverStore(covers.NewStore(notADir))
+	if rec := post(pngBytes); rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500: %s", rec.Code, rec.Body.String())
+	}
+	if got, _ := h.books.GetByID(t.Context(), book.ID); got.ImageURL != book.ImageURL {
+		t.Errorf("image_url changed to %q", got.ImageURL)
 	}
 }
