@@ -13,8 +13,10 @@
   <a href="https://github.com/vavallee/bindery/actions/workflows/ci.yml"><img src="https://github.com/vavallee/bindery/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://codecov.io/gh/vavallee/bindery"><img src="https://img.shields.io/codecov/c/github/vavallee/bindery?logo=codecov&logoColor=white" alt="codecov" /></a>
   <a href="https://github.com/vavallee/bindery/releases"><img src="https://img.shields.io/github/v/release/vavallee/bindery" alt="Release" /></a>
-  <a href="https://github.com/vavallee/bindery/pkgs/container/bindery"><img src="https://img.shields.io/badge/ghcr.io-vavallee%2Fbindery-blue" alt="Docker" /></a>
-  <a href="https://goreportcard.com/report/github.com/vavallee/bindery"><img src="https://goreportcard.com/badge/github.com/vavallee/bindery" alt="Go Report Card" /></a>
+  <a href="https://github.com/vavallee/bindery/releases"><img src="https://img.shields.io/github/downloads/vavallee/bindery/total" alt="Downloads" /></a>
+  <a href="https://github.com/vavallee/bindery/pkgs/container/bindery"><img src="https://img.shields.io/badge/ghcr.io-vavallee%2Fbindery-blue?logo=github" alt="GitHub Container Registry" /></a>
+  <a href="https://hub.docker.com/r/vavallee/bindery"><img src="https://img.shields.io/docker/pulls/vavallee/bindery?label=docker%20hub%20pulls&logo=docker&logoColor=white" alt="Docker Hub pulls" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/vavallee/bindery"><img src="https://img.shields.io/ossf-scorecard/github.com/vavallee/bindery?label=openssf%20scorecard" alt="OpenSSF Scorecard" /></a>
   <a href="https://github.com/vavallee/bindery/blob/main/LICENSE"><img src="https://img.shields.io/github/license/vavallee/bindery" alt="License" /></a>
   <a href="https://discord.gg/RpuYYRM9cZ"><img src="https://img.shields.io/badge/Discord-BINDERY-5865F2?logo=discord&logoColor=white" alt="Discord" /></a>
 </p>
@@ -144,12 +146,15 @@ Clean-room Go rewrite, modern React UI, MIT-licensed, actively developed.
 
 **Metadata sources** — all stable, documented, public APIs. No Goodreads scraping.
 
+Repeated provider searches use a bounded five-minute cache, and identical in-flight searches and edition lookups share requests. See [metadata request caching](docs/DEPLOYMENT.md#metadata-request-caching).
+
 | Source | Auth | Used for |
 |--------|------|----------|
 | [OpenLibrary](https://openlibrary.org) | None | Default primary: authors, books, editions, covers, ISBN |
 | [Google Books](https://developers.google.com/books) | API key (free) | Enrichment: descriptions, ratings |
 | [Hardcover.app](https://hardcover.app) | API token (free) | Search enrichment + community ratings, series, wishlist; can be promoted to **primary** for a curated, translation-free catalogue. Token required for **all** queries — without it Hardcover is silently skipped ([troubleshooting](docs/Troubleshooting-Wiki.md#a-book-is-on-hardcoverapp-but-doesnt-show-up-in-the-add-to-library-search)) |
 | [DNB](https://www.dnb.de/) | None (public SRU) | German-language descriptions, language, year, publisher; can be promoted to **primary** |
+| [Nasjonalbiblioteket](https://www.nb.no/) | None (public API) | Norwegian catalogues under their original titles (legal deposit), with series and series numbers; opt-in **primary** only, never queried otherwise |
 | [Audnex](https://api.audnex.us) | None | Audiobook narrator, duration, cover by ASIN |
 | [Audible](https://audible.com) | None | Supplemental audiobook author lookup — pulls ASINs OL/Hardcover miss |
 
