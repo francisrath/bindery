@@ -549,15 +549,18 @@ to the records. Things worth knowing before you judge the results:
   per book with a sentence saying why and what to do: add the author, confirm
   a suggested book, or choose one. See [Adopting files already in your
   library](#adopting-files-already-in-your-library).
-- **Fix match moves and renames the file.** When a book page shows the wrong
-  file, the **Fix match** button reassigns it to the book you pick. That runs
-  the full import, so the file is moved into the target book's folder and
+- **Fix match corrects the link and leaves the file alone by default.** When a
+  book page shows the wrong file, the **Fix match** button reassigns it to the
+  book you pick. After you pick the book, the modal asks what should happen to
+  the file. **Correct the match only**, the default, keeps the file where it
+  is under its current name and only changes which book it belongs to, the way
+  Readarr's fix match does (#2055). **Also move and rename the file** runs the
+  full import instead, so the file is moved into the target book's folder and
   renamed from your naming template, replacing your own layout for that file.
-  The modal warns you and shows the exact destination path before you confirm,
-  and nothing happens until you do; the move itself then runs in the background
-  and Bindery cannot undo it for you. Reassigning the metadata link *without*
-  relocating the file is not available yet (#2055). History records the move
-  as **File Moved**, naming the book the file came from.
+  Choosing it shows the exact destination path before you confirm; the move
+  then runs in the background and Bindery cannot undo it for you. Nothing
+  happens until you confirm either way. History records the change as **File
+  Moved**, naming the book the file came from.
 - **An import never takes a file another book already tracks.** If a download
   or a manual import lands on a path that a different book already has, the
   import stops with **Import Blocked** and the Queue row names that book and
@@ -569,6 +572,16 @@ to the records. Things worth knowing before you judge the results:
   over automatically.
 - A folder holding both an ebook and an audiobook for the same book attaches
   both in a single scan — one file per format, so a second scan is not needed.
+- In a **flat** layout, where audiobooks sit straight in the author folder as
+  `Author/Title.mp3`, each file is matched on its own. A tracked audiobook only
+  claims the other files in that folder that are tracks of it (the same name
+  up to a part, track, chapter or disc number, written as digits or as a word
+  like `Part Two`, or a name that starts with its number such as `02.mp3` or
+  `02 - Chapter Two.mp3`; a chapter title after the number is ignored), so
+  another audiobook by the same author beside it is attached to its own book
+  or listed as unmatched (#1985). Titles that differ only by a number, such as
+  `Saga 1.mp3` and `Saga 2.mp3`, still read as tracks of one audiobook; give
+  each book its own folder to keep them apart.
 - A PDF, TXT, RTF, CBZ or CBR sitting in a folder that also holds audio is treated as
   an **audiobook supplement** (the companion PDF Audible-style releases ship)
   and is not attached as the book's ebook. The same file in a folder with no

@@ -285,7 +285,7 @@ fingerprint and the next request rescans.
 ```
 GET    /api/v1/book?status=wanted                 filter by status (wanted, imported, skipped)
 POST   /api/v1/book/bulk                          bulk monitor / status flip / exclude (`"expectNoFiles": true` skips books that have files)
-GET    /api/v1/book/{id}                          book detail (with editions, history, formats)
+GET    /api/v1/book/{id}                          book detail (with editions, history, formats; `importInFlight: true` while a download for it is still on its way into the library)
 PUT    /api/v1/book/{id}                          update monitor / status / metadata
 DELETE /api/v1/book/{id}                          remove from library
 DELETE /api/v1/book/{id}/file                     delete imported file(s) on disk (`?format=ebook|audiobook` scopes to one format; `?path=…` deregisters one tracked path WITHOUT deleting anything on disk)
@@ -570,6 +570,9 @@ POST   /api/v1/queue/manual-import                import one path against a book
 POST   /api/v1/queue/manual-import/batch          import selected {path, bookId} pairs (admin); audio files for
                                                     the same book import as one audiobook under one download id
 POST   /api/v1/queue/manual-import/reassign       move a mis-matched file to another book (admin)
+                                                    {"path","targetBookId","format"?,"relocate"?}: relocate false links the
+                                                    file to the book and leaves it on disk as it is (200, done); true or
+                                                    absent re-imports it, moving and renaming it (202, background) (#2055)
 GET    /api/v1/queue/manual-import/reassign/preview  where that reassign would move and rename it (admin)
                                                     ?path=…&targetBookId=N[&format=ebook|audiobook]
 POST   /api/v1/queue/manual-import/match          attach an importFailed download to a book and import its files (admin)
@@ -753,7 +756,7 @@ GET    /api/v1/backup                             list stored backups (admin)
 DELETE /api/v1/backup/{filename}                  delete one backup (admin)
 POST   /api/v1/backup/{filename}/restore          stage a backup for the next restart (admin, X-Confirm-Restore: true)
 GET    /api/v1/system/status                      version, commit, build date, newest published release, image cache size, Hardcover feature state
-POST   /api/v1/library/scan                       start a library scan in the background (202)
+POST   /api/v1/library/scan                       start a library scan in the background (202; {"queued": true} when one is already running)
 GET    /api/v1/library/duplicate-candidates      read-only duplicate title groups across every author, paginated (#2999)
 GET    /api/v1/library/scan/status                summary of the last library scan, paths included (admin)
 GET    /api/v1/library/unmatched                  books the scan could not match, one row per book (admin)
@@ -769,6 +772,17 @@ GET    /api/v1/system/loglevel                    current log level (admin)
 PUT    /api/v1/system/loglevel                    runtime log-level switch, debug/info/warn/error (admin)
 GET    /api/v1/images?url=<encoded>               proxied + cached cover image (30-day TTL)
 ```
+
+`POST /api/v1/library/scan` answers `202` with `{"message": "library scan
+started"}` when it starts a scan. While a scan is already running it no longer
+answers `409`: the request is queued and the answer is `202` with
+`{"message": "library scan queued", "queued": true}`. When the running scan
+finishes, one more scan runs, however many requests arrived meanwhile, so a
+file placed in a folder the walk had already passed is still picked up (#3014).
+Both answers carry `scanId`, the `scan_id` the requested scan's result will
+have in `GET /api/v1/library/scan/status`, so a client can recognise its own
+scan's result. The status also carries `running` and `queued`, the live state
+next to the stored result of the last finished scan.
 
 `GET /api/v1/library/scan/status` returns the stored summary of the most recent
 scan: the counts, the library roots it walked and the path of every unmatched

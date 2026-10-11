@@ -805,6 +805,27 @@ func (r *DownloadRepo) GetOwnerByID(ctx context.Context, id int64) (int64, bool,
 	return owner.Int64, true, nil
 }
 
+// HasImportInFlight reports whether a download for the book is still on its
+// way into the library: grabbed, downloading, or completed and not yet through
+// the import. The book page polls while this is true (#2423). The parked
+// hand-off states (importExternal, importHeld) are left out on purpose: they
+// can wait hours on another tool, and a page should not poll for that long.
+//
+// userID scopes it the way the queue is scoped (QueryScope, strict owner
+// equality; 0 is unscoped), so a user looking at a book nobody owns cannot
+// learn from it that another user has a grab in flight.
+func (r *DownloadRepo) HasImportInFlight(ctx context.Context, bookID, userID int64) (bool, error) {
+	where, args := QueryScope("WHERE book_id = ? AND status IN (?, ?, ?, ?, ?)", userID,
+		bookID, models.StateGrabbed, models.StateDownloading, models.StateCompleted,
+		models.StateImportPending, models.StateImporting)
+	var n int
+	err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM downloads `+where, args...).Scan(&n)
+	if err != nil {
+		return false, fmt.Errorf("import in flight for book %d: %w", bookID, err)
+	}
+	return n > 0, nil
+}
+
 func (r *DownloadRepo) DeleteByBook(ctx context.Context, bookID int64) error {
 	_, err := r.db.ExecContext(ctx, "DELETE FROM downloads WHERE book_id=?", bookID)
 	return err
