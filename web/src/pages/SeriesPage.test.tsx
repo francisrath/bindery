@@ -796,7 +796,7 @@ describe('SeriesPage', () => {
       linkedAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
     }
     vi.mocked(api.getSeriesHardcoverDiff).mockResolvedValue({
-      seriesId: 41, link: hardcoverLink, present: [],
+      seriesId: 41, link: hardcoverLink, present: [], covered: [],
       missing: [{ foreignBookId: 'hc:fjellvinden', providerId: '8', title: 'Fjellvinden', position: '2', authorName: 'Kari Nordmann' }],
       localOnly: [], uncertain: [], presentCount: 0, missingCount: 1,
     })
