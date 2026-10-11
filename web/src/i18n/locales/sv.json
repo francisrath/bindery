@@ -1901,6 +1901,12 @@
     "copyPath": "Kopiera filsökvägen till urklipp",
     "download": "Ladda ner",
     "rebind": "Länka om",
+    "cover": {
+      "upload": "Ladda upp omslag",
+      "change": "Byt omslag",
+      "uploading": "Laddar upp…",
+      "uploadFailed": "Kunde inte ladda upp omslaget"
+    },
     "edit": {
       "button": "Redigera",
       "hint": "Redigera metadata manuellt. Redigerade fält låses så att uppdateringar inte skriver över dem",

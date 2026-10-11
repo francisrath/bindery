@@ -1901,6 +1901,12 @@
     "copyPath": "Kopier filstien til utklippstavlen",
     "download": "Last ned",
     "rebind": "Koble om",
+    "cover": {
+      "upload": "Last opp omslag",
+      "change": "Bytt omslag",
+      "uploading": "Laster opp…",
+      "uploadFailed": "Kunne ikke laste opp omslaget"
+    },
     "edit": {
       "button": "Rediger",
       "hint": "Rediger metadata manuelt. Redigerte felt låses, så oppdateringer ikke overskriver dem",
