@@ -26,6 +26,8 @@ import FixMatchModal from '../components/FixMatchModal'
 import EditBookModal from '../components/EditBookModal'
 import { formatBytes } from '../util/format'
 import MetadataLinksMenu from '../components/MetadataLinksMenu'
+import { usePolling } from '../components/usePolling'
+import { languageName } from '../util/language'
 
 function formatDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return ''
@@ -33,29 +35,6 @@ function formatDuration(seconds?: number): string {
   const m = Math.floor((seconds % 3600) / 60)
   if (h > 0) return `${h}h ${m}m`
   return `${m}m`
-}
-
-// Maps ISO-639 language codes (both 639-1 two-letter and 639-2/B three-letter
-// forms) to a full English name. Codes outside this short list fall back to the
-// raw code — indexers and metadata providers only reliably tag a few majors.
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: 'English', eng: 'English',
-  fr: 'French', fre: 'French', fra: 'French',
-  de: 'German', ger: 'German', deu: 'German',
-  nl: 'Dutch', dut: 'Dutch', nld: 'Dutch',
-  es: 'Spanish', spa: 'Spanish',
-  it: 'Italian', ita: 'Italian',
-  pt: 'Portuguese', por: 'Portuguese',
-  ja: 'Japanese', jpn: 'Japanese',
-  zh: 'Chinese', chi: 'Chinese', zho: 'Chinese',
-  ru: 'Russian', rus: 'Russian',
-  tl: 'Tagalog', tgl: 'Tagalog',
-  id: 'Indonesian', ind: 'Indonesian',
-}
-
-function languageName(code?: string): string | null {
-  if (!code) return null
-  return LANGUAGE_NAMES[code.toLowerCase()] ?? code
 }
 
 /** Final path segment, for labelling row-level controls. */
@@ -368,6 +347,24 @@ function BookDetailPageInner() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [bookId, t])
+
+  // Live refresh while an import is in flight (#2423). It arms on the
+  // server's importInFlight flag: a download for this book that is still on
+  // its way into the library. The first version (#1161) armed on book statuses
+  // nothing ever wrote, so it never ran. Each tick reloads the book, and the
+  // reload that comes back with the flag cleared disarms the poll and pulls the
+  // history once more so the import shows up there too. The ASIN draft is left
+  // alone, since the user may be typing in it.
+  usePolling(() => {
+    api.getBook(bookId)
+      .then(b => {
+        setBook(b)
+        if (!b.importInFlight) {
+          api.listHistory({ bookId }).then(({ items }) => setEvents(items)).catch(() => {})
+        }
+      })
+      .catch(() => {})
+  }, 5000, Boolean(book?.importInFlight))
 
   // Series membership. There is no book→series endpoint, so this reuses the
   // author's series list and picks out this book's entries — deliberately not a
@@ -1219,7 +1216,7 @@ function BookDetailPageInner() {
                               items={[
                                 {
                                   label: t('bookDetail.fixMatch.button', 'Fix match'),
-                                  title: t('bookDetail.fixMatch.hint', 'Move this file to a different book'),
+                                  title: t('bookDetail.fixMatch.hint', 'Say which book this file really belongs to'),
                                   disabled: deletingFile || deregistering || deletingBook,
                                   onSelect: () => setFixMatchRow(row),
                                 },
@@ -1277,7 +1274,7 @@ function BookDetailPageInner() {
                 onClick={() => setFixMatchRow(rows[0])}
                 disabled={deletingFile || deregistering || deletingBook}
                 className={actionBtnCls}
-                title={t('bookDetail.fixMatch.hint', 'Move this file to a different book')}
+                title={t('bookDetail.fixMatch.hint', 'Say which book this file really belongs to')}
               >
                 {t('bookDetail.fixMatch.button', 'Fix match')}
               </button>
