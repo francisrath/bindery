@@ -489,6 +489,7 @@
     },
     "booksHeading": "Books",
     "syncing": "Fetching this author’s catalogue. Books appear here when it finishes, which can take a few minutes for a large catalogue.",
+    "syncingMore": "Fetching this author’s catalogue. Any new books appear here when it finishes.",
     "filteredCount": "{{shown}} of {{total}}",
     "groupBySeries": "Group by series",
     "showFlatList": "Show flat list",

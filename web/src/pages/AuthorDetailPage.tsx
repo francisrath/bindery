@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../components/useConfirmDialog'
 import { api, ApiError, Author, AuthorAlias, Book, BookBulkAction, MediaType, Series } from '../api/client'
+import { usePolling } from '../components/usePolling'
 import ViewToggle from '../components/ViewToggle'
 import { bookStatusBadge } from '../components/bookStatus'
 import MergeAuthorsModal from '../components/MergeAuthorsModal'
@@ -107,6 +108,8 @@ const REFRESH_POLL_TIMEOUT_MS = 60000
 // spend minutes in the provider fetch (#3058).
 const SYNC_POLL_START_MS = 2000
 const SYNC_POLL_MAX_MS = 10000
+// Consecutive failed polls or reloads before the page stops watching a sync.
+const SYNC_POLL_MAX_FAILURES = 3
 
 export default function AuthorDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -148,6 +151,14 @@ export default function AuthorDetailPage() {
   const [showCatalogueReconciliation, setShowCatalogueReconciliation] = useState(false)
   const [showDuplicateCandidates, setShowDuplicateCandidates] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The sync poll stopped trying (#3058): a 404/403, or a few failures in a row.
+  const [syncGaveUp, setSyncGaveUp] = useState(false)
+  const syncFailures = useRef(0)
+  const noteSyncFailure = (err: unknown) => {
+    syncFailures.current++
+    const status = err instanceof ApiError ? err.status : 0
+    if (status === 404 || status === 403 || syncFailures.current >= SYNC_POLL_MAX_FAILURES) setSyncGaveUp(true)
+  }
 
   // Bulk multi-select state (#791). Selection is keyed by book.id and
   // intentionally scoped to the filtered view: hidden books can't be
@@ -297,8 +308,17 @@ export default function AuthorDetailPage() {
       api.getAuthor(authorId),
       api.listAllBooks({ authorId, includeExcluded: showExcluded }),
     ])
-      .then(([a, bs]) => { if (!cancelled) { setAuthor(a); setBooks(bs) } })
-      .catch(err => setError(err instanceof Error ? err.message : 'Failed to load'))
+      .then(([a, bs]) => {
+        if (cancelled) return
+        setAuthor(a)
+        setBooks(bs)
+        syncFailures.current = 0
+        setSyncGaveUp(false)
+      })
+      .catch(err => {
+        setError(err instanceof Error ? err.message : 'Failed to load')
+        if (!cancelled) noteSyncFailure(err)
+      })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [authorId, showExcluded, reloadKey])
@@ -307,37 +327,33 @@ export default function AuthorDetailPage() {
   // after an add or after a Refresh poll gave up, is polled until the sync
   // ends and then reloaded, so the page does not settle on "no books" while
   // the catalogue is still being fetched (#3058). A manual Refresh runs its
-  // own poll, so this one stands down meanwhile.
-  const syncing = !!author?.syncInProgress && author.id === authorId && !refreshing
-  useEffect(() => {
-    if (!syncing) return
+  // own poll, so this one stands down meanwhile. The poll keeps running until
+  // a reload has actually succeeded (a failed reload leaves the author marked
+  // as syncing, so the next poll reloads again), and gives up on a 404/403 or
+  // after a few failures in a row, so a permanent error ends in the error
+  // state rather than a spinner that never clears.
+  const syncing = !!author?.syncInProgress && author.id === authorId && !refreshing && !syncGaveUp
+  const [pollDelay, setPollDelay] = useState(SYNC_POLL_START_MS)
+  const backOff = () => setPollDelay(d => Math.min(d * 1.5, SYNC_POLL_MAX_MS))
+  usePolling(() => {
     const session = pageSession.current
-    let stopped = false
-    let delay = SYNC_POLL_START_MS
-    let timer: ReturnType<typeof setTimeout>
-    const tick = async () => {
-      try {
-        const latest = await api.getAuthor(authorId)
-        if (stopped || !session.active) return
+    api.getAuthor(authorId)
+      .then(latest => {
+        if (!session.active) return
         if (!latest.syncInProgress) {
           quietReload.current = true
           setReloadKey(k => k + 1)
           return
         }
-      } catch {
-        // A failed poll is retried: one network blip must not leave the
-        // page waiting on a sync it stopped watching.
-        if (stopped || !session.active) return
-      }
-      delay = Math.min(delay * 1.5, SYNC_POLL_MAX_MS)
-      timer = setTimeout(tick, delay)
-    }
-    timer = setTimeout(tick, delay)
-    return () => {
-      stopped = true
-      clearTimeout(timer)
-    }
-  }, [syncing, authorId])
+        syncFailures.current = 0
+        backOff()
+      })
+      .catch(err => {
+        if (!session.active) return
+        noteSyncFailure(err)
+        backOff()
+      })
+  }, pollDelay, syncing)
 
   // Validated against authorId: stale state (browser back/forward) or no
   // state at all (opened from elsewhere) must read as "no nav info", not
@@ -1416,8 +1432,10 @@ export default function AuthorDetailPage() {
 
         {syncing && (
           <p role="status" className="mb-3 flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400">
-            <span aria-hidden="true" className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            {t('authorDetail.syncing', 'Fetching this author’s catalogue. Books appear here when it finishes, which can take a few minutes for a large catalogue.')}
+            <span aria-hidden="true" className="inline-block h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            {books.length === 0
+              ? t('authorDetail.syncing', 'Fetching this author’s catalogue. Books appear here when it finishes, which can take a few minutes for a large catalogue.')
+              : t('authorDetail.syncingMore', 'Fetching this author’s catalogue. Any new books appear here when it finishes.')}
           </p>
         )}
         {books.length === 0 ? (
