@@ -66,6 +66,7 @@ func (h *AuthorHandler) DuplicateCandidates(w http.ResponseWriter, r *http.Reque
 		writeServerError(w, r, err)
 		return
 	}
+	proxyDuplicateGroups(groups)
 	writeJSON(w, http.StatusOK, duplicateCandidatesResponse{
 		AuthorID: author.ID,
 		Groups:   groups,

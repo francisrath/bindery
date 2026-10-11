@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/vavallee/bindery/internal/covers"
+	"github.com/vavallee/bindery/internal/duplicates"
 	"github.com/vavallee/bindery/internal/httpsec"
 	"github.com/vavallee/bindery/internal/models"
 	"github.com/vavallee/bindery/internal/useragent"
@@ -596,6 +597,19 @@ func proxySeriesImages(series []models.Series) {
 			if sb.Book != nil {
 				proxyBookImages(sb.Book)
 			}
+		}
+	}
+}
+
+// proxyDuplicateGroups rewrites the cover of every member of a duplicate
+// review group. The members embed the whole book row, so a stored cover
+// (bindery-cover:) went out raw (#3146). The groups are the caller's own
+// copy: the library review hands in a page copied from its cached scan.
+func proxyDuplicateGroups(groups []duplicates.Group) {
+	for _, g := range groups {
+		members := g.Members
+		for mi := range members {
+			proxyBookImages(&members[mi].Book)
 		}
 	}
 }

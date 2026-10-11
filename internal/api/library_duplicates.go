@@ -124,6 +124,7 @@ func (h *DuplicateReviewHandler) List(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, err)
 		return
 	}
+	proxyDuplicateGroups(page)
 	writeJSON(w, http.StatusOK, libraryDuplicatesResponse{
 		Groups: page,
 		Total:  total,
