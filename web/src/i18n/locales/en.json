@@ -872,7 +872,10 @@
       "add": "add",
       "addTitle": "Add this missing Hardcover book and search indexers",
       "moreMissing_one": "{{count}} more missing book",
-      "moreMissing_other": "{{count}} more missing books"
+      "moreMissing_other": "{{count}} more missing books",
+      "coveredSection_one": "{{count}} split edition of a book you own",
+      "coveredSection_other": "{{count}} split editions of books you own",
+      "coveredSubtitle": "Part of {{title}}, already in your library"
     },
     "nameModal": {
       "name": "Name",
@@ -1394,6 +1397,7 @@
       "deleteBackupTitle": "Delete backup"
     },
     "general": {
+      "hardcoverPausedUntil": "Hardcover is paused until {{time}} because its daily quota was reached. Retry interrupted imports after this time.",
       "appearance": "Appearance",
       "theme": "Theme",
       "themeHint": "Light or dark interface. Defaults to your OS preference on first visit.",
@@ -1708,6 +1712,12 @@
     "searchPlaceholder": "Author, title, ISBN, or ASIN (for example, Le Guin, Dune, 9780441478125, B0DBJBFHGT)",
     "addBook": "Add Book",
     "booksDivider": "Books",
+    "filter": {
+      "label": "Show",
+      "all": "All",
+      "books": "Books",
+      "authors": "Authors"
+    },
     "partialError": "Some results could not be loaded: {{error}}",
     "selectAuthor": "Select {{name}}",
     "searching": "Searching…",
@@ -1720,7 +1730,7 @@
     "idMissing": "This result has no book ID and cannot be added",
     "topWork": "Top work:",
     "books": "up to {{count}} works",
-    "booksTooltip": "OpenLibrary's raw work count. The actual catalogue added will be smaller after deduplication, language filtering, and junk-title removal.",
+    "booksTooltip": "The metadata provider's raw work count. The actual catalogue added will be smaller after deduplication, language filtering, and junk-title removal.",
     "ratings": "{{count}} ratings",
     "resultProvider": "from {{provider}}",
     "noResults": "No results found",
