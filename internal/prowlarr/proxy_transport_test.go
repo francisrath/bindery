@@ -3,6 +3,7 @@ package prowlarr
 import (
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,9 +14,11 @@ import (
 // like the newznab search client that talks to the same hosts, so sync and test
 // calls honor BINDERY_OUTBOUND_PROXY instead of dialing Prowlarr directly
 // (#1847). With a proxy configured, a real client call lands on the proxy. The
-// transport is used as it is there: the dial targets the operator-trusted
-// proxy, and a per-dial SSRF re-check would reject a LAN or loopback proxy and
-// break every sync, which this test's loopback proxy also covers.
+// client is built by New, so this checks what NewWithTimeout wires. The shared
+// transport is reset first so it is built here with the proxy in place, and put
+// back afterwards for the other tests. The proxy here is on loopback, which the
+// shipped PolicyLANLoopback would let through anyway, so this does not exercise
+// the per-dial SSRF re-check; that is only observable with a strict policy.
 func TestClient_RoutesThroughOutboundProxy(t *testing.T) {
 	t.Cleanup(func() { _, _ = httpsec.ConfigureOutboundProxy("", "", true) })
 	hit := make(chan string, 1)
@@ -34,10 +37,18 @@ func TestClient_RoutesThroughOutboundProxy(t *testing.T) {
 
 	// The shared transport is built once per process, after startup has
 	// configured the proxy (see sharedGuardedTransport). Other tests in this
-	// package build it first without one, so this client gets the transport
-	// startup would have built with the proxy in place.
+	// package build it first without one, so reset it and let New build it
+	// with the proxy in place, the way startup would.
+	prevShared := guardedTransportShared
+	guardedTransportOnce = sync.Once{}
+	t.Cleanup(func() {
+		guardedTransportOnce = sync.Once{}
+		guardedTransportShared = prevShared
+		if prevShared != nil {
+			guardedTransportOnce.Do(func() {})
+		}
+	})
 	c := New("http://prowlarr.example:9696", "key")
-	c.http.Transport = guardedTransport()
 	version, err := c.Test(t.Context())
 	if err != nil {
 		t.Fatalf("Test through the proxy: %v", err)
