@@ -270,7 +270,7 @@ func (h *RecommendationHandler) Add(w http.ResponseWriter, r *http.Request) {
 		go h.searcher.SearchAndGrabBook(indexer.WithSearchOrigin(h.appCtx, indexer.OriginRecommendation), *book) // #nosec G118 -- intentional: search must outlive the request
 	}
 
-	writeJSON(w, http.StatusCreated, book)
+	writeBook(w, http.StatusCreated, book)
 }
 
 // Refresh triggers a recommendation engine run in the background.

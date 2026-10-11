@@ -283,10 +283,12 @@ func toAdoptionItem(u *db.UnmatchedUnit, refs map[int64]db.UnmatchedBookRef) ado
 	for _, c := range u.Candidates {
 		// A suggested book deleted since the scan simply drops out.
 		if ref, ok := refs[c.BookID]; ok {
+			ref.ImageURL = ProxyImageURL(ref.ImageURL)
 			it.Candidates = append(it.Candidates, adoptionCandidate{Book: ref, Score: c.Score, FolderAuthorOnly: c.FolderAuthorOnly && it.AuthorConflict != nil})
 		}
 	}
 	if ref, ok := refs[u.BookID]; ok && u.BookID > 0 {
+		ref.ImageURL = ProxyImageURL(ref.ImageURL)
 		it.Book = &ref
 	}
 	return it

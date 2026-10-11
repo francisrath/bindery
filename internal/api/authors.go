@@ -488,9 +488,8 @@ func (h *AuthorHandler) Get(w http.ResponseWriter, r *http.Request) {
 	// Refresh so it can show the result instead of the state before it (#2601).
 	author.SyncInProgress = h.runningSyncs.running(id)
 
-	proxyAuthorImages(author)
 	cleanAuthorDescription(author)
-	writeJSON(w, http.StatusOK, author)
+	writeAuthor(w, http.StatusOK, author)
 }
 
 // ListSeries returns the series belonging to the author — i.e. the series
@@ -514,6 +513,7 @@ func (h *AuthorHandler) ListSeries(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, err)
 		return
 	}
+	proxySeriesImages(series)
 	writeJSON(w, http.StatusOK, series)
 }
 
@@ -559,10 +559,10 @@ func (h *AuthorHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !res.Created {
-		writeJSON(w, http.StatusOK, res.Author)
+		writeAuthor(w, http.StatusOK, res.Author)
 		return
 	}
-	writeJSON(w, http.StatusCreated, res.Author)
+	writeAuthor(w, http.StatusCreated, res.Author)
 }
 
 func cleanAuthorDescription(author *models.Author) {
@@ -837,7 +837,7 @@ func (h *AuthorHandler) writeCanonicalAuthorConflict(w http.ResponseWriter, cano
 	writeJSON(w, http.StatusConflict, map[string]any{
 		"error":             message,
 		"canonicalAuthorId": canonical.ID,
-		"canonicalAuthor":   canonical,
+		"canonicalAuthor":   proxiedAuthor(canonical),
 	})
 }
 
@@ -848,7 +848,7 @@ func (h *AuthorHandler) writeExistingBookConflict(w http.ResponseWriter, existin
 	writeJSON(w, http.StatusConflict, map[string]any{
 		"error":          "book already in your library; change its format or monitoring from the book page",
 		"existingBookId": existing.ID,
-		"existingBook":   existing,
+		"existingBook":   proxiedBook(existing),
 	})
 }
 
@@ -1117,7 +1117,7 @@ func (h *AuthorHandler) Update(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	writeJSON(w, http.StatusOK, author)
+	writeAuthor(w, http.StatusOK, author)
 }
 
 func applyMonitorModeToExistingBooks(ctx context.Context, booksRepo *db.BookRepo, authorsRepo *db.AuthorRepo, seriesRepo *db.SeriesRepo, author *models.Author) error {
@@ -1299,9 +1299,8 @@ func (h *AuthorHandler) RelinkUpstream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proxyAuthorImages(author)
 	cleanAuthorDescription(author)
-	writeJSON(w, http.StatusOK, author)
+	writeAuthor(w, http.StatusOK, author)
 }
 
 func (h *AuthorHandler) RelinkCandidates(w http.ResponseWriter, r *http.Request) {
@@ -3414,7 +3413,7 @@ func (h *AuthorHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 		h.writeAddBookError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusCreated, res.Book)
+	writeBook(w, http.StatusCreated, res.Book)
 }
 
 // logStrictMediaTypeBypass records an explicit add that the strict media-type

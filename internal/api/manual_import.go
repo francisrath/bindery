@@ -825,8 +825,8 @@ func (h *ManualImportHandler) Scan(w http.ResponseWriter, r *http.Request) {
 				ParsedTitle:     res.ParsedTitle,
 				ParsedAuthor:    res.ParsedAuthor,
 				DetectedFormat:  res.DetectedFormat,
-				Book:            res.Book,
-				Candidates:      res.Candidates,
+				Book:            proxiedBook(res.Book),
+				Candidates:      proxiedBooks(res.Candidates),
 				AlreadyImported: alreadyImported,
 			})
 		}

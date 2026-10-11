@@ -402,7 +402,7 @@ func (h *SeriesHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, updated)
+	writeSeries(w, http.StatusOK, updated)
 }
 
 func (h *SeriesHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -475,7 +475,7 @@ func (h *SeriesHandler) AddBook(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, updated)
+	writeSeries(w, http.StatusOK, updated)
 }
 
 // RemoveBook drops a single book's membership of a series, leaving every other
@@ -536,7 +536,7 @@ func (h *SeriesHandler) SetPrimaryBook(w http.ResponseWriter, r *http.Request) {
 		writeServerError(w, r, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, updated)
+	writeSeries(w, http.StatusOK, updated)
 }
 
 // Monitor toggles the monitored flag on a series.

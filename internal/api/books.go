@@ -208,7 +208,7 @@ func (h *BookHandler) EnrichAudiobook(w http.ResponseWriter, r *http.Request) {
 		}
 		if updated {
 			cleanBookDescription(book)
-			writeJSON(w, http.StatusOK, book)
+			writeBook(w, http.StatusOK, book)
 			return
 		}
 		if attempt > 0 {
@@ -407,12 +407,11 @@ func (h *BookHandler) Get(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	proxyBookImages(book)
 	cleanBookDescription(book)
 	h.attachBookFiles(r.Context(), book)
 	h.attachBookIdentifiers(r.Context(), book)
 	h.attachImportInFlight(r.Context(), book)
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 // attachImportInFlight marks a book whose download is still on its way into
@@ -637,7 +636,7 @@ func (h *BookHandler) Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 func (h *BookHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -815,7 +814,7 @@ func (h *BookHandler) DeleteFile(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 // deleteTrackedBookFile removes exactly one tracked book_files row and its
@@ -880,7 +879,7 @@ func (h *BookHandler) deleteTrackedBookFile(w http.ResponseWriter, r *http.Reque
 			})
 		}
 	}
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 // deregisterBookFile removes ONE book_files row by its tracked path and does
@@ -957,7 +956,7 @@ func (h *BookHandler) deregisterBookFile(w http.ResponseWriter, r *http.Request,
 		}
 	}
 
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 // removeBookPathScoped deletes a file or directory at p. Audiobooks are stored
@@ -1395,8 +1394,7 @@ func (h *BookHandler) Rebind(w http.ResponseWriter, r *http.Request) {
 
 	h.attachBookFiles(r.Context(), book)
 	cleanBookDescription(book)
-	proxyBookImages(book)
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 func (h *BookHandler) ToggleExcluded(w http.ResponseWriter, r *http.Request) {
@@ -1413,7 +1411,7 @@ func (h *BookHandler) ToggleExcluded(w http.ResponseWriter, r *http.Request) {
 	}
 	book.Excluded = newVal
 	cleanBookDescription(book)
-	writeJSON(w, http.StatusOK, book)
+	writeBook(w, http.StatusOK, book)
 }
 
 // preserveBookStateForMetadataMap and bookMapAuthorMatches below are retained:

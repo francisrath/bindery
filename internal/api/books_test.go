@@ -1296,7 +1296,9 @@ func TestEnrichAudiobook_RetriesAfterConcurrentEdit(t *testing.T) {
 	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
 		t.Fatal(err)
 	}
-	if got.Monitored || got.ImageURL != "https://example.test/user-cover.jpg" || got.Narrator != "Audnex Narrator" {
+	// The response carries the cover the way every book response does, as a
+	// proxy URL (#3146).
+	if got.Monitored || got.ImageURL != ProxyImageURL("https://example.test/user-cover.jpg") || got.Narrator != "Audnex Narrator" {
 		t.Fatalf("response does not match the stored row: %+v", got)
 	}
 }
