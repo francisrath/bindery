@@ -50,6 +50,12 @@ describe('index.css', () => {
     expect(block(built, /html:not\(\.dark\)\s*\{/)).toMatch(/color-scheme:\s*light/)
   })
 
+  it('sets text fields, but not selects, to 16px on touch screens', () => {
+    const touch = block(built, /@media \(hover: none\) and \(pointer: coarse\)\s*\{/)
+    expect(touch).toMatch(/input,\s*textarea\s*\{[^}]*font-size:\s*16px/)
+    expect(touch).not.toMatch(/select[^{}]*\{[^}]*font-size/)
+  })
+
   // Everywhere, not only on touch screens (#3148), and unlayered: inside a
   // layer or a media query the px-* utilities on each select would win, or
   // desktop would keep drawing the arrow over the value.
@@ -57,7 +63,7 @@ describe('index.css', () => {
     const prelude = /select:not\(\[multiple\]\):not\(\[size\]\):not\(\.bg-none\)\s*\{/g
     const rules = [...built.matchAll(prelude)].filter(m => depthAt(built, m.index) === 0)
     expect(rules).toHaveLength(1)
-    expect(block(built.slice(rules[0].index), prelude)).toMatch(/padding-right:\s*calc\(1\.5em \+ 0?\.5rem\)/)
+    expect(block(built.slice(rules[0].index), prelude)).toMatch(/padding-right:\s*calc\(1\.5em \+ 0?\.75rem\)/)
   })
 
   it('caps a select at the width of its container', () => {

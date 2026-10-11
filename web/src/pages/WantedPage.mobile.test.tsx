@@ -49,8 +49,7 @@ describe('WantedPage on a phone', () => {
     const row = select.closest('div.grid') as HTMLElement
     expect(row.className).toContain('grid-cols-[1.5rem_2rem_minmax(0,1fr)]')
     // The format column fits the longest format name with the select's arrow (#3148).
-    expect(row.className).toContain('sm:grid-cols-[1.5rem_2rem_1fr_8.5rem_8.5rem]')
-    expect(row.className).toContain('sm:pointer-coarse:grid-cols-[1.5rem_2rem_1fr_9.5rem_8.5rem]')
+    expect(row.className).toContain('sm:grid-cols-[1.5rem_2rem_1fr_9rem_8.5rem]')
   })
 
   it('puts format and actions on their own line under the title below sm', async () => {

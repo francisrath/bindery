@@ -82,12 +82,14 @@
   outline: none;
 }
 
-/* iOS Safari zooms the page in when a form control with a font size under
-   16px takes focus, and leaves it zoomed. Unlayered so it beats the text-sm
-   utilities on individual controls. */
+/* iOS Safari zooms the page in when a text field with a font size under 16px
+   takes focus, and leaves it zoomed. Unlayered so it beats the text-sm
+   utilities on individual controls. Selects are left at their own size: they
+   open a native picker instead of taking the keyboard, and at 16px the
+   compact ones (Wanted format, book media type) dwarfed the rows they sit
+   in. */
 @media (hover: none) and (pointer: coarse) {
   input,
-  select,
   textarea {
     font-size: 16px;
   }
@@ -96,23 +98,21 @@
 /* The forms plugin draws a select's arrow as a background image, 1.5em wide
    and 0.5rem from the edge. The px-* utility every select carries left 8-12px
    of right padding, so a select as wide as its longest option drew the arrow
-   over the end of it (#3148; on touch screens, at 16px, first in #3070).
-   Reserve exactly the arrow's footprint: the chevron sits in the middle of
-   it, so the text still clears it, and in em it stays right for an 11px
-   select as for a 16px one, where a flat 2.5rem squeezed the small ones in
-   fixed-width columns. Unlayered so it beats the px-* utilities; the left
-   padding is still theirs. A select drawn without the arrow (bg-none, as the
-   pager's "…" is) needs no room for it. */
+   over the end of it, on touch screens (#3070, #3081) and on desktop alike
+   (#3148). Reserve the arrow's width plus a small gap, in em so it stays
+   right for an 11px select as for a 16px one. Unlayered so it beats the px-*
+   utilities; the left padding is still theirs. A select drawn without the
+   arrow (bg-none, as the pager's "…" is) needs no room for it. */
 select:not([multiple]):not([size]):not(.bg-none) {
-  padding-right: calc(1.5em + 0.5rem);
+  padding-right: calc(1.5em + 0.75rem);
 }
 
-/* A select is as wide as its longest option, and on touch screens that
-   option is set at 16px with 2.5rem kept for the arrow, so a long one ran
-   past a 320px screen (Default monitor mode in Settings, Metadata, made the
-   page 349px wide). Capping it at its container lets the value truncate
-   instead. In the base layer so a max-w-* utility still wins, and it changes
-   nothing for a select that already fits. */
+/* A select is as wide as its longest option, and room is also kept for the
+   arrow, so a long one ran past a 320px screen (Default
+   monitor mode in Settings, Metadata, made the page 349px wide). Capping it
+   at its container lets the value truncate instead. In the base layer so a
+   max-w-* utility still wins, and it changes nothing for a select that
+   already fits. */
 @layer base {
   select {
     max-width: 100%;
