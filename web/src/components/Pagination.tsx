@@ -45,8 +45,9 @@ export default function Pagination({
   const btnActive = `${btnBase} bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white`
   const selectBase = 'pointer-coarse:min-h-11 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-slate-400 dark:focus:border-zinc-600'
   // The gap select is styled to read as the "…" it replaces: no chrome until
-  // you hover or focus it, at which point it is visibly a control.
-  const gapSelect = `${btnBase} pointer-coarse:min-h-11 appearance-none cursor-pointer bg-transparent text-center text-slate-500 dark:text-zinc-600 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-600`
+  // you hover or focus it, at which point it is visibly a control. bg-none
+  // drops the forms plugin's arrow, which was drawn over the "…" (#3148).
+  const gapSelect = `${btnBase} pointer-coarse:min-h-11 appearance-none cursor-pointer bg-transparent bg-none text-center text-slate-500 dark:text-zinc-600 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 focus:outline-none focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-600`
 
   return (
     <div className="flex flex-col items-center gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800 sm:flex-row sm:justify-between">

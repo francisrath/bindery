@@ -91,14 +91,17 @@
   textarea {
     font-size: 16px;
   }
+}
 
-  /* At 16px the select text outgrows the room the px-* utilities leave for
-     the arrow the forms plugin draws (1.5em wide, 0.5rem from the edge), so
-     the value ran under it. Reserve the arrow's width here; desktop keeps
-     the compact padding. */
-  select:not([multiple]):not([size]) {
-    padding-right: 2.5rem;
-  }
+/* The forms plugin draws a select's arrow as a background image, 1.5em wide
+   and 0.5rem from the edge, and reserves 2.5rem of right padding for it. The
+   px-* utility every select carries replaced that with 8-12px, so a select as
+   wide as its longest option drew the arrow over the end of it (#3148; on
+   touch screens, at 16px, first in #3070). Unlayered so it beats the px-*
+   utilities; the left padding is still theirs. A select drawn without the
+   arrow (bg-none, as the pager's "…" is) needs no room for it. */
+select:not([multiple]):not([size]):not(.bg-none) {
+  padding-right: 2.5rem;
 }
 
 /* A select is as wide as its longest option, and on touch screens that

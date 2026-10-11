@@ -1,0 +1,2 @@
+### Fixed
+- **Dropdown arrows no longer cover the selected value on desktop** (#3148). Every dropdown set a compact right padding that left no room for its arrow, so a dropdown as wide as its longest option (Media type showing "Audiobook", Per page showing "50") drew the arrow over the end of it. The room touch screens already had is now kept everywhere. The pager's "…" jump dropdown, meant to read as plain text, no longer draws an arrow at all.

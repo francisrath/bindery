@@ -17,6 +17,17 @@ beforeAll(async () => {
   built = result.css
 }, 60_000)
 
+// How many blocks are open at index: 0 means a top-level rule, outside any
+// @media or @layer.
+function depthAt(source: string, index: number): number {
+  let depth = 0
+  for (let i = 0; i < index; i++) {
+    if (source[i] === '{') depth += 1
+    else if (source[i] === '}') depth -= 1
+  }
+  return depth
+}
+
 // The body of the first block whose prelude matches, braces balanced.
 function block(source: string, prelude: RegExp): string {
   const m = prelude.exec(source)
@@ -39,9 +50,14 @@ describe('index.css', () => {
     expect(block(built, /html:not\(\.dark\)\s*\{/)).toMatch(/color-scheme:\s*light/)
   })
 
-  it('reserves room for the select arrow on touch screens only', () => {
-    const touch = block(built, /@media \(hover: none\) and \(pointer: coarse\)\s*\{/)
-    expect(block(touch, /select:not\(\[multiple\]\):not\(\[size\]\)\s*\{/)).toMatch(/padding-right:\s*2\.5rem/)
+  // Everywhere, not only on touch screens (#3148), and unlayered: inside a
+  // layer or a media query the px-* utilities on each select would win, or
+  // desktop would keep drawing the arrow over the value.
+  it('reserves room for the select arrow on every screen', () => {
+    const prelude = /select:not\(\[multiple\]\):not\(\[size\]\):not\(\.bg-none\)\s*\{/g
+    const rules = [...built.matchAll(prelude)].filter(m => depthAt(built, m.index) === 0)
+    expect(rules).toHaveLength(1)
+    expect(block(built.slice(rules[0].index), prelude)).toMatch(/padding-right:\s*2\.5rem/)
   })
 
   it('caps a select at the width of its container', () => {

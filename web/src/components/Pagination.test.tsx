@@ -92,6 +92,15 @@ describe('Pagination', () => {
     expect(gaps[0].querySelector('option')?.textContent).toBe('…')
   })
 
+  // The gap reads as a plain "…": no dropdown arrow drawn over it, and so no
+  // room reserved for one by index.css (#3148).
+  it('draws the jump dropdown without an arrow', () => {
+    render(<Pagination {...defaults} page={5} totalPages={10} />)
+    for (const gap of screen.getAllByRole('combobox', { name: 'Jump to page' })) {
+      expect(gap).toHaveClass('bg-none')
+    }
+  })
+
   // #2010: the gap used to be a dead "…", so reaching page 3 of 40 meant
   // stepping through Next one page at a time. Each gap now lists exactly the
   // pages it hides — the left one covers 2..(page-2), the right one
