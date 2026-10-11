@@ -125,7 +125,12 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
   const saveSeries = async () => {
     let target: number | null = null
     if (seriesChoice === NEW_SERIES) {
-      target = (await api.createSeries({ title: newSeriesName.trim() })).id
+      const created = await api.createSeries({ title: newSeriesName.trim() })
+      target = created.id
+      // From here on the series exists. Select it, so a retry after a later
+      // failure links to it instead of creating a second one.
+      setAllSeries(prev => [...(prev ?? []), created].sort((a, b) => a.title.localeCompare(b.title)))
+      setSeriesChoice(String(created.id))
     } else if (seriesChoice !== '') {
       target = Number(seriesChoice)
     }
@@ -136,6 +141,11 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
     for (const id of leave) {
       await api.removeBookFromSeries(id, book.id)
     }
+    // Saved: the book now sits where the form says. Without this the form
+    // still differs from what it loaded, and a retry after the book update
+    // fails would send the series changes again.
+    setMembership(target === null ? null : { id: target, position: position.trim() })
+    setMemberOf(target === null ? [] : [target])
   }
 
   const unlockAll = async () => {

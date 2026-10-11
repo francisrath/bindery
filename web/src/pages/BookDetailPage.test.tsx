@@ -1271,6 +1271,8 @@ describe('BookDetailPage — header', () => {
     expect(within(keptOut).getAllByRole('listitem')).toHaveLength(1)
     expect(within(keptOut).getByText('Rincewind #2')).toBeInTheDocument()
 
+    // Under 44px on its own, so it carries the touch hit area.
+    expect(within(keptOut).getByRole('button', { name: resolveKey('bookDetail.series.restore')! }).className.split(/\s+/)).toContain('touch-target')
     fireEvent.click(within(keptOut).getByRole('button', { name: resolveKey('bookDetail.series.restore')! }))
     // The book already has a primary series, so the restored one is not.
     await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(8, { bookId: 42, positionInSeries: '2', primarySeries: false }))

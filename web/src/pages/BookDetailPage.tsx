@@ -1139,7 +1139,7 @@ function BookDetailPageInner() {
                         ? t('bookDetail.seriesPosition', { series: e.seriesTitle, position: e.position, defaultValue: '{{series}} #{{position}}' })
                         : e.seriesTitle}
                     </span>
-                    <button type="button" className={`${btn.ghost} ${btnSize.sm}`} disabled={seriesBusy} onClick={() => restoreSeries(e)}>
+                    <button type="button" className={`touch-target ${btn.ghost} ${btnSize.sm}`} disabled={seriesBusy} onClick={() => restoreSeries(e)}>
                       {t('bookDetail.series.restore')}
                     </button>
                   </li>

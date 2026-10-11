@@ -175,6 +175,37 @@ describe('EditBookModal (#1237, #1446)', () => {
       expect(api.removeBookFromSeries).toHaveBeenCalledWith(1, 7)
     })
 
+    it('does not create the series twice when the book update fails and the save is retried', async () => {
+      vi.mocked(api.updateBook).mockRejectedValueOnce(new Error('boom'))
+      const select = await open()
+      fireEvent.change(select, { target: { value: 'new' } })
+      fireEvent.change(screen.getByLabelText('New series name'), { target: { value: 'Ny serie' } })
+      fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Changed' } })
+      save()
+      expect(await screen.findByText('boom')).toBeInTheDocument()
+      expect(api.createSeries).toHaveBeenCalledTimes(1)
+      save()
+      await waitFor(() => expect(onClose).toHaveBeenCalled())
+      expect(api.updateBook).toHaveBeenCalledTimes(2)
+      expect(api.createSeries).toHaveBeenCalledTimes(1)
+      expect(api.linkBookToSeries).toHaveBeenCalledTimes(1)
+      expect(api.removeBookFromSeries).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not create the series twice when linking it fails and the save is retried', async () => {
+      vi.mocked(api.linkBookToSeries).mockRejectedValueOnce(new Error('link failed'))
+      const select = await open()
+      fireEvent.change(select, { target: { value: 'new' } })
+      fireEvent.change(screen.getByLabelText('New series name'), { target: { value: 'Ny serie' } })
+      save()
+      expect(await screen.findByText('link failed')).toBeInTheDocument()
+      save()
+      await waitFor(() => expect(onClose).toHaveBeenCalled())
+      expect(api.createSeries).toHaveBeenCalledTimes(1)
+      expect(api.linkBookToSeries).toHaveBeenCalledTimes(2)
+      expect(api.linkBookToSeries).toHaveBeenLastCalledWith(9, { bookId: 7, positionInSeries: '1', primarySeries: true })
+    })
+
     it('takes the book out of its series when cleared', async () => {
       const select = await open()
       fireEvent.change(select, { target: { value: '' } })
