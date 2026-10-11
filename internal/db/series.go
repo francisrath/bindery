@@ -833,6 +833,19 @@ func (r *SeriesRepo) ClearBookSeriesExclusions(ctx context.Context, bookID int64
 	return nil
 }
 
+// ClearBookSeriesExclusion forgets that the user took the book out of this one
+// series (by its foreign id or any id merged into it), so the next link is not
+// refused. It is for an explicit request to put the book back; every
+// automatic writer leaves the exclusion alone (#2554).
+func (r *SeriesRepo) ClearBookSeriesExclusion(ctx context.Context, seriesID, bookID int64) error {
+	if _, err := r.exec.ExecContext(ctx, `DELETE FROM book_series_exclusions WHERE book_id = ? AND series_foreign_id IN (
+		SELECT foreign_id FROM series WHERE id = ?
+		UNION SELECT foreign_id FROM series_aliases WHERE series_id = ?)`, bookID, seriesID, seriesID); err != nil {
+		return fmt.Errorf("clear series exclusion for book %d in series %d: %w", bookID, seriesID, err)
+	}
+	return nil
+}
+
 // ErrSeriesAlias reports a foreign id that names a series through a merge
 // alias and so cannot be given to another series.
 var ErrSeriesAlias = errors.New("series foreign id is an alias")

@@ -7,3 +7,4 @@
 - **Position is optional** when adding a book to a series, as it already was on the server.
 - **Series controls for other users.** Users who aren't admins no longer see series buttons that the server refuses (add, rename, merge, delete, fill, Hardcover link, a book's series in Edit metadata). They still see every series and what is missing.
 - **Series grouping after a refresh.** The author page regroups its books by series after a refresh, without a reload.
+- **Add on a removed book** (#2554). Clicking Add on a book you took out of a series, in the Hardcover missing list, now puts it back in that series. Before, it said it queued the book and left it missing. Fill all still leaves removed books out.
