@@ -341,7 +341,10 @@
     "noClient": {
       "body": "Nothing was grabbed — no enabled download client can handle this release. Add or enable a download client to start downloads.",
       "action": "Set up Download Clients"
-    }
+    },
+    "forceTitle": "Grab this release again?",
+    "forceBody": "Bindery already imported this release once. Grab it anyway only if the files from that import are missing: while they are still there, the new download is skipped as a duplicate. Nothing is removed from your download client and the book's current files stay where they are.",
+    "forceConfirm": "Grab anyway"
   },
   "login": {
     "title": "Sign in",
@@ -523,7 +526,21 @@
       "status_wanted": "Wanted",
       "status_imported": "Imported",
       "status_skipped": "Skipped",
-      "status_excluded": "Excluded"
+      "status_excluded": "Excluded",
+      "monitored": "Monitored",
+      "allMonitored": "Any",
+      "monitoredOnly": "Monitored",
+      "unmonitoredOnly": "Unmonitored",
+      "language": "Language",
+      "allLanguages": "All languages",
+      "sort": "Sort",
+      "sortDefault": "Default",
+      "sortTitleAZ": "Title A–Z",
+      "sortTitleZA": "Title Z–A",
+      "sortNewest": "Published, newest",
+      "sortOldest": "Published, oldest",
+      "sortAddedNew": "Added, newest",
+      "sortAddedOld": "Added, oldest"
     },
     "deleteConfirm": "Delete {{author}} and all {{count}} book(s)?",
     "deleteWithFilesConfirm": "Delete {{author}}, all {{count}} book(s), AND {{withFiles}} file(s) or folder(s) on disk?\n\nThis cannot be undone.",
@@ -830,7 +847,11 @@
       "nothing": "Nothing to fill",
       "queued_one": "{{count}} book queued",
       "queued_other": "{{count}} books queued",
-      "failed": "Failed"
+      "failed": "Failed",
+      "skippedByProfile_one": "{{count}} skipped by the metadata profile",
+      "skippedByProfile_other": "{{count}} skipped by the metadata profile",
+      "skippedSplitParts_one": "{{count}} split edition part skipped",
+      "skippedSplitParts_other": "{{count}} split edition parts skipped"
     },
     "hardcover": {
       "searching": "Searching…",
@@ -883,6 +904,17 @@
       "confirmBody_one": "Merge {{count}} series into \"{{title}}\"? The merged series are deleted; this cannot be undone.",
       "confirmBody_other": "Merge {{count}} series into \"{{title}}\"? The merged series are deleted; this cannot be undone.",
       "failed": "Merge failed"
+    },
+    "splitParts": {
+      "badge": "Split part",
+      "badgeHint": "One part of a split edition of a book already in this series. Fill and the wanted search skip it.",
+      "unmonitor_one": "Unmonitor {{count}} split part",
+      "unmonitor_other": "Unmonitor {{count}} split parts",
+      "unmonitorHint": "Stop searching for the split edition parts of books you already have. Nothing is deleted.",
+      "confirm": "Unmonitor the split edition parts of books already in this series? They stay in the library and leave Wanted, and you can monitor any of them again from its book page.",
+      "done_one": "{{count}} split part unmonitored",
+      "done_other": "{{count}} split parts unmonitored",
+      "failed": "Could not unmonitor the split parts"
     }
   },
   "importHints": {
@@ -966,6 +998,11 @@
       }
     },
     "calibre": {
+      "calibredbMissing": {
+        "title": "calibredb cannot run where Bindery runs",
+        "body": "Nothing reaches Calibre in this mode. The official Bindery image does not include Calibre and cannot run a Calibre install mounted into it, so the calibredb CLI mode cannot work there. Use the Calibre Bridge plugin instead, which runs inside Calibre on another container or host, or run Bindery where calibredb is installed.",
+        "switchToBridge": "Switch to the Calibre Bridge plugin"
+      },
       "transport": {
         "label": "Transport",
         "push": "Push: Bindery sends books to Calibre",
@@ -1436,6 +1473,8 @@
       "scanLibrary": "Scan library",
       "scanLibraryHint": "Walks your library folders and attaches the files it finds to books already in your catalogue. It never creates a book: a file with no matching book is listed under Import, In your library, where you decide what it is. Downloads Bindery grabbed itself are imported on their own and do not need a scan.",
       "scanning": "Scanning…",
+      "scanCheckBack": "Scan started. Check back shortly for results.",
+      "scanQueued": "A scan is already running. Another one starts as soon as it finishes, so files added since it began are picked up too.",
       "scanLibraryButton": "Scan Library",
       "reorganizeLibrary": "Reorganize library",
       "reorganizeLibraryHint": "Moves every file Bindery already tracks to where your current naming template says it belongs, and shows you the full list before anything moves. It only touches files a scan has attached to a book, so run Scan library first.",
@@ -2081,11 +2120,17 @@
     "deletingFile": "Deleting…",
     "fixMatch": {
       "button": "Fix match",
-      "hint": "Move this file to a different book",
+      "hint": "Say which book this file really belongs to",
       "title": "Reassign file to another book",
       "searchPlaceholder": "Search your library for the correct book…",
       "noResults": "No matching books in your library",
-      "moveNotice": "Reassigning does more than correct the metadata: Bindery moves the file into the chosen book’s folder and renames it from your naming template.",
+      "moveNotice": "By default this only corrects which book the file belongs to and leaves the file where it is. You can also have Bindery move and rename it into the chosen book’s folder.",
+      "modeLegend": "What should happen to the file?",
+      "modeLinkOnly": "Correct the match only",
+      "modeLinkOnlyHint": "The file stays where it is, under its current name. Only the book it belongs to changes.",
+      "modeRelocate": "Also move and rename the file",
+      "modeRelocateHint": "Bindery moves the file into the chosen book’s folder and renames it from your naming template.",
+      "staysAtLabel": "The file stays at",
       "reassigningTo": "Reassigning to",
       "confirmHeading": "This moves and renames the file on disk",
       "confirmBody": "Bindery runs the full import against the chosen book, so the file is moved into that book’s folder and renamed from your naming template. Whatever folder layout you had for this file is replaced.",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { api, BINDERY_BASE, Book, BookSeriesExclusion, HistoryEvent, MediaType, SearchResult, SearchDebug, Series } from '../api/client'
@@ -16,6 +16,8 @@ import { bookStatusBadge } from '../components/bookStatus'
 import RebindModal from '../components/RebindModal'
 import RenameFilesModal from '../components/RenameFilesModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { useConfirmDialog } from '../components/useConfirmDialog'
+import { grabWithForceConfirm } from '../util/forceGrab'
 import ClipboardManualFallback from '../components/ClipboardManualFallback'
 import { useClipboardCopy } from '../components/useClipboardCopy'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
@@ -25,6 +27,8 @@ import FixMatchModal from '../components/FixMatchModal'
 import EditBookModal from '../components/EditBookModal'
 import { formatBytes } from '../util/format'
 import MetadataLinksMenu from '../components/MetadataLinksMenu'
+import { usePolling } from '../components/usePolling'
+import { languageName } from '../util/language'
 
 function formatDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return ''
@@ -32,29 +36,6 @@ function formatDuration(seconds?: number): string {
   const m = Math.floor((seconds % 3600) / 60)
   if (h > 0) return `${h}h ${m}m`
   return `${m}m`
-}
-
-// Maps ISO-639 language codes (both 639-1 two-letter and 639-2/B three-letter
-// forms) to a full English name. Codes outside this short list fall back to the
-// raw code — indexers and metadata providers only reliably tag a few majors.
-const LANGUAGE_NAMES: Record<string, string> = {
-  en: 'English', eng: 'English',
-  fr: 'French', fre: 'French', fra: 'French',
-  de: 'German', ger: 'German', deu: 'German',
-  nl: 'Dutch', dut: 'Dutch', nld: 'Dutch',
-  es: 'Spanish', spa: 'Spanish',
-  it: 'Italian', ita: 'Italian',
-  pt: 'Portuguese', por: 'Portuguese',
-  ja: 'Japanese', jpn: 'Japanese',
-  zh: 'Chinese', chi: 'Chinese', zho: 'Chinese',
-  ru: 'Russian', rus: 'Russian',
-  tl: 'Tagalog', tgl: 'Tagalog',
-  id: 'Indonesian', ind: 'Indonesian',
-}
-
-function languageName(code?: string): string | null {
-  if (!code) return null
-  return LANGUAGE_NAMES[code.toLowerCase()] ?? code
 }
 
 /** Final path segment, for labelling row-level controls. */
@@ -280,6 +261,9 @@ export default function BookDetailPage() {
 
 function BookDetailPageInner() {
   const { t } = useTranslation()
+  // The page has its own ConfirmDialog states; this one only asks before a
+  // forced grab of a release Bindery already imported (#2289).
+  const { confirm: forceConfirm, confirmDialog: forceConfirmDialog } = useConfirmDialog()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
@@ -294,6 +278,18 @@ function BookDetailPageInner() {
   const [autoSearchNotice, setAutoSearchNotice] = useState<string | null>(null)
   const [results, setResults] = useState<SearchResult[] | null>(null)
   const [searchDebug, setSearchDebug] = useState<SearchDebug | null>(null)
+  // #1636: the results of an interactive search render below the metadata
+  // sections, often well below the fold, and a sweep can take 10 to 18
+  // seconds. revealResults is set when a search finishes so the effect below
+  // can scroll the results region into view once React has rendered it.
+  const searchResultsRef = useRef<HTMLDivElement>(null)
+  const [revealResults, setRevealResults] = useState(false)
+  // Set when the reader scrolls on their own while the search runs. They
+  // went somewhere on purpose, so the finished search must not pull them
+  // back. Input events rather than 'scroll', because clearing the previous
+  // results shortens the page and the browser's own scroll clamp fires
+  // 'scroll' with no reader involved.
+  const userScrolledDuringSearch = useRef(false)
   const [hasIndexers, setHasIndexers] = useState<boolean | null>(null)
   const [grabbing, setGrabbing] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -355,6 +351,24 @@ function BookDetailPageInner() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [bookId, t])
+
+  // Live refresh while an import is in flight (#2423). It arms on the
+  // server's importInFlight flag: a download for this book that is still on
+  // its way into the library. The first version (#1161) armed on book statuses
+  // nothing ever wrote, so it never ran. Each tick reloads the book, and the
+  // reload that comes back with the flag cleared disarms the poll and pulls the
+  // history once more so the import shows up there too. The ASIN draft is left
+  // alone, since the user may be typing in it.
+  usePolling(() => {
+    api.getBook(bookId)
+      .then(b => {
+        setBook(b)
+        if (!b.importInFlight) {
+          api.listHistory({ bookId }).then(({ items }) => setEvents(items)).catch(() => {})
+        }
+      })
+      .catch(() => {})
+  }, 5000, Boolean(book?.importInFlight))
 
   // Series membership. There is no book→series endpoint, so this reuses the
   // author's series list and picks out this book's entries — deliberately not a
@@ -476,12 +490,44 @@ function BookDetailPageInner() {
       setHasIndexers(indexers.length > 0)
       setResults(r.results)
       setSearchDebug(r.debug ?? null)
+      setRevealResults(true)
     } catch (e) {
       setError(e instanceof Error ? e.message : t('bookDetail.searchFailed'))
     } finally {
       setSearching(false)
     }
   }
+
+  useEffect(() => {
+    if (!searching) return
+    userScrolledDuringSearch.current = false
+    const scrollKeys = new Set(['ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'Home', 'End', ' '])
+    const onScrollIntent = () => { userScrolledDuringSearch.current = true }
+    const onKey = (e: KeyboardEvent) => { if (scrollKeys.has(e.key)) onScrollIntent() }
+    window.addEventListener('wheel', onScrollIntent, { passive: true })
+    window.addEventListener('touchmove', onScrollIntent, { passive: true })
+    window.addEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('wheel', onScrollIntent)
+      window.removeEventListener('touchmove', onScrollIntent)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [searching])
+
+  useEffect(() => {
+    if (!revealResults) return
+    setRevealResults(false)
+    if (userScrolledDuringSearch.current) return
+    const el = searchResultsRef.current
+    // jsdom and some older engines have no scrollIntoView.
+    if (!el || typeof el.scrollIntoView !== 'function') return
+    // Already on screen: scrolling would only move the page for nothing.
+    const top = el.getBoundingClientRect().top
+    if (top >= 0 && top < window.innerHeight) return
+    const reduceMotion = typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    el.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' })
+  }, [revealResults])
 
   // #2668 (ThatDeltaGuy): the automatic counterpart of runSearch above. That
   // one is POST /book/{id}/search, which returns releases and grabs nothing,
@@ -522,7 +568,7 @@ function BookDetailPageInner() {
     setGrabbing(r.guid)
     setError(null)
     try {
-      await api.grab({
+      const dl = await grabWithForceConfirm({
         guid: r.guid,
         title: r.title,
         nzbUrl: r.nzbUrl,
@@ -537,7 +583,8 @@ function BookDetailPageInner() {
         // this is the format the user picked; single-format searches leave it
         // unset and the book's own type is the answer.
         mediaType: r.mediaType || book.mediaType,
-      })
+      }, forceConfirm, t)
+      if (!dl) return
       // Refresh book + history
       const [b, h] = await Promise.all([
         api.getBook(book.id),
@@ -842,6 +889,7 @@ function BookDetailPageInner() {
     // (7xl vs 4xl), so author → book collapsed the content by 384px and
     // left-aligned it mid-navigation.
     <div className="max-w-7xl">
+      {forceConfirmDialog}
       {navRow}
 
       {/* ===== Header: cover + metadata ===== */}
@@ -993,9 +1041,19 @@ function BookDetailPageInner() {
             <button
               onClick={runSearch}
               disabled={searching}
+              aria-busy={searching}
               className={`${btn.primary} ${btnSize.md}`}
             >
-              <span aria-hidden>🔍</span> {searchLabel}
+              {searching ? (
+                <span
+                  data-testid="search-spinner"
+                  aria-hidden
+                  className="inline-block h-3.5 w-3.5 align-[-2px] animate-spin rounded-full border-2 border-current border-t-transparent"
+                />
+              ) : (
+                <span aria-hidden>🔍</span>
+              )}{' '}
+              {searchLabel}
             </button>
             {canAutoSearch && (
               <button
@@ -1209,7 +1267,7 @@ function BookDetailPageInner() {
                               items={[
                                 {
                                   label: t('bookDetail.fixMatch.button', 'Fix match'),
-                                  title: t('bookDetail.fixMatch.hint', 'Move this file to a different book'),
+                                  title: t('bookDetail.fixMatch.hint', 'Say which book this file really belongs to'),
                                   disabled: deletingFile || deregistering || deletingBook,
                                   onSelect: () => setFixMatchRow(row),
                                 },
@@ -1267,7 +1325,7 @@ function BookDetailPageInner() {
                 onClick={() => setFixMatchRow(rows[0])}
                 disabled={deletingFile || deregistering || deletingBook}
                 className={actionBtnCls}
-                title={t('bookDetail.fixMatch.hint', 'Move this file to a different book')}
+                title={t('bookDetail.fixMatch.hint', 'Say which book this file really belongs to')}
               >
                 {t('bookDetail.fixMatch.button', 'Fix match')}
               </button>
@@ -1443,40 +1501,44 @@ function BookDetailPageInner() {
         </Section>
       )}
 
-      {/* ===== Search results ===== */}
-      {results !== null && results.length === 0 && (
-        <div className="mt-6 text-center py-6 text-sm text-slate-600 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
-          {hasIndexers === false ? (
-            <>
-              {t('bookDetail.noIndexers')}{' '}
-              <Link to="/settings" className="underline">{t('nav.settings')}</Link>.
-            </>
-          ) : (
-            t('bookDetail.noResults')
-          )}
-        </div>
-      )}
+      {/* ===== Search results =====
+          One region so a finished search can scroll it into view (#1636).
+          scroll-mt clears the sticky header. */}
+      <div ref={searchResultsRef} data-testid="search-results-region" className="scroll-mt-20">
+        {results !== null && results.length === 0 && (
+          <div className="mt-6 text-center py-6 text-sm text-slate-600 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
+            {hasIndexers === false ? (
+              <>
+                {t('bookDetail.noIndexers')}{' '}
+                <Link to="/settings" className="underline">{t('nav.settings')}</Link>.
+              </>
+            ) : (
+              t('bookDetail.noResults')
+            )}
+          </div>
+        )}
 
-      {searchDebug && (
-        <div className="mt-6">
-          <SearchDebugPanel
-            debug={searchDebug}
-            resultCount={results?.length ?? 0}
-            defaultOpen={results !== null && results.length === 0}
-          />
-        </div>
-      )}
+        {searchDebug && (
+          <div className="mt-6">
+            <SearchDebugPanel
+              debug={searchDebug}
+              resultCount={results?.length ?? 0}
+              defaultOpen={results !== null && results.length === 0}
+            />
+          </div>
+        )}
 
-      {results !== null && results.length > 0 && (
-        <div className="mt-6">
-          <SearchResultsSection
-            results={results}
-            bookMediaType={book.mediaType}
-            grabbing={grabbing}
-            onGrab={grab}
-          />
-        </div>
-      )}
+        {results !== null && results.length > 0 && (
+          <div className="mt-6">
+            <SearchResultsSection
+              results={results}
+              bookMediaType={book.mediaType}
+              grabbing={grabbing}
+              onGrab={grab}
+            />
+          </div>
+        )}
+      </div>
 
       {/* ===== History section ===== */}
       {events.length > 0 && (
