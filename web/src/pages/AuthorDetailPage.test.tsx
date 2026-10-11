@@ -683,6 +683,39 @@ describe('AuthorDetailPage', () => {
     expect(screen.queryByText('Plain Ebook Wanted')).not.toBeInTheDocument()
   })
 
+  it('lists a partially owned dual-format book under Imported and counts it in library (#3132)', async () => {
+    renderAuthorDetailPage(
+      [
+        makeBook({
+          id: 621, title: 'Partly Owned', status: 'wanted', monitored: true,
+          mediaType: 'both', ebookFilePath: '/books/loop.epub', audiobookFilePath: '',
+        }),
+        makeBook({ id: 622, title: 'Nothing Owned', status: 'wanted', monitored: true, mediaType: 'both' }),
+      ],
+      'table',
+    )
+    await screen.findByText('Partly Owned')
+    const stats = await screen.findByTestId('author-stats')
+    expect(within(stats).getByText('In library').parentElement).toHaveTextContent('1')
+
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'imported' } })
+    expect(screen.getByText('Partly Owned')).toBeInTheDocument()
+    expect(screen.queryByText('Nothing Owned')).not.toBeInTheDocument()
+
+    // Still wanted too: one format is missing.
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'wanted' } })
+    expect(screen.getByText('Partly Owned')).toBeInTheDocument()
+    expect(screen.getByText('Nothing Owned')).toBeInTheDocument()
+
+    // With a format chip the file has to be of that format: the ebook only
+    // book is not in the audiobook library, matching the Books page.
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'imported' } })
+    fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'audiobook' } })
+    expect(screen.queryByText('Partly Owned')).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Type'), { target: { value: 'ebook' } })
+    expect(screen.getByText('Partly Owned')).toBeInTheDocument()
+  })
+
   it("includes 'both' books under either media-type chip (#1406)", async () => {
     renderAuthorDetailPage(
       [
@@ -1320,6 +1353,29 @@ describe('AuthorDetailPage: manual refresh', () => {
     const calls = vi.mocked(api.getAuthor).mock.calls.length
     await advance(10000)
     expect(vi.mocked(api.getAuthor).mock.calls.length).toBe(calls)
+  })
+
+  it('regroups by series after a refresh moves a book into one (#2554)', async () => {
+    // Grouped by series: before the refresh the book is in none, the refresh
+    // files it under one, and the page must regroup without a reload.
+    localStorage.setItem('bindery.group.author-detail.series', 'true')
+    const book = makeBook({ id: 7, title: 'Fjellvinden', status: 'imported' })
+    renderAuthorDetailPage([book], 'table')
+    await screen.findByRole('heading', { name: /Standalone/ })
+
+    vi.useFakeTimers()
+    const finishAt = Date.now() + 3000
+    const synced = () => Date.now() >= finishAt
+    vi.mocked(api.getAuthor).mockImplementation(async () => (synced() ? author : { ...author, syncInProgress: true }))
+    vi.mocked(api.listAuthorSeries).mockImplementation(async () => (synced()
+      ? [{ id: 3, foreignSeriesId: 's:3', title: 'Fjellserien', description: '', monitored: false, books: [{ seriesId: 3, bookId: 7, positionInSeries: '1' }] }]
+      : []))
+    vi.mocked(api.refreshAuthor).mockResolvedValue(undefined)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Refresh' }))
+    await advance(4000)
+    expect(screen.getByRole('heading', { name: /Fjellserien/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: /Standalone/ })).toBeNull()
   })
 
   it('gives up waiting after a minute and shows whatever the server has', async () => {

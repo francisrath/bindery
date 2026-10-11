@@ -87,6 +87,22 @@ nothing populated the catalogue first. That list is where you can adopt them.
 The sequence that works is always: **populate the catalogue, then scan**. See
 [Bringing in an existing library](#bringing-in-an-existing-library) below.
 
+The scan leaves out folders that are not library content: known junk and sync
+folders (`.torrents`, `.Trash-*`, `.Trashes`, `.incomplete`,
+`.bindery-stage-*`, `.AppleDouble`, `.AppleDB`, `.Spotlight-V100`,
+`.fseventsd`, `.TemporaryItems`, `.DocumentRevisions-V100`, `.thumbnails`,
+`.stfolder`, `.stversions`, `.syncthing.*`, `.sync`, `.git`, `.svn`,
+`.recycle` and `.snapshot`, in any letter case), any folder holding a
+`.binderyignore` file (an empty file is enough; everything under that folder
+is skipped), and the download folders (`BINDERY_DOWNLOAD_DIR`,
+`BINDERY_AUDIOBOOK_DOWNLOAD_DIR`) when they sit inside a library folder. Other
+folders that start with a dot are scanned, because a book folder can start
+with one (`...And Then There Were None`, `.hack Sign`); to leave one out, put
+a `.binderyignore` file in it. The same goes for the check that skips
+searching for books you already have, and for importing a folder from
+**Import**. Entries an earlier scan listed from those folders disappear on the
+next scan.
+
 ### 2. Status and Monitored are two different switches
 
 Every book has a **status** — its acquisition lifecycle:
@@ -205,10 +221,15 @@ monitored.
 | **Library imports** (Calibre, Readarr, ABS, Goodreads CSV, author list) | Your existing catalogue — see the next section |
 
 **Add Author** and **Add Book** open the same dialog. Type an author name, a
-title, an ISBN or an ASIN and press Enter; the results list authors first, each
-followed by the books the provider attributes to them, with any remaining books
-under a *Books* divider. Which button you pressed only changes the placeholder.
-What you pick decides what happens next: an author row leads to the monitoring
+title, an ISBN or an ASIN and press Enter. The **All / Books / Authors** control
+under the search box picks what the results show: *Books* is a flat list of
+books, best title match first; *Authors* is author rows only; *All* lists
+authors first, each followed by the books the provider attributes to them, with
+any remaining books under a *Books* divider. **Add Book** opens on *Books*,
+**Add Author** on *Authors*, and the header search on *All*. Every search looks
+up both kinds, so switching views is instant, and each view shows how many
+results it holds. Which button you pressed otherwise only changes the
+placeholder. What you pick decides what happens next: an author row leads to the monitoring
 step (metadata profile, root folder, media type, monitor mode, auto-grab), a
 book row to the single-book step (cover, identifiers, format, search on add).
 Rows that already match something in your library say **In your library** with
@@ -792,6 +813,11 @@ like everything else on that tab that names server paths.
   row. **Without an API token (Settings → API Keys) Hardcover is silently
   skipped everywhere.** The free token is the single highest-value config for
   metadata quality.
+- **Covers from your own files.** When no metadata provider has a cover for
+  a book, Bindery uses the art embedded in the file you import (M4B, MP3,
+  FLAC, EPUB), or a `cover.jpg` / `folder.jpg` in a multi-file audiobook's
+  folder. Books already in your library pick theirs up on the next library
+  scan. A provider's cover is never replaced, so this only fills blanks.
 
   It can also be promoted to *primary*, which is worth doing if OpenLibrary
   refreshes bury your wanted list in translations and box sets. Hardcover's
@@ -1088,6 +1114,12 @@ author's own window would: titles are only compared with other titles by the
 same author. After you exclude rows, a group that no longer has two included
 rows drops off the list. On a shared install with per user libraries, each
 person sees only the authors they could open themselves.
+
+A title filed with its article last ("Trace of Death, A") counts as the same
+title as "A Trace of Death", both here and when a refresh decides whether a
+book is already in your library, so a refresh no longer adds a second row for
+it. Pairs that already exist are never merged for you. They stay as two rows
+and appear here as a group, and you choose which to exclude.
 
 ## How author names are filed
 

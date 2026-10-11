@@ -106,6 +106,13 @@ func TestArticleKey(t *testing.T) {
 		{"filing-form-a", "Trace of Death, A", "traceofdeath"},
 		{"filing-form-the", "Martian, The", "martian"},
 		{"filing-form-german", "Name des Windes, Der", "namedeswindes"},
+		// The tail is read through the title fold, so punctuation around the
+		// article does not hide it. The shared rule in textutil (#3122) must not
+		// narrow this.
+		{"filing-form-bang", "Martian, The!", "martian"},
+		{"filing-form-paren", "Martian, The)", "martian"},
+		{"filing-form-quoted", "Martian, \"The\"", "martian"},
+		{"filing-form-accent", "Aleph, Él", "aleph"},
 		{"comma-not-article", "Love, Actually", "loveactually"},
 		{"comma-phrase-kept", "Me, Myself and I", "memyselfandi"},
 		{"comma-only-article-survives", ", A", "a"},

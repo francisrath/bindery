@@ -502,7 +502,9 @@ func (h *SeriesHandler) RemoveBook(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "series not found"})
 		return
 	}
-	if err := h.series.UnlinkBook(r.Context(), id, bookID); err != nil {
+	// The user is taking the book out of this series, so it is recorded: a
+	// refresh that still reports the book in it leaves it out (#2554).
+	if _, err := h.series.RemoveBookFromSeries(r.Context(), id, bookID); err != nil {
 		writeServerError(w, r, err)
 		return
 	}
@@ -917,14 +919,19 @@ type seriesHardcoverDiffBook struct {
 }
 
 type seriesHardcoverDiffResponse struct {
-	SeriesID     int64                       `json:"seriesId"`
-	Link         *models.SeriesHardcoverLink `json:"link"`
-	Present      []seriesHardcoverDiffBook   `json:"present"`
-	Missing      []seriesHardcoverDiffBook   `json:"missing"`
-	LocalOnly    []seriesHardcoverDiffBook   `json:"localOnly"`
-	Uncertain    []seriesHardcoverDiffBook   `json:"uncertain"`
-	PresentCount int                         `json:"presentCount"`
-	MissingCount int                         `json:"missingCount"`
+	SeriesID  int64                       `json:"seriesId"`
+	Link      *models.SeriesHardcoverLink `json:"link"`
+	Present   []seriesHardcoverDiffBook   `json:"present"`
+	Missing   []seriesHardcoverDiffBook   `json:"missing"`
+	LocalOnly []seriesHardcoverDiffBook   `json:"localOnly"`
+	Uncertain []seriesHardcoverDiffBook   `json:"uncertain"`
+	// Covered is a catalogue row that is not a missing volume but a split
+	// edition (#2524) of a book already present: the row's own LocalBookID/
+	// LocalTitle point at the whole work that covers it, not at a row of its
+	// own. Never counted in MissingCount, never offered to Fill.
+	Covered      []seriesHardcoverDiffBook `json:"covered"`
+	PresentCount int                       `json:"presentCount"`
+	MissingCount int                       `json:"missingCount"`
 }
 
 var (
@@ -1435,6 +1442,7 @@ func buildHardcoverDiff(ctx context.Context, books *db.BookRepo, userID int64, s
 		Missing:   []seriesHardcoverDiffBook{},
 		LocalOnly: []seriesHardcoverDiffBook{},
 		Uncertain: []seriesHardcoverDiffBook{},
+		Covered:   []seriesHardcoverDiffBook{},
 	}
 	// matchedCatalog doubles as the exclusion set for bestCatalogMatch: a
 	// catalog entry a previous local book already claimed is off the table for
@@ -1443,6 +1451,12 @@ func buildHardcoverDiff(ctx context.Context, books *db.BookRepo, userID int64, s
 	// and pushed the second local's real catalog entry into Missing behind an
 	// Add button that ensureHardcoverCatalogBook's guards then refuse.
 	matchedCatalog := make(map[int]struct{})
+	// presentWholes collects the subset of Present rows eligible to cover a
+	// split-edition part (#2524/#3048): not excluded, and imported or
+	// monitored, the same gate db.ListCoveredSplitEditionParts applies to
+	// stored rows, so the diff and that sweep never disagree about which
+	// wholes cover which parts.
+	presentWholes := make([]presentWhole, 0, len(series.Books))
 	// Identities bind first (#2553). Assigning in library order let an
 	// earlier local's fuzzy title match claim the catalogue slot that a later
 	// local owned by foreign ID: "He Who Fights with Monsters 4" took volume
@@ -1537,6 +1551,14 @@ func buildHardcoverDiff(ctx context.Context, books *db.BookRepo, userID int64, s
 		if match.score >= 90 || match.foreignID {
 			diff.Present = append(diff.Present, item)
 			matchedCatalog[match.index] = struct{}{}
+			if eligibleSplitEditionWhole(local.Book) {
+				presentWholes = append(presentWholes, presentWhole{
+					position:    item.Position,
+					title:       item.Title,
+					localBookID: local.Book.ID,
+					localTitle:  local.Book.Title,
+				})
+			}
 		} else if match.score >= 70 {
 			diff.Uncertain = append(diff.Uncertain, item)
 			matchedCatalog[match.index] = struct{}{}
@@ -1556,6 +1578,14 @@ func buildHardcoverDiff(ctx context.Context, books *db.BookRepo, userID int64, s
 		if title := firstNonEmpty(book.Book.Title, book.Title); metadata.IsUnambiguousBundleTitle(title) {
 			continue
 		}
+		if whole, ok := splitEditionWhole(book, presentWholes); ok {
+			item := catalogDiffBook(book, catalog.AuthorName)
+			id := whole.localBookID
+			item.LocalBookID = &id
+			item.LocalTitle = whole.localTitle
+			diff.Covered = append(diff.Covered, item)
+			continue
+		}
 		item := catalogDiffBook(book, catalog.AuthorName)
 		enrichMissingDiffBook(ctx, books, userID, book, &item)
 		diff.Missing = append(diff.Missing, item)
@@ -1563,6 +1593,67 @@ func buildHardcoverDiff(ctx context.Context, books *db.BookRepo, userID int64, s
 	diff.PresentCount = len(diff.Present)
 	diff.MissingCount = len(diff.Missing)
 	return diff
+}
+
+// presentWhole is the subset of a Present row that splitEditionWhole needs:
+// a catalogue diff row the library holds, eligible to cover a split-edition
+// part (#2524/#3048). Kept separate from seriesHardcoverDiffBook so the
+// eligibility gate (not excluded, imported or monitored) is decided once,
+// where local.Book is still in scope, rather than re-derived from the API
+// response shape.
+type presentWhole struct {
+	position    string
+	title       string
+	localBookID int64
+	localTitle  string
+}
+
+// eligibleSplitEditionWhole reports whether book is a book the user actually
+// has or wants, so it is allowed to cover a split-edition part (#3048): not
+// excluded, and imported or monitored.
+//
+// This MUST stay in agreement with the SQL predicate in
+// db.ListCoveredSplitEditionParts (internal/db/split_edition_parts.go),
+// which applies the identical rule to rows already stored. The two cannot
+// share one literal implementation across the SQL/Go boundary, so an
+// eligibility change here needs the same change made there, and vice versa,
+// or the catalogue diff and the stored-row sweep will disagree about which
+// wholes cover which parts.
+func eligibleSplitEditionWhole(b *models.Book) bool {
+	return !b.Excluded && (b.Status == models.BookStatusImported || b.Monitored)
+}
+
+// splitEditionWhole reports whether book is a split-edition part of some
+// already-present, eligible whole work, and if so returns that whole.
+//
+// #2524/#3048: some Hardcover catalogues list a novel AND its split parts at
+// fractional positions under the novel's own position — Stormlight's "The
+// Way of Kings" at 1 alongside "…, Part 1" and "…, Part 2" at 1.1 and 1.2.
+// Owning the whole novel should not leave its own parts reading as missing
+// volumes, counting against the series, and sitting behind an Add button
+// that would create and queue a download for text already on the shelf.
+//
+// The two-signal rule itself is seriesmatch.SplitEditionPartOf, shared with
+// db.ListCoveredSplitEditionParts (#3048), which applies the same rule to
+// rows already stored for an install that filled before this landed. A
+// series represented ONLY by its split parts — Wheel of Time's "Two Volume
+// Edition", where there is no unsplit whole at the integer position — never
+// matches this, because there is no eligible whole to match against; its
+// parts are the real volumes and stay Missing.
+//
+// wholes is pre-filtered to Present rows that are also eligible (not
+// excluded, imported or monitored), so an excluded or purely-wanted,
+// unmonitored Present row covers nothing — the same gate the stored-row
+// sweep applies, so the two never disagree about which wholes cover which
+// parts.
+func splitEditionWhole(book metadata.SeriesCatalogBook, wholes []presentWhole) (presentWhole, bool) {
+	partTitle := firstNonEmpty(book.Book.Title, book.Title)
+	for _, whole := range wholes {
+		if seriesmatch.SplitEditionPartOf(partTitle, book.Position, whole.title, whole.position) {
+			return whole, true
+		}
+	}
+	return presentWhole{}, false
 }
 
 // logDiffDecision records which catalogue entry a local series book bound
@@ -1816,7 +1907,7 @@ func (h *SeriesHandler) createMissingHardcoverBooks(ctx context.Context, seriesI
 		if !ok {
 			continue
 		}
-		if _, err := h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, format, true); err != nil {
+		if _, err := h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, format, true, false); err != nil {
 			if errors.Is(err, errSeriesBookFilteredByProfile) {
 				filtered++
 				continue
@@ -1874,7 +1965,7 @@ func (h *SeriesHandler) createMissingHardcoverBook(ctx context.Context, seriesID
 		if !ok {
 			return nil, errSeriesCatalogBookNotFound
 		}
-		return h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, selector.format(), false)
+		return h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, selector.format(), false, true)
 	}
 	return nil, errSeriesCatalogBookNotFound
 }
@@ -1913,9 +2004,24 @@ func findCatalogBook(books []metadata.SeriesCatalogBook, foreignID, position str
 // it and an explicit single add does not. A book that already exists is
 // linked whatever the profile says, the same way an author sync keeps
 // maintaining books it already has.
-func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *models.Series, fallbackAuthor string, catalogBook metadata.SeriesCatalogBook, format requestedFormat, applyProfile bool) (*models.Book, error) {
+//
+// explicit marks the user asking for this one book (the Add button), as
+// opposed to a bulk fill. It forgets a record of the user having taken the
+// book out of this series before linking it, the way adding by hand does;
+// without it the exclusion silently refused the link and the book stayed
+// missing for good (#2554). A bulk fill keeps honouring the exclusion.
+func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *models.Series, fallbackAuthor string, catalogBook metadata.SeriesCatalogBook, format requestedFormat, applyProfile, explicit bool) (*models.Book, error) {
 	if series == nil {
 		return nil, errSeriesNotFound
+	}
+	link := func(target *models.Book) error {
+		if explicit {
+			if err := h.series.ClearBookSeriesExclusion(ctx, series.ID, target.ID); err != nil {
+				return err
+			}
+		}
+		_, err := h.series.LinkBookPreservingPrimary(ctx, series.ID, target.ID, catalogBook.Position)
+		return err
 	}
 	// A series catalog is a metadata ingestion source like an author
 	// catalogue, so the unconditional bundle prune (#1780) has to apply here
@@ -1955,8 +2061,7 @@ func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *
 			"matchedForeignID", existing.ForeignID,
 			"matchedStatus", existing.Status,
 			"matchedBy", "identity")
-		_, err := h.series.LinkBookPreservingPrimary(ctx, series.ID, existing.ID, catalogBook.Position)
-		return existing, err
+		return existing, link(existing)
 	}
 
 	author := book.Author
@@ -2120,8 +2225,7 @@ func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *
 			"matchedStatus", best.Status,
 			"matchedBy", "title",
 			"score", bestScore)
-		_, err := h.series.LinkBookPreservingPrimary(ctx, series.ID, best.ID, catalogBook.Position)
-		return best, err
+		return best, link(best)
 	}
 	if blockedByExcludedTitle {
 		return nil, nil

@@ -150,29 +150,15 @@ func AggressiveTitleKey(title string) string {
 	return strings.Join(foldWords(title), "")
 }
 
-// leadingArticles are the whole-word leading articles dropped by the
-// article-strip rule. Deliberately a closed list, matched as a complete first
-// word: "Theatre of Blood" must not collapse because "Theatre" starts with
-// "the".
-var leadingArticles = map[string]struct{}{
-	// English
-	"the": {}, "a": {}, "an": {},
-	// German
-	"der": {}, "die": {}, "das": {},
-	// French / Spanish / Portuguese
-	"le": {}, "la": {}, "les": {}, "el": {}, "los": {}, "las": {}, "de": {},
-	// Italian
-	"il": {}, "gli": {}, "una": {},
-	// Dutch
-	"een": {}, "het": {},
-}
+// The article list lives in textutil (textutil.IsArticle) so this rule and the
+// persisted books.dedup_key read the filing form from one definition (#3122).
 
 // dropLeadingArticle removes the first word when it is a whole-word leading
 // article. The len > 1 guard keeps a title that IS an article ("A", "Die")
 // from keying to empty — an empty key must never match anything.
 func dropLeadingArticle(words []string) []string {
 	if len(words) > 1 {
-		if _, ok := leadingArticles[words[0]]; ok {
+		if textutil.IsArticle(words[0]) {
 			return words[1:]
 		}
 	}
@@ -185,12 +171,9 @@ func dropLeadingArticle(words []string) []string {
 // because folding turns it into a space. Only a lone article after the last
 // comma counts, so "Love, Actually" and "Me, Myself and I" are left alone.
 func dropArticle(title string, words []string) []string {
-	if idx := strings.LastIndex(title, ","); idx >= 0 && len(words) > 1 {
-		tail := foldWords(title[idx+1:])
-		if len(tail) == 1 && words[len(words)-1] == tail[0] {
-			if _, ok := leadingArticles[tail[0]]; ok {
-				return words[:len(words)-1]
-			}
+	if _, article, ok := textutil.SplitFilingForm(title); ok && len(words) > 1 {
+		if tail := foldWords(article); len(tail) == 1 && words[len(words)-1] == tail[0] {
+			return words[:len(words)-1]
 		}
 	}
 	return dropLeadingArticle(words)

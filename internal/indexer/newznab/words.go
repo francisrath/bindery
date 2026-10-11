@@ -88,9 +88,20 @@ func IsVolumeMarker(w string) bool {
 // so "Ender's" produces the token "enders", matching the apostrophe-free form
 // used in most release names. Unicode letters (CJK, accented Latin) count as
 // word characters so non-Latin titles still tokenise.
+//
+// The one place the keyword alphabet differs from the release alphabet: ä, ö
+// and ü are KEPT here ("Müller" yields "müller"), where NormalizeRelease
+// expands them ("mueller"). Which digraphs began as umlauts is what decides
+// whether a keyword may match a compact release spelling ("Muller"), and
+// "michael" cannot be told from "mueller" once both are folded (#3123). The
+// regex builder, indexer.keywordPattern, reads the umlaut and makes only that
+// digraph optional. A keyword is therefore not a release-alphabet string:
+// compare it to one through textutil.TransliterateUmlauts, or not at all. The
+// word count, the order and the three byte floor are unchanged, since an
+// umlaut and its digraph are both two bytes.
 func SigWords(s string) []string {
 	var out []string
-	for _, w := range strings.Fields(textutil.FoldForTitleMatch(s)) {
+	for _, w := range strings.Fields(textutil.FoldForKeyword(s)) {
 		if len(w) >= 3 && !stopWords[w] {
 			out = append(out, w)
 		}
@@ -151,7 +162,10 @@ func ElideApostrophes(s string) string {
 // against the whole haystack, so collapsing punctuation to spaces would only
 // remove separators the substring test already tolerates.
 func foldForSigWordMatch(s string) string {
-	s = strings.ToLower(s)
+	// Composed first, as FoldForTitleMatch does, so a release title a tracker
+	// stores decomposed ("a" + U+030A for "å") holds the same words as the
+	// query's composed title.
+	s = strings.ToLower(norm.NFC.String(s))
 	s = strings.ReplaceAll(s, "'", "")
 	s = strings.ReplaceAll(s, "’", "")
 	return textutil.TransliterateUmlauts(s)

@@ -234,7 +234,9 @@ type BookListFilter struct {
 	Search string
 	// Status restricts to books with that status. As a special case, "wanted"
 	// additionally requires monitored = 1 (an unmonitored book is not wanted),
-	// matching the old client-side filter. Empty disables the filter.
+	// matching the old client-side filter. "imported" (In Library) also matches a
+	// wanted book that has at least one tracked file, so a partially owned dual
+	// format book shows under both (#3132). Empty disables the filter.
 	Status string
 	// MediaType is "ebook" (matches ebook/both/unset, mirroring the UI default)
 	// or "audiobook" (matches audiobook/both). Any other value disables it.
@@ -352,12 +354,20 @@ func (r *BookRepo) ListPageFiltered(ctx context.Context, f BookListFilter, limit
 		}
 		searchOrder, rankArgs = bookSearchRank(folded)
 	}
-	if f.Status != "" {
+	switch f.Status {
+	case "":
+	case models.BookStatusImported:
+		// In Library means "owns at least one format", not "owns every format
+		// it wants" (#3132). See InLibraryPredicate for the rule. With a format
+		// chip active the wanted branch must own that format, so Audiobook plus
+		// In Library does not list a book that only has an ebook.
+		where += " AND " + InLibraryPredicate("books", f.MediaType)
+	case models.BookStatusWanted:
+		where += " AND books.status = ? AND books.monitored = 1"
+		args = append(args, f.Status)
+	default:
 		where += " AND books.status = ?"
 		args = append(args, f.Status)
-		if f.Status == models.BookStatusWanted {
-			where += " AND books.monitored = 1"
-		}
 	}
 	switch f.MediaType {
 	case "ebook":
@@ -1446,6 +1456,22 @@ func (r *BookRepo) SetImageURL(ctx context.Context, id int64, imageURL string) e
 	return nil
 }
 
+// FillImageURL sets a book's cover only while it has none, and reports
+// whether it did. Covers read from a book's own file use it, so a provider
+// cover that lands between reading the book and writing the cover is kept.
+func (r *BookRepo) FillImageURL(ctx context.Context, id int64, imageURL string) (bool, error) {
+	res, err := r.exec.ExecContext(ctx, "UPDATE books SET image_url=?, updated_at=? WHERE id=? AND image_url=''",
+		imageURL, timeValueArg(time.Now().UTC()), id)
+	if err != nil {
+		return false, fmt.Errorf("fill book %d image_url: %w", id, err)
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, fmt.Errorf("fill book %d image_url: %w", id, err)
+	}
+	return n > 0, nil
+}
+
 // ListWithLocalImagePath returns books whose image_url is an absolute
 // filesystem path rather than a URL, including excluded ones, so the #2564
 // startup repair can rewrite them. Nothing in Bindery wrote such a value to
@@ -1453,6 +1479,13 @@ func (r *BookRepo) SetImageURL(ctx context.Context, id int64, imageURL string) e
 // alongside the editions that did hold one.
 func (r *BookRepo) ListWithLocalImagePath(ctx context.Context) ([]models.Book, error) {
 	return r.query(ctx, bookCTE+" SELECT "+bookColumns+" FROM books "+bookJoins+" WHERE (books.image_url LIKE '/%' OR books.image_url LIKE '_:\\%') ORDER BY books.id", nil)
+}
+
+// ListWithFilesWithoutCover returns books that have at least one file on disk
+// but no cover, so the library scan can fill the cover from the file (see
+// importer.Scanner.WithCoverStore).
+func (r *BookRepo) ListWithFilesWithoutCover(ctx context.Context) ([]models.Book, error) {
+	return r.query(ctx, bookCTE+" SELECT "+bookColumns+" FROM books "+bookJoins+" WHERE books.image_url = '' AND EXISTS (SELECT 1 FROM book_files bf WHERE bf.book_id = books.id) ORDER BY books.id", nil)
 }
 
 // SetCalibreID stores the Calibre-assigned book id for the given Bindery

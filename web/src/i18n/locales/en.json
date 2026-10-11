@@ -394,8 +394,8 @@
     "refreshAllFailed": "Metadata refresh failed: {{message}}",
     "refreshAllError": "Unknown error",
     "searchPlaceholder": "Search authors…",
-    "sortAZ": "A–Z",
-    "sortZA": "Z–A",
+    "sortAZ": "Last name A–Z",
+    "sortZA": "Last name Z–A",
     "sortFirstNameAZ": "First name A–Z",
     "sortFirstNameZA": "First name Z–A",
     "sortRecent": "Recent",
@@ -408,6 +408,8 @@
     "noMatch": "No authors match \"{{query}}\"",
     "colName": "Name",
     "colBooks": "Books",
+    "booksInLibrary": "{{have}} of {{total}} in library",
+    "booksInLibraryHint": "A book counts once at least one of its files is in your library.",
     "colRating": "Rating",
     "colMonitored": "Monitored",
     "noDescription": "No description available",
@@ -647,6 +649,8 @@
     "sortTitleZA": "Z–A",
     "sortNewest": "Newest",
     "sortOldest": "Oldest",
+    "sortAuthorAZ": "Author A–Z",
+    "sortAuthorZA": "Author Z–A",
     "filterMonitored": "Monitored:",
     "filterAll": "All",
     "filterMonitoredOnly": "Monitored",
@@ -872,7 +876,10 @@
       "add": "add",
       "addTitle": "Add this missing Hardcover book and search indexers",
       "moreMissing_one": "{{count}} more missing book",
-      "moreMissing_other": "{{count}} more missing books"
+      "moreMissing_other": "{{count}} more missing books",
+      "coveredSection_one": "{{count}} split edition of a book you own",
+      "coveredSection_other": "{{count}} split editions of books you own",
+      "coveredSubtitle": "Part of {{title}}, already in your library"
     },
     "nameModal": {
       "name": "Name",
@@ -1394,6 +1401,7 @@
       "deleteBackupTitle": "Delete backup"
     },
     "general": {
+      "hardcoverPausedUntil": "Hardcover is paused until {{time}} because its daily quota was reached. Retry interrupted imports after this time.",
       "appearance": "Appearance",
       "theme": "Theme",
       "themeHint": "Light or dark interface. Defaults to your OS preference on first visit.",
@@ -1708,6 +1716,12 @@
     "searchPlaceholder": "Author, title, ISBN, or ASIN (for example, Le Guin, Dune, 9780441478125, B0DBJBFHGT)",
     "addBook": "Add Book",
     "booksDivider": "Books",
+    "filter": {
+      "label": "Show",
+      "all": "All",
+      "books": "Books",
+      "authors": "Authors"
+    },
     "partialError": "Some results could not be loaded: {{error}}",
     "selectAuthor": "Select {{name}}",
     "searching": "Searching…",
@@ -1720,7 +1734,7 @@
     "idMissing": "This result has no book ID and cannot be added",
     "topWork": "Top work:",
     "books": "up to {{count}} works",
-    "booksTooltip": "OpenLibrary's raw work count. The actual catalogue added will be smaller after deduplication, language filtering, and junk-title removal.",
+    "booksTooltip": "The metadata provider's raw work count. The actual catalogue added will be smaller after deduplication, language filtering, and junk-title removal.",
     "ratings": "{{count}} ratings",
     "resultProvider": "from {{provider}}",
     "noResults": "No results found",
@@ -2102,8 +2116,13 @@
       "fieldReleaseDate": "Release date",
       "lockedHint": "Manually edited — metadata refresh will not overwrite this field",
       "unlockAll": "Unlock all fields",
-      "unlockAllHint": "Let metadata refresh manage every field again",
-      "saveFailed": "Save failed"
+      "unlockAllHint": "Let metadata refresh manage every field and the book's series again",
+      "saveFailed": "Save failed",
+      "fieldSeries": "Series",
+      "seriesNone": "No series",
+      "seriesNew": "New series…",
+      "fieldNewSeries": "New series name",
+      "fieldPosition": "Position"
     },
     "exclude": "Exclude",
     "unexclude": "Un-exclude",
@@ -2196,7 +2215,11 @@
       "removeBody1": "This takes the book out of",
       "removeBody2": "It does not delete the book, its files, or the series itself.",
       "setPrimaryFailed": "Could not change the series used for naming",
-      "removeFailed": "Could not remove the book from that series"
+      "removeFailed": "Could not remove the book from that series",
+      "keptOutHeading": "Kept out of",
+      "keptOutExplainer": "You took this book out of these series, so refreshes leave it out. Restore puts it back where it was.",
+      "restore": "Restore",
+      "restoreFailed": "Could not put the book back in that series"
     },
     "calibreChip": {
       "pending": "Waiting for Calibre",

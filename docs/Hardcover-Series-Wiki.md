@@ -13,7 +13,7 @@ When enhanced Hardcover series data is enabled, Bindery can:
 - search Hardcover for the matching catalog series
 - link or unlink a local series to a Hardcover series
 - compare the local series against the Hardcover catalog
-- show present, missing, local-only, and uncertain catalog entries
+- show present, missing, local-only, uncertain, and covered (split-edition) catalog entries
 - add one missing Hardcover book, or add all missing books for a linked series
 - create wanted and monitored book rows for missing catalog entries and queue searches for them
 
@@ -57,7 +57,7 @@ Most series rows are not created on the Series page at all. They arrive when Bin
 
 When Hardcover enriches an author whose works come from OpenLibrary, both providers can claim a series for the same book. Hardcover wins. Its series carry a stable catalog id and a position, while OpenLibrary parses a free text string, and keeping both would create two local series for one real one and put the book in each. Providers other than Hardcover only fill in a series when the work has none yet.
 
-Refreshing an author links the series of the books you already have, not only the ones the refresh creates. That is how an imported library gains its series: point the author at the metadata record you want and refresh, and each book the provider puts in a series is filed under it. A link that is already stored is left exactly as it is, position included, so a position you corrected by hand survives every later refresh. Nothing is unlinked, and a book already in a series keeps that series even when the provider now names the same one under a different catalog id. Matching those two up ignores case, spacing, apostrophes and a parenthetical suffix, but not an inverted article, so a stored "Expanse, The" and an incoming "The Expanse" still end up as two series.
+Refreshing an author links the series of the books you already have, not only the ones the refresh creates. That is how an imported library gains its series: point the author at the metadata record you want and refresh, and each book the provider puts in a series is filed under it. A link that is already stored is left exactly as it is, position included, so a position you corrected by hand survives every later refresh. Nothing is unlinked, and a book already in a series keeps that series even when the provider now names the same one under a different catalog id. Matching those two up ignores case, spacing, apostrophes, a parenthetical suffix and an inverted article, so a stored "Expanse, The" and an incoming "The Expanse" count as the same series.
 
 Two more limits are worth knowing:
 
@@ -93,7 +93,7 @@ The fill action may create new authors and books from Hardcover metadata when th
 
 When fill re-queues the books already in the series, it also leaves out any that are unmonitored and not imported and that the profile's skip part books or skip missing release date filter rejects, so a fill no longer puts those back on Wanted. A book that is already monitored, for example one you added by hand, is queued as before. A book with no known language is not rejected by the language filter during a fill, whatever the profile does with unknown languages, because Hardcover series entries carry no language; it is resolved later. The other filters need a fresh provider lookup; use **More → Reconcile catalogue…** on the author to apply every filter to books already stored.
 
-Some catalogs list a novel's own split edition beside it, such as "The Way of Kings, Part 1" and "Part 2" at 1.1 and 1.2 under "The Way of Kings" at 1. A book in the series counts as such a split part when both hold: its position is a fraction under the whole's position, and its title is the whole's title followed by "Part N". When the whole is imported, or monitored and wanted, fill does not re-queue the parts and the scheduled wanted search does not search them, so a part of a book you already have is never downloaded. The parts are marked **Split part** on the series card and are not counted as missing. If a fill from an older version left them monitored, **Unmonitor N split parts** on the series card unmonitors them in one click. Nothing is deleted, and an imported part is never touched. A real novella at a fractional position ("Edgedancer" at 2.5) has no "Part N" marker and stays a normal book, and parts with no whole at the integer position are the real volumes and are searched as usual.
+Some catalogs list a novel's own split edition beside it, such as "The Way of Kings, Part 1" and "Part 2" at 1.1 and 1.2 under "The Way of Kings" at 1. A book counts as such a split part when both hold: its position is a fraction under the whole's position, and its title is the whole's title followed by "Part N" (a subtitle after the marker is ignored). Position alone is not enough: a real novella at a fractional position, such as "Edgedancer" at 2.5 beside "Words of Radiance" at 2, has no "Part N" marker and stays a normal book, and a catalog that represents a work only as its split parts, with no unsplit row at the integer position at all (Robert Jordan's Wheel of Time "Two Volume Edition" catalog is like this), never triggers the rule either, since there is nothing to cover the parts. On the Hardcover catalog diff a covered part is reported as covered, not missing: it is not counted, not offered an **add** button, and not created by fill, and appears in its own collapsed section on the Series page ("N split editions of books you own") linking to the whole that covers it. The same rule covers rows already stored locally: once the whole is imported, or monitored and not excluded, fill no longer re-queues a stored part and the scheduled wanted search no longer searches it, so a part of a book you already have is never downloaded. Stored parts are marked **Split part** on the series card and are not counted as missing. If a fill from an older version left one monitored, **Unmonitor N split parts** on the series card unmonitors them in one click. Nothing is deleted, and an imported part is never touched.
 
 The format dropdown beside **add all** sets the media type of every book the fill creates. Pick **Ebook** and the created books are ebook only, even when Hardcover lists an audiobook edition of the same work, so only one search is queued per book. Pick **Audiobook** for audio only. Pick **Both** if you want Bindery to look for both formats. Books that are already in the series keep whatever media type they were added with, so change those on the book itself.
 
@@ -110,6 +110,12 @@ One series can end up as several rows, when a provider names it in more than one
 The dialog previews every change, including books whose positions differ, before anything is applied. Merging is for admins.
 
 Undoing an import (ABS, Calibre) made before a merge does not take the merged books back out of the series you kept.
+
+## Fixing One Book's Series
+
+When one book is filed under the wrong series, or is missing its number, fix it from the book: **Edit metadata** has a **Series** field with the author's series, a position, and **New series…** to create one. Picking a series makes it the book's primary series and takes the book out of the one it was filed under; **No series** takes it out of every series it is in. A position is optional.
+
+A refresh does not put a book back into a series you took it out of, here or from the series page, even when the provider still lists it there or the series was merged into another. The book page lists those series with **Restore**, and **Unlock all fields** in Edit metadata hands the book's series back to refresh. Changing series is for admins.
 
 ## Known Behavior
 

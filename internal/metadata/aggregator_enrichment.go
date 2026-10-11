@@ -294,8 +294,10 @@ func enrichmentInputKey(book *models.Book) string {
 	if book.Author != nil {
 		author = book.Author.Name
 	}
-	var isbns []string
+	var isbns, languages []string
 	for _, edition := range book.Editions {
+		// The cover guard reads each edition's language (#3018).
+		languages = append(languages, edition.Language)
 		isbn := ""
 		if edition.ISBN13 != nil && *edition.ISBN13 != "" {
 			isbn = *edition.ISBN13
@@ -304,8 +306,9 @@ func enrichmentInputKey(book *models.Book) string {
 		}
 		isbns = append(isbns, isbn)
 	}
-	input := fmt.Sprintf("%q|%q|%q|%q|%g|%d|%q|%q", book.Title, author,
-		book.Description, book.ImageURL, book.AverageRating, book.RatingsCount, book.Genres, isbns)
+	input := fmt.Sprintf("%q|%q|%q|%q|%g|%d|%q|%q|%q|%q", book.Title, author,
+		book.Description, book.ImageURL, book.AverageRating, book.RatingsCount, book.Genres, isbns,
+		book.Language, languages)
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(input)))
 }
 
@@ -575,6 +578,10 @@ func pickEnrichmentMatch(candidates []models.Book, target *models.Book) *models.
 // CoverProvider and tries each ISBN edition until one resolves. Used by
 // enrichBook as a last-resort cover lookup for books whose primary
 // provider (e.g. DNB) returns no cover URL in its bibliographic data.
+//
+// A translation's edition is skipped (#3018): its cover is another book's,
+// with another title, and a work's editions often list their translations.
+// The book keeps no cover rather than wearing a translation's.
 func (a *Aggregator) fillCoverFromCoverProviders(ctx context.Context, book *models.Book) {
 	for _, p := range a.providers() {
 		p, _ = resolveCacheProvider(ctx, p)
@@ -583,6 +590,9 @@ func (a *Aggregator) fillCoverFromCoverProviders(ctx context.Context, book *mode
 			continue
 		}
 		for _, ed := range book.Editions {
+			if !coverLanguageMatches(book.Language, ed.Language) {
+				continue
+			}
 			var isbn string
 			switch {
 			case ed.ISBN13 != nil && *ed.ISBN13 != "":
@@ -601,4 +611,20 @@ func (a *Aggregator) fillCoverFromCoverProviders(ctx context.Context, book *mode
 			}
 		}
 	}
+}
+
+// coverLanguageMatches reports whether an edition in language edition may
+// supply the cover of a book in language book: the same language once both
+// are normalised, or either language unknown. "und" (undetermined) and "mul"
+// (several) say nothing about the language, so they count as unknown.
+func coverLanguageMatches(book, edition string) bool {
+	known := func(code string) string {
+		code = models.NormalizeLanguageCode(code)
+		if code == "und" || code == "mul" {
+			return ""
+		}
+		return code
+	}
+	b, e := known(book), known(edition)
+	return b == "" || e == "" || b == e
 }

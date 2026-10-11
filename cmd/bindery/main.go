@@ -298,7 +298,8 @@ func main() {
 	olClient := openlibrary.New()
 	dnbClient := dnb.New()
 
-	hcClient := hardcover.New().WithTokenSource(func(ctx context.Context) string {
+	dailyQuota := hardcover.NewDailyQuota(settingsRepo)
+	hcClient := hardcover.New().WithDailyQuota(dailyQuota).WithTokenSource(func(ctx context.Context) string {
 		return api.GetHardcoverAPIToken(ctx, settingsRepo)
 	})
 
@@ -430,10 +431,9 @@ func main() {
 	}
 	grimmoryPusher := grimmory.NewPusher(grimmoryLoadPushCfg, grimmoryPushRepo)
 	importScanner.WithGrimmory(grimmoryPusher)
-	if cfg.AudiobookDownloadDir != "" {
-		importScanner.WithAudiobookDownloadDir(cfg.AudiobookDownloadDir)
-		slog.Info("audiobook download dir configured", "path", cfg.AudiobookDownloadDir)
-	}
+	// The library scan leaves the download folders out when a client saves
+	// inside a library root.
+	wireScanDownloadDirs(importScanner, cfg)
 
 	// Wire ABS post-import scan notification (Bug #10). The notifier reads ABS
 	// config from settings at call time so that config changes (URL, API key,
@@ -484,6 +484,7 @@ func main() {
 	// but outside it, because the image cache evicts by age and these have
 	// no upstream to refetch from.
 	coverStore := covers.NewStore(filepath.Join(cfg.DataDir, "covers"))
+	importScanner.WithCoverStore(coverStore)
 	calibreImporter := calibre.NewImporter(authorRepo, authorAliasRepo, bookRepo, editionRepo, settingsRepo).
 		WithRunTracking(calibreImportRunRepo, calibreSnapshotRepo, calibreProvenanceRepo).
 		WithSeries(seriesRepo).
@@ -614,6 +615,7 @@ func main() {
 
 	// Register the Hardcover list syncer (24-hour job).
 	hcSyncer := hardcoverlistsyncer.New(importListRepo, authorRepo, bookRepo).
+		WithDailyQuota(dailyQuota).
 		WithSeriesRepo(seriesRepo).
 		WithTokenSource(func(ctx context.Context) string {
 			return api.GetHardcoverAPIToken(ctx, settingsRepo)
@@ -743,6 +745,7 @@ func main() {
 	importRoots := api.NewLibraryRoots(rootFolderRepo, cfg.LibraryDir, cfg.AudiobookDir, cfg.DownloadDir, cfg.AudiobookDownloadDir)
 	manualImportHandler := api.NewManualImportHandler(importScanner, downloadRepo, bookRepo).
 		WithRoots(importRoots).
+		WithExcludedDirs(manualImportExcludedDirs(cfg)...).
 		WithJobs(bgJobs) // drain in-flight batch imports and reassigns on shutdown (#2371)
 	pendingHandler := api.NewPendingHandler(pendingReleaseRepo, queueHandler, downloadRepo, bookRepo)
 	reorganizeHandler := api.NewReorganizeHandler(importScanner)
@@ -794,14 +797,14 @@ func main() {
 	blocklistHandler := api.NewBlocklistHandler(blocklistRepo)
 	notificationHandler := api.NewNotificationHandler(notificationRepo, notif)
 	qualityProfileHandler := api.NewQualityProfileHandler(qualityProfileRepo)
-	settingsHandler := api.NewSettingsHandler(settingsRepo)
+	settingsHandler := api.NewSettingsHandler(settingsRepo).WithDailyQuota(dailyQuota)
 	seriesHandler := api.NewSeriesHandler(seriesRepo, bookRepo, authorRepo, metaAgg, sched).
 		WithHardcoverFeatureSettings(settingsRepo, cfg.EnhancedHardcoverAPI).
 		WithFinder(importScanner).
 		WithEditionHydration(editionRepo).
 		WithMetadataProfiles(metadataProfileRepo).
 		WithLifetimeCtx(appCtx)
-	importListHandler := api.NewImportListHandler(importListRepo, settingsRepo, hcSyncer, userRepo)
+	importListHandler := api.NewImportListHandler(importListRepo, settingsRepo, hcSyncer, userRepo).WithDailyQuota(dailyQuota)
 	metadataProfileHandler := api.NewMetadataProfileHandler(metadataProfileRepo)
 	delayProfileHandler := api.NewDelayProfileHandler(delayProfileRepo)
 	customFormatHandler := api.NewCustomFormatHandler(customFormatRepo)
@@ -952,6 +955,13 @@ func main() {
 			w.Header().Set("Content-Type", "application/json")
 			cacheBytes, _ := imageProxyHandler.CacheSize()
 			hardcoverState := api.HardcoverFeatureStateFor(r.Context(), settingsRepo, cfg.EnhancedHardcoverAPI)
+			var pausedUntil string
+			var exhausted *metadata.DailyQuotaError
+			if err := hcClient.CheckQuota(r.Context()); errors.As(err, &exhausted) {
+				pausedUntil = exhausted.ResetAt.UTC().Format(time.RFC3339)
+			} else if err != nil {
+				slog.Warn("read Hardcover pause status", "error", err)
+			}
 			_ = json.NewEncoder(w).Encode(struct {
 				Version   string `json:"version"`
 				Commit    string `json:"commit"`
@@ -964,6 +974,7 @@ func main() {
 				ImageCacheBytes                 int64  `json:"imageCacheBytes"`
 				EnhancedHardcoverAPI            bool   `json:"enhancedHardcoverApi"`
 				HardcoverTokenConfigured        bool   `json:"hardcoverTokenConfigured"`
+				HardcoverPausedUntil            string `json:"hardcoverPausedUntil,omitempty"`
 				EnhancedHardcoverDisabledReason string `json:"enhancedHardcoverDisabledReason,omitempty"`
 			}{
 				Version:                         version,
@@ -973,6 +984,7 @@ func main() {
 				ImageCacheBytes:                 cacheBytes,
 				EnhancedHardcoverAPI:            hardcoverState.EnhancedHardcoverAPI,
 				HardcoverTokenConfigured:        hardcoverState.HardcoverTokenConfigured,
+				HardcoverPausedUntil:            pausedUntil,
 				EnhancedHardcoverDisabledReason: hardcoverState.EnhancedHardcoverDisabledReason,
 			})
 		})
@@ -1047,6 +1059,7 @@ func main() {
 		r.Delete("/book/{id}", bookHandler.Delete)
 		r.Delete("/book/{id}/file", bookHandler.DeleteFile)
 		r.Put("/book/{id}/exclude", bookHandler.ToggleExcluded)
+		r.Get("/book/{id}/series-exclusions", bookHandler.SeriesExclusions)
 		r.Post("/book/{id}/rebind", bookHandler.Rebind)
 		r.Post("/book/{id}/enrich-audiobook", bookHandler.EnrichAudiobook)
 		r.Post("/book/{id}/search", indexerHandler.SearchBook)
