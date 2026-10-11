@@ -87,14 +87,21 @@ nothing populated the catalogue first. That list is where you can adopt them.
 The sequence that works is always: **populate the catalogue, then scan**. See
 [Bringing in an existing library](#bringing-in-an-existing-library) below.
 
-The scan leaves out folders that are not library content: any folder whose
-name starts with a dot (`.torrents`, `.Trash-1000`), any folder holding a
+The scan leaves out folders that are not library content: known junk and sync
+folders (`.torrents`, `.Trash-*`, `.Trashes`, `.incomplete`,
+`.bindery-stage-*`, `.AppleDouble`, `.AppleDB`, `.Spotlight-V100`,
+`.fseventsd`, `.TemporaryItems`, `.DocumentRevisions-V100`, `.thumbnails`,
+`.stfolder`, `.stversions`, `.syncthing.*`, `.sync`, `.git`, `.svn`,
+`.recycle` and `.snapshot`, in any letter case), any folder holding a
 `.binderyignore` file (an empty file is enough; everything under that folder
 is skipped), and the download folders (`BINDERY_DOWNLOAD_DIR`,
-`BINDERY_AUDIOBOOK_DOWNLOAD_DIR`) when they sit inside a library folder. The
-same goes for the check that skips searching for books you already have, and
-for importing a folder from **Import**. Entries an earlier scan listed from
-those folders disappear on the next scan.
+`BINDERY_AUDIOBOOK_DOWNLOAD_DIR`) when they sit inside a library folder. Other
+folders that start with a dot are scanned, because a book folder can start
+with one (`...And Then There Were None`, `.hack Sign`); to leave one out, put
+a `.binderyignore` file in it. The same goes for the check that skips
+searching for books you already have, and for importing a folder from
+**Import**. Entries an earlier scan listed from those folders disappear on the
+next scan.
 
 ### 2. Status and Monitored are two different switches
 

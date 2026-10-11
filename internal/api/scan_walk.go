@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
-	"strings"
 
 	"github.com/vavallee/bindery/internal/importer"
 )
@@ -52,7 +51,18 @@ const (
 // during the walk itself, rather than capping first and filtering the capped
 // result — the latter can starve the cap entirely when most of a large,
 // already-imported folder sits ahead of any new files in walk order.
-func enumerateImportUnits(root string, limit int, skip func(path string, isDir bool) bool) (units []scanUnit, truncated bool) {
+//
+// excluded lists folders the walk does not enter, as the library scan does
+// for the download folders: a path equal to one of them is left out (the root
+// itself never is). Callers pass them cleaned and symlink-resolved once, at
+// setup, so the walk compares strings and makes no filesystem call for them.
+// Junk folders are left out as in the library scan, through the same
+// deny-list (importer.JunkLibraryDirName) so the rules cannot drift.
+func enumerateImportUnits(root string, limit int, skip func(path string, isDir bool) bool, excluded []string) (units []scanUnit, truncated bool) {
+	excludedSet := make(map[string]bool, len(excluded))
+	for _, dir := range excluded {
+		excludedSet[dir] = true
+	}
 	entriesSeen := 0
 	var walk func(dir string, depth int, isRoot bool)
 	walk = func(dir string, depth int, isRoot bool) {
@@ -81,10 +91,10 @@ func enumerateImportUnits(root string, limit int, skip func(path string, isDir b
 			full := filepath.Join(dir, name)
 			switch {
 			case e.IsDir():
-				// Hidden folders are not library content, as in the library
-				// scan: a torrent client's ".torrents" copies under the
-				// folder being imported stay out of it.
-				if !strings.HasPrefix(name, ".") {
+				// Junk folders (a torrent client's ".torrents", a trash
+				// folder) and the download folders are not library content,
+				// as in the library scan.
+				if !importer.JunkLibraryDirName(name) && !excludedSet[full] {
 					subdirs = append(subdirs, full)
 				}
 			case importer.IsAudioFile(full):

@@ -73,7 +73,7 @@ func NewLibrarySnapshot(libraryDir, audiobookDir string) *LibrarySnapshot {
 }
 
 // WithExcluded sets folders the walk leaves out, as the library scan does:
-// the download folders when a client saves inside a library root. Hidden and
+// the download folders when a client saves inside a library root. Junk and
 // ignored folders are left out regardless (see SkipLibraryDir).
 func (ls *LibrarySnapshot) WithExcluded(dirs ...string) *LibrarySnapshot {
 	ls.excluded = dirs

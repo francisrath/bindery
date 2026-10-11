@@ -73,10 +73,12 @@ To import such a download, either rename one of the files at the source and retr
 
 A download folder can sit inside the library folder (for example
 `/data/audiobooks/.torrents`, so imports hardlink on the same filesystem and
-torrents keep seeding). The library scan leaves it out: it skips every folder
-whose name starts with a dot, the configured download folders, and any folder
-holding a `.binderyignore` file, so torrent copies are never listed as
-unmatched books or imported a second time.
+torrents keep seeding). The library scan leaves it out: it skips known junk
+folders such as `.torrents`, `.Trash-*` and `.incomplete`, the configured
+download folders, and any folder holding a `.binderyignore` file, so torrent
+copies are never listed as unmatched books or imported a second time. Other
+folders that start with a dot are scanned, since a book folder can be named
+that way (`.hack Sign`). To leave one out, put a `.binderyignore` file in it.
 
 ## Default audiobook root folder
 

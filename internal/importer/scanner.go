@@ -3530,14 +3530,62 @@ func walkRoot(root string, excluded []string, fn filepath.WalkFunc) error {
 // everything under it, like Audiobookshelf's .ignore and Plex's .plexignore.
 const LibraryIgnoreFile = ".binderyignore"
 
+// junkDirNames are folder names, matched exactly and case-insensitively, that
+// hold no library content: trash, torrent and incomplete-download folders,
+// macOS and Windows volume metadata, sync tool state and version control.
+var junkDirNames = map[string]bool{
+	".torrents":               true,
+	".trashes":                true,
+	".incomplete":             true,
+	".appledouble":            true,
+	".appledb":                true,
+	".spotlight-v100":         true,
+	".fseventsd":              true,
+	".temporaryitems":         true,
+	".documentrevisions-v100": true,
+	".thumbnails":             true,
+	".stfolder":               true,
+	".stversions":             true,
+	".sync":                   true,
+	".git":                    true,
+	".svn":                    true,
+	".recycle":                true,
+	".snapshot":               true,
+}
+
+// junkDirPrefixes are folder name prefixes of the same kind: a per-user trash
+// (".Trash-1000"), Bindery's own staging folders and Syncthing's temporary
+// folders.
+var junkDirPrefixes = []string{".trash-", ".bindery-stage-", ".syncthing."}
+
+// JunkLibraryDirName reports whether a folder name is on the deny-list of
+// folders that are never library content. It looks at the name only, so it
+// is safe to call on a path built from a request and costs no filesystem
+// access. It is deliberately not "starts with a dot": Bindery's own naming
+// keeps leading dots, so "...And Then There Were None", ".hack Sign" and an
+// author folder ".38 Special" are real library folders. Any other dot folder
+// can be left out with a LibraryIgnoreFile.
+func JunkLibraryDirName(name string) bool {
+	lower := strings.ToLower(name)
+	if junkDirNames[lower] {
+		return true
+	}
+	for _, p := range junkDirPrefixes {
+		if strings.HasPrefix(lower, p) {
+			return true
+		}
+	}
+	return false
+}
+
 // SkipLibraryDir reports whether a folder found while walking a library is
-// not library content: a hidden folder (".torrents", ".Trash-1000", a
-// client's ".incomplete"), or one holding a LibraryIgnoreFile. Torrents
-// saved into a hidden folder inside the library are the case this exists
-// for: their copies would otherwise be scanned as unmatched books, one click
-// from being imported or moved out of the client's folder.
+// not library content: one on the JunkLibraryDirName deny-list (".torrents",
+// ".Trash-1000", a client's ".incomplete"), or one holding a LibraryIgnoreFile.
+// Torrents saved into a hidden folder inside the library are the case this
+// exists for: their copies would otherwise be scanned as unmatched books, one
+// click from being imported or moved out of the client's folder.
 func SkipLibraryDir(dir string) bool {
-	if strings.HasPrefix(filepath.Base(dir), ".") {
+	if JunkLibraryDirName(filepath.Base(dir)) {
 		return true
 	}
 	_, err := os.Lstat(filepath.Join(dir, LibraryIgnoreFile))

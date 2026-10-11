@@ -432,11 +432,7 @@ func main() {
 	importScanner.WithGrimmory(grimmoryPusher)
 	// The library scan leaves the download folders out when a client saves
 	// inside a library root.
-	importScanner.WithDownloadDir(cfg.DownloadDir)
-	if cfg.AudiobookDownloadDir != "" {
-		importScanner.WithAudiobookDownloadDir(cfg.AudiobookDownloadDir)
-		slog.Info("audiobook download dir configured", "path", cfg.AudiobookDownloadDir)
-	}
+	wireScanDownloadDirs(importScanner, cfg)
 
 	// Wire ABS post-import scan notification (Bug #10). The notifier reads ABS
 	// config from settings at call time so that config changes (URL, API key,
@@ -746,6 +742,7 @@ func main() {
 	importRoots := api.NewLibraryRoots(rootFolderRepo, cfg.LibraryDir, cfg.AudiobookDir, cfg.DownloadDir, cfg.AudiobookDownloadDir)
 	manualImportHandler := api.NewManualImportHandler(importScanner, downloadRepo, bookRepo).
 		WithRoots(importRoots).
+		WithExcludedDirs(manualImportExcludedDirs(cfg)...).
 		WithJobs(bgJobs) // drain in-flight batch imports and reassigns on shutdown (#2371)
 	pendingHandler := api.NewPendingHandler(pendingReleaseRepo, queueHandler, downloadRepo, bookRepo)
 	reorganizeHandler := api.NewReorganizeHandler(importScanner)

@@ -84,7 +84,7 @@ func TestLibrarySnapshot_SkipsHiddenIgnoredAndDownloadFolders(t *testing.T) {
 	// copies sit under one: a hidden folder, a download folder, an ignored one.
 	author := filepath.Join(libraryDir, "Kari Nordmann")
 	incoming := filepath.Join(author, "incoming")
-	for _, dir := range []string{filepath.Join(author, ".partial"), incoming, filepath.Join(author, "Kladd")} {
+	for _, dir := range []string{filepath.Join(author, ".incomplete"), incoming, filepath.Join(author, "Kladd")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}

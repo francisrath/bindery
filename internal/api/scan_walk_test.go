@@ -132,7 +132,7 @@ func TestEnumerateImportUnits_BoundaryHeuristic(t *testing.T) {
 				writeTestFile(t, filepath.Join(root, filepath.FromSlash(f)))
 			}
 
-			units, truncated := enumerateImportUnits(root, 1000, nil)
+			units, truncated := enumerateImportUnits(root, 1000, nil, nil)
 			if truncated {
 				t.Errorf("unexpected truncation for a small tree")
 			}
@@ -168,7 +168,7 @@ func TestEnumerateImportUnits_Truncates(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		writeTestFile(t, filepath.Join(root, "Author", string(rune('a'+i))+".epub"))
 	}
-	units, truncated := enumerateImportUnits(root, 4, nil)
+	units, truncated := enumerateImportUnits(root, 4, nil, nil)
 	if !truncated {
 		t.Errorf("expected truncated=true when units exceed the limit")
 	}
@@ -193,7 +193,7 @@ func TestEnumerateImportUnits_SkipDoesNotCountTowardLimitOrTruncation(t *testing
 	skipAllButNew := func(path string, isDir bool) bool {
 		return filepath.Base(path) != "new.epub"
 	}
-	units, truncated := enumerateImportUnits(root, 4, skipAllButNew)
+	units, truncated := enumerateImportUnits(root, 4, skipAllButNew, nil)
 	if truncated {
 		t.Errorf("expected truncated=false: only one unit passes skip, well under the limit")
 	}
@@ -221,7 +221,7 @@ func TestEnumerateImportUnits_UnreadableDirSkipped(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(locked, 0o755) })
 
-	units, _ := enumerateImportUnits(root, 1000, nil)
+	units, _ := enumerateImportUnits(root, 1000, nil, nil)
 	// The readable book is still enumerated; the locked dir is silently skipped.
 	got := unitNames(units)
 	if len(got) != 1 || got[0] != "book.epub" {
@@ -245,7 +245,7 @@ func TestEnumerateImportUnits_SkipsHiddenAndIgnoredFolders(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "Scratch", importer.LibraryIgnoreFile), nil, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	units, _ := enumerateImportUnits(root, 100, nil)
+	units, _ := enumerateImportUnits(root, 100, nil, nil)
 	if len(units) != 1 || !strings.HasPrefix(units[0].path, filepath.Join(root, "Kari Nordmann")) {
 		t.Errorf("units = %+v, want only the book under Kari Nordmann", units)
 	}
