@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, onTestFinished } from 'vitest'
 import { act, render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { ModalHistoryProvider } from '../components/useModal'
@@ -41,6 +41,13 @@ vi.mock('../api/client', async importOriginal => {
     },
   }
 })
+
+// Series changes are admin only (#468); one test switches to another user.
+const authState = { isAdmin: true }
+vi.mock('../auth/AuthContext', async importOriginal => ({
+  ...await importOriginal<typeof import('../auth/AuthContext')>(),
+  useIsAdmin: () => authState.isAdmin,
+}))
 
 function renderSeriesPage(series: Series[], status: SystemStatus = { version: 'dev', commit: 'unknown', buildDate: '', enhancedHardcoverApi: true, hardcoverTokenConfigured: true }) {
   vi.mocked(api.listSeries).mockResolvedValue(series)
@@ -433,6 +440,7 @@ describe('SeriesPage', () => {
       ],
       localOnly: [],
       uncertain: [],
+      covered: [],
       presentCount: 2,
       missingCount: 1,
     })
@@ -768,7 +776,7 @@ describe('SeriesPage', () => {
 
     expect(within(dialog).queryByText('Dune')).not.toBeInTheDocument()
     fireEvent.click(await within(dialog).findByLabelText(/Dune Messiah/))
-    fireEvent.change(within(dialog).getByLabelText('Position'), { target: { value: '2' } })
+    fireEvent.change(within(dialog).getByLabelText('Position (optional)'), { target: { value: '2' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Add' }))
 
     await waitFor(() => expect(api.linkBookToSeries).toHaveBeenCalledWith(30, {
@@ -777,6 +785,29 @@ describe('SeriesPage', () => {
       primarySeries: true,
     }))
     expect(await screen.findByRole('link', { name: /Dune Messiah/ })).toHaveAttribute('href', '/book/102')
+  })
+
+  it('shows another user the series and what is missing, without the controls that need an admin', async () => {
+    authState.isAdmin = false
+    onTestFinished(() => { authState.isAdmin = true })
+    const hardcoverLink = {
+      id: 1, seriesId: 41, hardcoverSeriesId: 'hc-series:7', hardcoverProviderId: '7', hardcoverTitle: 'Fjellserien',
+      hardcoverAuthorName: 'Kari Nordmann', hardcoverBookCount: 2, confidence: 1, linkedBy: 'manual',
+      linkedAt: '2026-01-01T00:00:00Z', createdAt: '2026-01-01T00:00:00Z', updatedAt: '2026-01-01T00:00:00Z',
+    }
+    vi.mocked(api.getSeriesHardcoverDiff).mockResolvedValue({
+      seriesId: 41, link: hardcoverLink, present: [], covered: [],
+      missing: [{ foreignBookId: 'hc:fjellvinden', providerId: '8', title: 'Fjellvinden', position: '2', authorName: 'Kari Nordmann' }],
+      localOnly: [], uncertain: [], presentCount: 0, missingCount: 1,
+    })
+    renderSeriesPage([{ id: 41, foreignSeriesId: 'series-41', title: 'Fjellserien', description: '', monitored: false, books: [], hardcoverLink }])
+
+    fireEvent.click(await screen.findByRole('heading', { name: 'Fjellserien' }))
+    expect(await screen.findByText('Fjellvinden')).toBeInTheDocument()
+    for (const name of [/add series/i, /rename/i, /merge/i, /delete/i, /^add$/i, /add all/i, /add book/i]) {
+      expect(screen.queryByRole('button', { name })).not.toBeInTheDocument()
+    }
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument()
   })
 
   it('adds only the selected Hardcover missing book from its row', async () => {
@@ -818,6 +849,7 @@ describe('SeriesPage', () => {
       ],
       localOnly: [],
       uncertain: [],
+      covered: [],
       presentCount: 0,
       missingCount: 1,
     })
@@ -879,6 +911,7 @@ describe('SeriesPage', () => {
       ],
       localOnly: [],
       uncertain: [],
+      covered: [],
       presentCount: 0,
       missingCount: 1,
     })
@@ -952,6 +985,7 @@ describe('SeriesPage', () => {
       ],
       localOnly: [],
       uncertain: [],
+      covered: [],
       presentCount: 0,
       missingCount: 1,
     })
@@ -964,6 +998,85 @@ describe('SeriesPage', () => {
     expect(bookLink).toHaveAttribute('href', '/book/555')
     const row = within(bookLink).queryByRole('button', { name: 'add' })
     expect(row).not.toBeInTheDocument()
+  })
+
+  // #2524: a split-edition catalogue row is reported under `covered`, not
+  // `missing`, so it must render in its own collapsed section, link to the
+  // whole work that covers it, and never show an add button.
+  it('shows a covered split-edition row in its own section, linked to the owned whole', async () => {
+    const hardcoverLink = {
+      id: 1,
+      seriesId: 43,
+      hardcoverSeriesId: 'hc-series:42',
+      hardcoverProviderId: '42',
+      hardcoverTitle: 'The Stormlight Archive',
+      hardcoverAuthorName: 'Brandon Sanderson',
+      hardcoverBookCount: 3,
+      confidence: 1,
+      linkedBy: 'manual',
+      linkedAt: '2026-01-01T00:00:00Z',
+      createdAt: '2026-01-01T00:00:00Z',
+      updatedAt: '2026-01-01T00:00:00Z',
+    }
+    const series: Series = {
+      id: 43,
+      foreignSeriesId: 'series-43',
+      title: 'The Stormlight Archive',
+      description: '',
+      monitored: true,
+      books: [],
+      hardcoverLink,
+    }
+    vi.mocked(api.getSeriesHardcoverDiff).mockResolvedValue({
+      seriesId: 43,
+      link: hardcoverLink,
+      present: [
+        {
+          foreignBookId: 'hc:the-way-of-kings',
+          providerId: '101',
+          title: 'The Way of Kings',
+          position: '1',
+          authorName: 'Brandon Sanderson',
+          localBookId: 7,
+        },
+      ],
+      missing: [],
+      localOnly: [],
+      uncertain: [],
+      covered: [
+        {
+          foreignBookId: 'hc:the-way-of-kings-part-1',
+          providerId: '101-1',
+          title: 'The Way of Kings, Part 1',
+          position: '1.1',
+          authorName: 'Brandon Sanderson',
+          localBookId: 7,
+          localTitle: 'The Way of Kings',
+        },
+        {
+          foreignBookId: 'hc:the-way-of-kings-part-2',
+          providerId: '101-2',
+          title: 'The Way of Kings, Part 2',
+          position: '1.2',
+          authorName: 'Brandon Sanderson',
+          localBookId: 7,
+          localTitle: 'The Way of Kings',
+        },
+      ],
+      presentCount: 1,
+      missingCount: 0,
+    })
+
+    renderSeriesPage([series])
+
+    fireEvent.click(await screen.findByRole('heading', { name: 'The Stormlight Archive' }))
+    // Plural form (i18next _other), not a hand-rolled "s" suffix.
+    fireEvent.click(await screen.findByText('2 split editions of books you own'))
+
+    const partLink = await screen.findByRole('link', { name: /The Way of Kings, Part 1/ })
+    expect(partLink).toHaveAttribute('href', '/book/7')
+    expect(within(partLink).queryByRole('button', { name: 'add' })).not.toBeInTheDocument()
+    expect(within(partLink).getByText('Part of The Way of Kings, already in your library')).toBeInTheDocument()
   })
 
   it('keeps a Hardcover missing row without a library match non-clickable', async () => {
@@ -1005,6 +1118,7 @@ describe('SeriesPage', () => {
       ],
       localOnly: [],
       uncertain: [],
+      covered: [],
       presentCount: 0,
       missingCount: 1,
     })
@@ -1054,6 +1168,7 @@ describe('SeriesPage Hardcover links out (#1708)', () => {
     missing: [],
     localOnly: [],
     uncertain: [],
+    covered: [],
     presentCount: 0,
     missingCount: 0,
   }

@@ -608,3 +608,96 @@ func TestAggregator_GetAuthorWorks_NoEnrichersNoCovers(t *testing.T) {
 		t.Errorf("expected empty cover with no enrichers, got %q", got[0].ImageURL)
 	}
 }
+
+// A translation's cover is another book's cover (#3018): the cover-by-ISBN
+// fallback skips editions in another language. Here the book's own edition
+// has no cover at the cover provider and the German translation's does, so
+// the book gets none.
+func TestAggregator_enrichBook_CoverProviderSkipsTranslations(t *testing.T) {
+	own, translation := "9788200000011", "9783000000012"
+	cover := &mockCoverProvider{
+		mockProvider: mockProvider{name: "dnb-cover"},
+		urls:         map[string]string{translation: "https://portal.dnb.de/opac/mvb/cover?isbn=" + translation},
+	}
+	agg := &Aggregator{primary: &mockProvider{name: "nb"}, enrichers: []Provider{cover}, cache: newTTLCache(time.Minute)}
+	book := &models.Book{
+		Title:    "Fjellvinden",
+		Author:   &models.Author{Name: "Kari Nordmann"},
+		Language: "nob",
+		Editions: []models.Edition{{ISBN13: &own, Language: "nob"}, {ISBN13: &translation, Language: "ger"}},
+	}
+	agg.enrichBook(context.Background(), book)
+	if book.ImageURL != "" {
+		t.Errorf("took the translation's cover: %q", book.ImageURL)
+	}
+	if cover.coverCalls != 1 {
+		t.Errorf("cover lookups = %d, want 1 (the own-language edition only)", cover.coverCalls)
+	}
+}
+
+// The enrichment snapshot is keyed on its inputs, and the cover guard reads the
+// book's and each edition's language (#3018). A work enriched while its language
+// was unknown took the German edition's cover; once the language is known, the
+// same work must not be served that cover from the snapshot.
+func TestAggregator_enrichBook_SnapshotKeyedOnLanguage(t *testing.T) {
+	translation := "9783000000012"
+	cover := &mockCoverProvider{
+		mockProvider: mockProvider{name: "dnb-cover"},
+		urls:         map[string]string{translation: "https://portal.dnb.de/opac/mvb/cover?isbn=" + translation},
+	}
+	agg := &Aggregator{primary: &mockProvider{name: "nb"}, enrichers: []Provider{cover}, cache: newTTLCache(time.Hour)}
+	newBook := func(language string) *models.Book {
+		return &models.Book{
+			ForeignID: "NB1W",
+			Title:     "Fjellvinden",
+			Author:    &models.Author{Name: "Kari Nordmann"},
+			Language:  language,
+			Editions:  []models.Edition{{ISBN13: &translation, Language: "ger"}},
+		}
+	}
+
+	first := newBook("")
+	agg.enrichBook(context.Background(), first)
+	if first.ImageURL == "" {
+		t.Fatal("precondition: with the language unknown the German edition supplies the cover")
+	}
+
+	second := newBook("nob")
+	agg.enrichBook(context.Background(), second)
+	if second.ImageURL != "" {
+		t.Errorf("served the cached translation cover to a Norwegian book: %q", second.ImageURL)
+	}
+
+	// An edition's language changing is an input change as well.
+	third := newBook("nob")
+	third.Editions[0].Language = "nob"
+	agg.enrichBook(context.Background(), third)
+	if third.ImageURL == "" {
+		t.Error("a same-language edition should supply the cover rather than reuse the snapshot made for another language")
+	}
+}
+
+// Same-language editions, and editions or books without a language, are used
+// exactly as before.
+func TestCoverLanguageMatches(t *testing.T) {
+	for _, c := range []struct {
+		book, edition string
+		want          bool
+	}{
+		{"ger", "ger", true},
+		{"ger", "deu", true}, // 639-2/T and /B
+		{"nob", "nor", true}, // Norwegian written standards fold together
+		{"nob", "nno", true},
+		{"en", "eng", true},
+		{"", "ger", true},
+		{"nob", "", true},
+		{"nob", "und", true},
+		{"mul", "ger", true},
+		{"nob", "ger", false},
+		{"eng", "fre", false},
+	} {
+		if got := coverLanguageMatches(c.book, c.edition); got != c.want {
+			t.Errorf("coverLanguageMatches(%q, %q) = %v, want %v", c.book, c.edition, got, c.want)
+		}
+	}
+}

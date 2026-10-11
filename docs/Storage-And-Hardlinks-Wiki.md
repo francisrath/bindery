@@ -43,7 +43,7 @@ If you pick **hardlink** on a setup that cannot hardlink — separate Docker vol
 
 Some audiobook releases arrive as nested disc folders with repeated track names, for example `Disc 1/Track 01.mp3`, `Disc 1/Track 02.mp3`, `Disc 2/Track 01.mp3`. Audiobook players that sort each disc folder independently (or treat repeated `Track 01` names as duplicates) play these in the wrong order.
 
-Enable **Settings → General → File Naming → Flatten multi-disc audiobooks** to import such a download into a single flat folder. The toggle only appears when the mode audiobooks use (the Audiobook import mode, or Import Mode when that is Same as ebooks) is Copy or Hardlink; on Auto, switch the mode to see it, then switch back, because the stored setting is kept either way. Tracks are renamed to `Part 001.ext`, `Part 002.ext`, … in disc-then-track order. Disc numbers are detected from folder names like `Disc 1`, `Disk 02`, `CD 3`, `Part 4`; track numbers from file names like `Track 01.mp3`, `Chapter 02.mp3`, or a leading `01 - Title.mp3`. Root-level sidecars (cover art, cue sheets) are carried across.
+Enable **Settings → General → File Naming → Flatten multi-disc audiobooks** to import such a download into a single flat folder. The toggle only appears when the mode audiobooks use (the Audiobook import mode, or Import Mode when that is Same as ebooks) is Copy or Hardlink; on Auto, switch the mode to see it, then switch back, because the stored setting is kept either way. Tracks are renamed to `Part 001.ext`, `Part 002.ext`, … in disc-then-track order. Disc numbers are detected from folder names like `Disc 1`, `Disk 02`, `CD 3`, `Part 4`, `Del 2`, also after the title (`Fjellvinden CD1`, `Fjellvinden_Cd 01`); track numbers from file names like `Track 01.mp3`, `Chapter 02.mp3`, or a leading `01 - Title.mp3`. Root-level sidecars (cover art, cue sheets) are carried across.
 
 Guarantees:
 
@@ -54,6 +54,8 @@ Guarantees:
 ## Audiobooks whose files share no folder
 
 A torrent sometimes reports book files that sit directly at a shared download root, or spread across sibling folders with no single folder below the root containing them all. Moving that root would drag in unrelated downloads, so Bindery places those files one at a time into the book's destination folder instead.
+
+A torrent with a folder of its own is not that case, even when its files sit in sibling disc folders (`Book/CD1/01.mp3`, `Book/CD2/01.mp3`): the torrent's folder is placed whole, disc folders included, as with any other audiobook folder, and the flattening option above applies. qBittorrent only reports a shared root for a torrent added without a root folder.
 
 Per-file placement flattens: every file keeps its own name and lands directly in the destination. If two of the reported files have the same filename but different contents, they would both claim the same destination path and one would replace the other.
 
@@ -70,6 +72,15 @@ To import such a download, either rename one of the files at the source and retr
 | `BINDERY_DOWNLOAD_PATH_REMAP` | Comma separated `from:to` pairs mapping the paths your download client reports onto the paths Bindery sees. Needed when the two containers mount the same storage at different paths. |
 | `BINDERY_LIBRARY_DIR` | Ebook library destination. |
 | `BINDERY_AUDIOBOOK_DIR` | Audiobook library destination. |
+
+A download folder can sit inside the library folder (for example
+`/data/audiobooks/.torrents`, so imports hardlink on the same filesystem and
+torrents keep seeding). The library scan leaves it out: it skips known junk
+folders such as `.torrents`, `.Trash-*` and `.incomplete`, the configured
+download folders, and any folder holding a `.binderyignore` file, so torrent
+copies are never listed as unmatched books or imported a second time. Other
+folders that start with a dot are scanned, since a book folder can be named
+that way (`.hack Sign`). To leave one out, put a `.binderyignore` file in it.
 
 ## Default audiobook root folder
 
