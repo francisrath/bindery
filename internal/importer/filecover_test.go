@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/vavallee/bindery/internal/covers"
+	"github.com/vavallee/bindery/internal/db"
 	"github.com/vavallee/bindery/internal/models"
 )
 
@@ -407,5 +408,43 @@ func TestReadFileCover_HostileClaimsAreRejected(t *testing.T) {
 	write("big.epub", buf.Bytes())
 	if got := readFileCover(big); got != nil {
 		t.Errorf("oversized package document: got a cover, want none")
+	}
+}
+
+// Only files inside a library root are read: the library folder, the
+// audiobook folder or a root folder. A path anywhere else is refused before
+// it is opened.
+func TestFillCoverFromFile_OnlyReadsInsideLibraryRoots(t *testing.T) {
+	t.Parallel()
+	libraryDir := t.TempDir()
+	book := &models.Book{ForeignID: "nb:roots", Title: "Fjellvinden", SortTitle: "fjellvinden",
+		Status: models.BookStatusWanted, MediaType: models.MediaTypeAudiobook}
+	s, _, bookRepo, _, ctx := languageFixture(t, libraryDir, book)
+	s.WithCoverStore(covers.NewStore(t.TempDir()))
+	otherRoot := t.TempDir()
+	track := filepath.Join(otherRoot, "Fjellvinden.mp3")
+	writeTaggedMP3(t, track, fakeImage("root folder"))
+	reads := 0
+	s.readCover = func(p string) []byte { reads++; return readFileCover(p) }
+
+	s.fillCoverFromFile(ctx, book, track)
+	if reads != 0 || book.ImageURL != "" {
+		t.Fatalf("a file outside every root was read (reads=%d, image_url=%q)", reads, book.ImageURL)
+	}
+
+	database, err := db.OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { database.Close() })
+	rootFolders := db.NewRootFolderRepo(database)
+	if _, err := rootFolders.Create(ctx, otherRoot); err != nil {
+		t.Fatal(err)
+	}
+	s.WithRootFolders(rootFolders)
+
+	s.fillCoverFromFile(ctx, book, track)
+	if got, _ := bookRepo.GetByID(ctx, book.ID); reads != 1 || !strings.HasPrefix(got.ImageURL, covers.Scheme) {
+		t.Errorf("file in a root folder: reads=%d, image_url=%q, want its cover", reads, got.ImageURL)
 	}
 }

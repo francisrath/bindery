@@ -42,6 +42,27 @@ func (s *Scanner) fillCoverFromFile(ctx context.Context, book *models.Book, file
 	if s.covers == nil || book == nil || book.ImageURL != "" {
 		return
 	}
+	// Only a file inside a library root is read. Every caller passes one, but
+	// the check is made here, with filepath.Rel and filepath.IsLocal on the
+	// path that is then read, because that is the guard CodeQL's
+	// go/path-injection query credits (see WriteOPFSidecarFile).
+	var target string
+	for _, root := range s.coverRoots(ctx) {
+		if root == "" {
+			continue
+		}
+		rel, err := filepath.Rel(filepath.Clean(root), filepath.Clean(filePath))
+		if err != nil || !filepath.IsLocal(rel) {
+			continue
+		}
+		target = filepath.Join(filepath.Clean(root), rel)
+		break
+	}
+	if target == "" {
+		slog.Debug("file cover not read: path outside the library roots", "bookID", book.ID, "path", filePath)
+		return
+	}
+	filePath = target
 	// A file already found to have no art is skipped while it is unchanged.
 	// The record is in memory, so each such file is read once per process;
 	// persisting it is the next step if one pass after a restart matters.
@@ -79,6 +100,20 @@ func (s *Scanner) fillCoverFromFile(ctx context.Context, book *models.Book, file
 	}
 	book.ImageURL = ref
 	slog.Info("filled book cover from its file", "bookID", book.ID, "path", filePath)
+}
+
+// coverRoots lists the folders a book's files may live in: the library and
+// audiobook folders, and every root folder an author can be assigned.
+func (s *Scanner) coverRoots(ctx context.Context) []string {
+	roots := []string{s.libraryDir, s.audiobookDir}
+	if s.rootFolders != nil {
+		if rfs, err := s.rootFolders.List(ctx); err == nil {
+			for _, rf := range rfs {
+				roots = append(roots, rf.Path)
+			}
+		}
+	}
+	return roots
 }
 
 // backfillFileCovers gives every book that has files but no cover the art from
