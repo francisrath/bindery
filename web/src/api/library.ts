@@ -48,9 +48,18 @@ export const libraryApi = {
     return request<LibrarySearchResponse>(`/search/library?${params.toString()}`)
   },
   // Library
-  triggerLibraryScan: () => request<{ message: string }>('/library/scan', { method: 'POST' }),
+  // queued is true when a scan was already running: the request is not
+  // dropped, one more scan runs as soon as that one finishes (#3014).
+  // scanId is the scan_id the requested scan's result will carry in
+  // libraryScanStatus, so a caller can recognise it without comparing clocks.
+  triggerLibraryScan: () => request<{ message: string; queued?: boolean; scanId?: string }>('/library/scan', { method: 'POST' }),
   libraryScanStatus: () => request<{
     ran_at: string
+    // Which scan produced this result, and whether a scan is walking or
+    // queued right now (#3014).
+    scan_id?: string
+    running?: boolean
+    queued?: boolean
     files_found: number
     reconciled: number
     unmatched: number

@@ -285,7 +285,7 @@ fingerprint and the next request rescans.
 ```
 GET    /api/v1/book?status=wanted                 filter by status (wanted, imported, skipped)
 POST   /api/v1/book/bulk                          bulk monitor / status flip / exclude (`"expectNoFiles": true` skips books that have files)
-GET    /api/v1/book/{id}                          book detail (with editions, history, formats)
+GET    /api/v1/book/{id}                          book detail (with editions, history, formats; `importInFlight: true` while a download for it is still on its way into the library)
 PUT    /api/v1/book/{id}                          update monitor / status / metadata
 DELETE /api/v1/book/{id}                          remove from library
 DELETE /api/v1/book/{id}/file                     delete imported file(s) on disk (`?format=ebook|audiobook` scopes to one format; `?path=…` deregisters one tracked path WITHOUT deleting anything on disk)
@@ -302,7 +302,8 @@ GET    /api/v1/book/{id}/calibre                  where the book stands in the C
 ```
 GET    /api/v1/series                             list series with their linked books
 GET    /api/v1/series/{id}                        one series
-POST   /api/v1/series/{id}/fill                   add the series' missing books as wanted (admin)
+POST   /api/v1/series/{id}/fill                   add the series' missing books as wanted (admin); answers {queued, skippedByProfile, skippedSplitParts}
+POST   /api/v1/series/{id}/split-parts/unmonitor  unmonitor the split edition parts of books already in the series, listed as splitEditionPartBookIds on the series (admin); answers {unmonitored}
 PATCH  /api/v1/series/{id}                        monitor / unmonitor (admin)
 POST   /api/v1/series/{id}/merge                  merge other series into this one: {"sourceIds":[..],"title":"optional rename","dryRun":true} previews (admin)
 ```
@@ -322,6 +323,35 @@ GET    /api/v1/book/lookup?isbn=… | ?asin=…       single-book lookup by iden
 GET    /api/v1/wanted/missing                     list wanted-but-missing books
 POST   /api/v1/wanted/bulk                        bulk operations on wanted
 ```
+
+Some bulk actions start an automatic search (search and grab) for the books
+they touch, and the response is written before any indexer is asked: the
+searches run on a background pool afterwards, so `"ok": true` means the action
+was accepted, not that a search finished (#2154). These are the actions that
+can search, and when:
+
+* `POST /book/bulk` with `"action": "search"`: each book.
+* `POST /book/bulk` with `"action": "monitor"`: a book that was wanted and
+  becomes monitored, the same immediate search a single book monitor fires.
+* `POST /wanted/bulk` with `"action": "search"`: each book.
+* `POST /author/bulk` with `"action": "search"`: every monitored wanted book of
+  the author.
+
+For those actions an `ok` entry carries one of two extra fields:
+
+* `"queued": true`: at least one search for this id is on its way. It is set
+  only when that search will actually run: a searcher is configured,
+  automatic grabbing is on, and the book still needs a format.
+* `"searchSkipped": "<reason>"`: the action succeeded but no search was
+  queued. The reasons are `no_format_needed` (every format the book wants is
+  already on disk), `nothing_wanted` (an author with no monitored wanted book
+  still needing a format), `auto_grab_disabled` (a monitor while automatic
+  grabbing is off) and `no_searcher`.
+
+A `"action": "search"` while automatic grabbing is off is refused instead,
+with `"ok": false` and `"code": "auto_grab_disabled"` (#2669). Each search
+that runs leaves a `book search finished` line in the log with its outcome,
+and shows in `GET /search/last-debug`.
 
 Metadata results say when they are already in the caller's library (#1227).
 Each `/search/book` and `/book/lookup` result carries `libraryBookId` when its
@@ -351,7 +381,7 @@ DELETE /api/v1/indexer/{id}                       remove (admin)
 POST   /api/v1/indexer/{id}/test                  probe a saved indexer (admin)
 POST   /api/v1/indexer/test                       probe an unsaved config posted in the body (admin)
 GET    /api/v1/indexer/search?q=…                 multi-indexer ad-hoc query
-GET    /api/v1/search/last-debug                  last query plan & raw responses (debugging)
+GET    /api/v1/search/last-debug                  newest search audit trail you can see (debugging; see below)
 
 GET    /api/v1/prowlarr                           list registered Prowlarr servers (admin)
 GET    /api/v1/prowlarr/{id}                      fetch one (admin)
@@ -365,6 +395,28 @@ GET    /api/v1/rootfolder                         list library roots
 POST   /api/v1/rootfolder                         add a new root (admin)
 DELETE /api/v1/rootfolder/{id}                    remove (admin)
 ```
+
+`GET /search/last-debug` returns the newest search audit trail the caller may
+see: their own latest search from a book page's Search button, or the latest
+automatic search (scheduled sweep, bulk search, series fill and so on) of a
+book they can see, whichever ran last. A request made with the API key sees
+every user's interactive searches too, so a script can read the search a user
+just ran in the browser. A signed in user never sees another user's
+interactive search. The payload says which search it is (#2154):
+
+* `origin`: `interactive` for the Search button, otherwise what started the
+  automatic search: `scheduled`, `bulk`, `series-fill`, `author`, `book`,
+  `add`, `recommendation`, `list-sync`, `requeue` or `unknown`.
+* `bookId`: the book searched for.
+* `userId`: the signed in user who ran an interactive search; absent for an
+  automatic one.
+* `outcome`: an automatic search's result, in the same words as the
+  `book search finished` log line (`grabbed`, `no results`,
+  `nothing approved` and so on).
+
+Check `bookId` and `startedAt` before reading the rest: an automatic search
+that ran after yours will replace it as the newest. 404 means nothing has run
+since startup.
 
 #### Quality profiles
 
@@ -496,6 +548,10 @@ POST   /api/v1/queue/grab                         submit a search result to the 
                                                   record (raw URL) for every caller; otherwise only the API key
                                                   uses the posted nzbUrl, and everyone else gets 400 "this search
                                                   result has expired, search again"
+                                                  409 "already grabbed" when a row holds the guid; the body's
+                                                  "forceAvailable":true means it is your own imported row and
+                                                  the same grab with "force":true re-grabs it (reuses the row,
+                                                  removes nothing from the client)
 POST   /api/v1/queue/{id}/retry-import           retry an importFailed/importBlocked item without re-downloading
 POST   /api/v1/queue/{id}/retry                   re-send a failed item's release to the download client (no re-search)
 POST   /api/v1/queue/bulk-retry                   retry many; {"ids":[..]}; per id {"ok":true,"action":"import"|"resend"}
@@ -514,6 +570,9 @@ POST   /api/v1/queue/manual-import                import one path against a book
 POST   /api/v1/queue/manual-import/batch          import selected {path, bookId} pairs (admin); audio files for
                                                     the same book import as one audiobook under one download id
 POST   /api/v1/queue/manual-import/reassign       move a mis-matched file to another book (admin)
+                                                    {"path","targetBookId","format"?,"relocate"?}: relocate false links the
+                                                    file to the book and leaves it on disk as it is (200, done); true or
+                                                    absent re-imports it, moving and renaming it (202, background) (#2055)
 GET    /api/v1/queue/manual-import/reassign/preview  where that reassign would move and rename it (admin)
                                                     ?path=…&targetBookId=N[&format=ebook|audiobook]
 POST   /api/v1/queue/manual-import/match          attach an importFailed download to a book and import its files (admin)
@@ -697,7 +756,7 @@ GET    /api/v1/backup                             list stored backups (admin)
 DELETE /api/v1/backup/{filename}                  delete one backup (admin)
 POST   /api/v1/backup/{filename}/restore          stage a backup for the next restart (admin, X-Confirm-Restore: true)
 GET    /api/v1/system/status                      version, commit, build date, newest published release, image cache size, Hardcover feature state
-POST   /api/v1/library/scan                       start a library scan in the background (202)
+POST   /api/v1/library/scan                       start a library scan in the background (202; {"queued": true} when one is already running)
 GET    /api/v1/library/duplicate-candidates      read-only duplicate title groups across every author, paginated (#2999)
 GET    /api/v1/library/scan/status                summary of the last library scan, paths included (admin)
 GET    /api/v1/library/unmatched                  books the scan could not match, one row per book (admin)
@@ -713,6 +772,17 @@ GET    /api/v1/system/loglevel                    current log level (admin)
 PUT    /api/v1/system/loglevel                    runtime log-level switch, debug/info/warn/error (admin)
 GET    /api/v1/images?url=<encoded>               proxied + cached cover image (30-day TTL)
 ```
+
+`POST /api/v1/library/scan` answers `202` with `{"message": "library scan
+started"}` when it starts a scan. While a scan is already running it no longer
+answers `409`: the request is queued and the answer is `202` with
+`{"message": "library scan queued", "queued": true}`. When the running scan
+finishes, one more scan runs, however many requests arrived meanwhile, so a
+file placed in a folder the walk had already passed is still picked up (#3014).
+Both answers carry `scanId`, the `scan_id` the requested scan's result will
+have in `GET /api/v1/library/scan/status`, so a client can recognise its own
+scan's result. The status also carries `running` and `queued`, the live state
+next to the stored result of the last finished scan.
 
 `GET /api/v1/library/scan/status` returns the stored summary of the most recent
 scan: the counts, the library roots it walked and the path of every unmatched

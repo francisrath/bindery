@@ -259,6 +259,15 @@ func (r *DownloadRepo) RetryFailed(ctx context.Context, d *models.Download) (boo
 		models.StateFailed, models.StateImportBlocked, models.StateImported)
 }
 
+// RetryImported is RetryFailed for a grab the user forced over an earlier
+// import of the same release (#2289): the same reset, claimed only while the
+// row is still imported, book or no book. A row that moved to any other state
+// since the caller read it is refused, so a force can never take over live
+// work. The caller (api.forceRegrabbable) decides who may force.
+func (r *DownloadRepo) RetryImported(ctx context.Context, d *models.Download) (bool, error) {
+	return r.claimForRegrab(ctx, d, regrabClaimSQL+`status=?`, models.StateImported)
+}
+
 // RetryDeadForAutoGrab is RetryFailed for the scheduler's auto grab: the same
 // reset, over a narrower set of rows, with one extra condition of its own.
 //
@@ -794,6 +803,27 @@ func (r *DownloadRepo) GetOwnerByID(ctx context.Context, id int64) (int64, bool,
 		return 0, false, fmt.Errorf("get download owner: %w", err)
 	}
 	return owner.Int64, true, nil
+}
+
+// HasImportInFlight reports whether a download for the book is still on its
+// way into the library: grabbed, downloading, or completed and not yet through
+// the import. The book page polls while this is true (#2423). The parked
+// hand-off states (importExternal, importHeld) are left out on purpose: they
+// can wait hours on another tool, and a page should not poll for that long.
+//
+// userID scopes it the way the queue is scoped (QueryScope, strict owner
+// equality; 0 is unscoped), so a user looking at a book nobody owns cannot
+// learn from it that another user has a grab in flight.
+func (r *DownloadRepo) HasImportInFlight(ctx context.Context, bookID, userID int64) (bool, error) {
+	where, args := QueryScope("WHERE book_id = ? AND status IN (?, ?, ?, ?, ?)", userID,
+		bookID, models.StateGrabbed, models.StateDownloading, models.StateCompleted,
+		models.StateImportPending, models.StateImporting)
+	var n int
+	err := r.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM downloads `+where, args...).Scan(&n)
+	if err != nil {
+		return false, fmt.Errorf("import in flight for book %d: %w", bookID, err)
+	}
+	return n > 0, nil
 }
 
 func (r *DownloadRepo) DeleteByBook(ctx context.Context, bookID int64) error {
