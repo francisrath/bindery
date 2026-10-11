@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"slices"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/vavallee/bindery/internal/indexer/newznab"
 	"github.com/vavallee/bindery/internal/models"
+	"golang.org/x/text/unicode/norm"
 )
 
 // newTestSearcher returns a Searcher whose client factory bypasses the
@@ -2226,5 +2228,46 @@ func TestRankResultsProfileIgnoredWithoutACriteriaMediaType(t *testing.T) {
 	})
 	if results[0].Title != "The.Sparrow.Russell.epub" {
 		t.Errorf("with no criteria media type QualityRank decides, so epub outranks pdf, got: %v", resultTitles(results))
+	}
+}
+
+// TestSearchBook_FindsDecomposedReleaseTitle runs #3137 end to end: a tracker
+// that stores the release title decomposed (NFD) and matches query bytes
+// literally answers only the decomposed retry, and the release must survive
+// the searcher's relevance filter and come back from SearchBook.
+func TestSearchBook_FindsDecomposedReleaseTitle(t *testing.T) {
+	nfdTitle := norm.NFD.String("Fjellåsen")
+	rssBody := `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:newznab="http://www.newznab.com/DTD/2010/feeds/attributes/">
+  <channel>
+    <newznab:response offset="0" total="1"/>
+    <item>
+      <title>` + nfdTitle + ` - Kari Nordmann</title>
+      <guid isPermaLink="false">guid-nfd</guid>
+      <enclosure url="https://fake/dl/1" length="1000" type="application/x-bittorrent"/>
+    </item>
+  </channel>
+</rss>`
+	const emptyBody = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel></channel></rss>`
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/xml")
+		q := r.URL.Query()
+		if strings.Contains(q.Get("title")+q.Get("q"), nfdTitle) {
+			w.Write([]byte(rssBody))
+			return
+		}
+		w.Write([]byte(emptyBody))
+	}))
+	defer srv.Close()
+
+	idxs := []models.Indexer{{ID: 1, Name: "test", URL: srv.URL, Enabled: true, Categories: []int{3030}}}
+	results := newTestSearcher().SearchBook(context.Background(), idxs, MatchCriteria{
+		Title:  "Fjellåsen",
+		Author: "Kari Nordmann",
+	})
+	if len(results) != 1 || results[0].GUID != "guid-nfd" {
+		t.Fatalf("SearchBook = %v, want the decomposed release", resultTitles(results))
 	}
 }
