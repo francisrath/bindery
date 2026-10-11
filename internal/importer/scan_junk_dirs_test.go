@@ -21,6 +21,7 @@ var junkDirExamples = []string{
 	".fseventsd", ".TemporaryItems", ".DocumentRevisions-V100", ".thumbnails",
 	".stfolder", ".stversions", ".syncthing.Book.epub.tmp", ".sync", ".git",
 	".svn", ".recycle", ".snapshot",
+	"@eaDir", "#recycle", ".@__thumb", ".zfs", ".snapshots", "lost+found",
 	// Volumes on macOS and Windows are case-insensitive.
 	".TORRENTS", ".SPOTLIGHT-v100", ".Git",
 }

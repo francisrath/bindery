@@ -92,7 +92,9 @@ folders (`.torrents`, `.Trash-*`, `.Trashes`, `.incomplete`,
 `.bindery-stage-*`, `.AppleDouble`, `.AppleDB`, `.Spotlight-V100`,
 `.fseventsd`, `.TemporaryItems`, `.DocumentRevisions-V100`, `.thumbnails`,
 `.stfolder`, `.stversions`, `.syncthing.*`, `.sync`, `.git`, `.svn`,
-`.recycle` and `.snapshot`, in any letter case), any folder holding a
+`.recycle`, `.snapshot`, and the NAS and file system folders `@eaDir`,
+`#recycle`, `.@__thumb`, `.zfs`, `.snapshots` and `lost+found`, in any
+letter case), any folder holding a
 `.binderyignore` file (an empty file is enough; everything under that folder
 is skipped), and the download folders (`BINDERY_DOWNLOAD_DIR`,
 `BINDERY_AUDIOBOOK_DOWNLOAD_DIR`) when they sit inside a library folder. Other

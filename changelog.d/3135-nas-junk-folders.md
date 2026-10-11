@@ -1,0 +1,2 @@
+### Fixed
+- **Library Scan also skips NAS and snapshot folders** (#3135). Synology's `@eaDir` and `#recycle`, QNAP's `.@__thumb`, ZFS and btrfs snapshot folders (`.zfs`, `.snapshots`) and `lost+found` are left out of the scan, the "already in the library" check and folder import, like the other non-library folders. A snapshot folder inside a library could otherwise make the scan find every book again.

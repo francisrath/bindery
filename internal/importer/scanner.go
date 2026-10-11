@@ -3545,7 +3545,8 @@ const LibraryIgnoreFile = ".binderyignore"
 
 // junkDirNames are folder names, matched exactly and case-insensitively, that
 // hold no library content: trash, torrent and incomplete-download folders,
-// macOS and Windows volume metadata, sync tool state and version control.
+// macOS and Windows volume metadata, NAS thumbnail and recycle folders, file
+// system snapshots, sync tool state and version control.
 var junkDirNames = map[string]bool{
 	".torrents":               true,
 	".trashes":                true,
@@ -3564,6 +3565,16 @@ var junkDirNames = map[string]bool{
 	".svn":                    true,
 	".recycle":                true,
 	".snapshot":               true,
+	// NAS and file system folders a library on a NAS share can hold:
+	// Synology's thumbnail and recycle folders, QNAP's thumbnails, ZFS and
+	// btrfs (snapper) snapshots, which can hold whole copies of the library,
+	// and fsck's lost+found.
+	"@eadir":     true,
+	"#recycle":   true,
+	".@__thumb":  true,
+	".zfs":       true,
+	".snapshots": true,
+	"lost+found": true,
 }
 
 // junkDirPrefixes are folder name prefixes of the same kind: a per-user trash
