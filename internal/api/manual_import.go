@@ -50,6 +50,31 @@ type ManualImportHandler struct {
 	// trackedCache holds Scan's already-tracked index, rebuilt only when
 	// book_files changes (see trackedFileIndex, #2480).
 	trackedCache trackedFileCache
+	// excluded are folders Scan does not enter below the folder being
+	// imported: the download folders, as in the library scan. Cleaned and
+	// symlink-resolved at setup (see WithExcludedDirs).
+	excluded []string
+}
+
+// WithExcludedDirs sets folders folder import leaves out when they sit inside
+// the folder being imported, as the library scan does: the download folders.
+// Each is stored cleaned and, when it resolves, as its real path too, so the
+// walk, which runs on a symlink-resolved folder, compares plain strings. The
+// folder being imported is never left out, so importing a download folder
+// itself still works.
+func (h *ManualImportHandler) WithExcludedDirs(dirs ...string) *ManualImportHandler {
+	h.excluded = nil
+	for _, dir := range dirs {
+		if strings.TrimSpace(dir) == "" {
+			continue
+		}
+		dir = filepath.Clean(dir)
+		h.excluded = append(h.excluded, dir)
+		if resolved, err := filepath.EvalSymlinks(dir); err == nil && resolved != dir {
+			h.excluded = append(h.excluded, resolved)
+		}
+	}
+	return h
 }
 
 func NewManualImportHandler(scanner manualImportScanner, downloads *db.DownloadRepo, books *db.BookRepo) *ManualImportHandler {
@@ -739,7 +764,7 @@ func (h *ManualImportHandler) Scan(w http.ResponseWriter, r *http.Request) {
 			seen++
 			return seen <= skipToOffset
 		}
-		cands, roundTruncated := enumerateImportUnits(path, remaining, roundSkip)
+		cands, roundTruncated := enumerateImportUnits(path, remaining, roundSkip, h.excluded)
 		truncated = roundTruncated
 		alreadyConsumed += len(cands)
 		if len(cands) == 0 {
