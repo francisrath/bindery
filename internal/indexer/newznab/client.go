@@ -357,8 +357,10 @@ func (c *Client) Search(ctx context.Context, query string, categories []int) ([]
 // "å") and match query bytes literally, so every composed query misses it while
 // the author alone finds it. When nothing has been found yet and the
 // decomposed spelling differs, the cascade runs once more with it. A title
-// with no decomposable letter (ASCII, "ø", "æ", most non-Latin scripts) never
-// pays for that pass.
+// with no decomposable letter (ASCII, "ø", "æ", Chinese, most Cyrillic) never
+// pays for that pass. Hangul, kana with dakuten or handakuten, and Cyrillic
+// "й" all decompose, so titles in those scripts do pay for it when the first
+// passes find nothing.
 func (c *Client) BookSearch(ctx context.Context, title, author string, categories []int) ([]SearchResult, error) {
 	origTitle := primaryTitleForQuery(title)
 	origAuthor := norm.NFC.String(author)
@@ -950,9 +952,10 @@ func (c *Client) getXMLCached(ctx context.Context, rawURL string, target interfa
 // error. The caller unmarshals.
 func (c *Client) fetchXML(ctx context.Context, rawURL string) ([]byte, error) {
 	// The daily query cap is enforced here rather than at the top of the
-	// searcher's fan-out because one BookSearch can issue up to eight requests
-	// as it falls through the tier cascade and the transliteration retry. A
-	// check made once per search could therefore overshoot the cap by seven;
+	// searcher's fan-out because one BookSearch can issue up to twelve requests
+	// as it falls through the tier cascade, the transliteration retry and the
+	// decomposed (NFD) retry. A check made once per search could therefore
+	// overshoot the cap by eleven;
 	// checked here it cannot overshoot at all. Requests served from the query
 	// cache never reach this function and correctly cost nothing (#2312).
 	if b := budgetFrom(ctx); b != nil && !b.Take() {

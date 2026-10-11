@@ -1826,6 +1826,10 @@ func TestBookSearch_NoDecomposedPassWithoutDecomposableLetters(t *testing.T) {
 	defer srv.Close()
 
 	c := testNew(srv.URL, "testkey")
+	// The query cache would answer a repeated cascade without a request, so
+	// with it on this count could not tell one pass from two. A nil cache
+	// passes every call through.
+	c.queries = nil
 	if _, err := c.BookSearch(context.Background(), "Fjellsjøen", "Kari Nordmann", []int{3030}); err != nil {
 		t.Fatalf("BookSearch: %v", err)
 	}
