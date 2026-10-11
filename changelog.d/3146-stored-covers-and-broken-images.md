@@ -1,0 +1,2 @@
+### Fixed
+- **Covers Bindery stores itself show on the Wanted and Series pages, and a cover that fails to load shows "No cover"** (#3146). The Wanted list and the series endpoints returned stored covers (such as a Calibre library's cover) without routing them through the image proxy, the only way they load, so those rows showed a broken image. Every cover in the web app now also falls back to the same placeholder as a book with no cover when its image fails to load, whatever the reason, instead of the browser's broken-image icon.

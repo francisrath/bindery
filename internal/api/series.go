@@ -219,6 +219,7 @@ func (h *SeriesHandler) List(w http.ResponseWriter, r *http.Request) {
 			series = []models.Series{}
 		}
 		h.annotateSplitEditionParts(r.Context(), 0, series)
+		proxySeriesImages(series)
 		writeJSON(w, http.StatusOK, series)
 		return
 	}
@@ -233,6 +234,7 @@ func (h *SeriesHandler) List(w http.ResponseWriter, r *http.Request) {
 		series = []models.Series{}
 	}
 	h.annotateSplitEditionParts(r.Context(), 0, series)
+	proxySeriesImages(series)
 	writeJSON(w, http.StatusOK, seriesListResponse{
 		Items:  series,
 		Total:  total,
@@ -262,6 +264,7 @@ func (h *SeriesHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 	one := []models.Series{*s}
 	h.annotateSplitEditionParts(r.Context(), s.ID, one)
+	proxySeriesImages(one)
 	writeJSON(w, http.StatusOK, one[0])
 }
 
@@ -1773,7 +1776,7 @@ func localDiffBook(local models.SeriesBook) seriesHardcoverDiffBook {
 	}
 	item.ForeignBookID = local.Book.ForeignID
 	item.Title = local.Book.Title
-	item.ImageURL = local.Book.ImageURL
+	item.ImageURL = ProxyImageURL(local.Book.ImageURL)
 	item.ReleaseDate = local.Book.ReleaseDate
 	item.LocalBookID = &local.Book.ID
 	item.LocalTitle = local.Book.Title

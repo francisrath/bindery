@@ -1156,6 +1156,9 @@ func (h *BookHandler) ListWanted(w http.ResponseWriter, r *http.Request) {
 	}
 	for i := range books {
 		cleanBookDescription(&books[i])
+		// Through the proxy like every other book list: a stored cover
+		// (bindery-cover:) does not load any other way (#3146).
+		proxyBookImages(&books[i])
 	}
 	h.markUnmonitoredAuthors(r.Context(), books)
 	writeJSON(w, http.StatusOK, books)

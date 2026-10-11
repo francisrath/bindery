@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, Book } from '../api/client'
 import { bucketBooksByDay } from './calendarBuckets'
+import CoverImage from '../components/CoverImage'
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate()
@@ -278,9 +279,7 @@ export default function CalendarPage() {
                         <span className="text-xs text-slate-600 dark:text-zinc-500 w-12 flex-shrink-0">
                           {dayOfMonthLabel(lang, viewYear, viewMonth, Number(day))}
                         </span>
-                        {book.imageUrl && (
-                          <img loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0" />
-                        )}
+                        <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0" />
                         <span className="text-sm text-slate-800 dark:text-zinc-200 min-w-0 truncate">{book.title}</span>
                         {book.author && (
                           <span className="text-xs text-slate-600 dark:text-zinc-500 flex-shrink-0 hidden sm:block">

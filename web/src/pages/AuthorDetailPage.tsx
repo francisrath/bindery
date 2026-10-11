@@ -24,6 +24,7 @@ import Section from '../components/Section'
 import AuthorSyncNotice from '../components/AuthorSyncNotice'
 import CatalogueReconciliationModal from '../components/CatalogueReconciliationModal'
 import DuplicateCandidatesModal from '../components/DuplicateCandidatesModal'
+import CoverImage from '../components/CoverImage'
 
 type MediaFilter = '' | 'ebook' | 'audiobook'
 // 'excluded' folds in what used to be a separate "Show excluded" checkbox. It
@@ -764,16 +765,16 @@ export default function AuthorDetailPage() {
               selectingClick(e, book)
             }}
           >
-            {book.imageUrl ? (
-              <img loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-6 h-9 object-cover rounded flex-shrink-0" />
-            ) : (
-              <CoverPlaceholder
-                id={book.id}
-                title={book.title}
-                size="xs"
-                className="w-6 h-9 rounded flex-shrink-0"
-              />
-            )}
+            <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-6 h-9 object-cover rounded flex-shrink-0"
+              fallback={
+                <CoverPlaceholder
+                  id={book.id}
+                  title={book.title}
+                  size="xs"
+                  className="w-6 h-9 rounded flex-shrink-0"
+                />
+              }
+            />
             <span className="min-w-0 flex-1">
               <span className="block text-slate-800 dark:text-zinc-200 truncate">{book.title}</span>
               <span className="mt-1 flex flex-wrap items-center gap-1 sm:hidden">
@@ -895,11 +896,11 @@ export default function AuthorDetailPage() {
             onClick={e => { selectingClick(e, book) }}
           >
             <div className="aspect-[2/3] bg-slate-200 dark:bg-zinc-800 relative">
-              {book.imageUrl ? (
-                <img loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" />
-              ) : (
-                <CoverPlaceholder id={book.id} title={book.title} size="sm" className="w-full h-full" />
-              )}
+              <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-full h-full object-cover"
+                fallback={
+                  <CoverPlaceholder id={book.id} title={book.title} size="sm" className="w-full h-full" />
+                }
+              />
             </div>
             {/* Fixed height. The badge row and the year are both variable, so
                 cards in the same row used to end at different heights and the
@@ -981,13 +982,13 @@ export default function AuthorDetailPage() {
 
       <div className="flex flex-col sm:flex-row gap-6 mb-8">
         <div className="w-32 flex-shrink-0">
-          {author.imageUrl ? (
-            <img src={author.imageUrl} alt={author.authorName} className="w-full rounded-full shadow-lg aspect-square object-cover" />
-          ) : (
-            <div className="aspect-square rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-2xl font-bold text-slate-500 dark:text-zinc-600">
-              {author.authorName.charAt(0).toUpperCase()}
-            </div>
-          )}
+          <CoverImage src={author.imageUrl} alt={author.authorName} className="w-full rounded-full shadow-lg aspect-square object-cover"
+            fallback={
+              <div className="aspect-square rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-2xl font-bold text-slate-500 dark:text-zinc-600">
+                {author.authorName.charAt(0).toUpperCase()}
+              </div>
+            }
+          />
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold mb-1 [overflow-wrap:anywhere]">{author.authorName}</h2>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
 import type { LibraryRequest, RequestKind } from '../api/client'
+import CoverImage from './CoverImage'
 
 // The confirm step a requester sees in place of the Add Author and Add Book
 // steps. A requester chooses only the format; the admin who approves chooses
@@ -45,9 +46,7 @@ export default function RequestConfirm({ kind, foreignId, title, subtitle, image
     <>
       <div className="p-4 flex-1 overflow-y-auto">
         <div className="flex items-start gap-4 rounded-md border border-slate-300 dark:border-zinc-700 bg-slate-200/50 dark:bg-zinc-800/50 p-4">
-          {imageUrl && (
-            <img src={imageUrl} alt="" className="w-20 aspect-[2/3] object-cover rounded-md flex-shrink-0" />
-          )}
+          <CoverImage src={imageUrl} alt="" className="w-20 aspect-[2/3] object-cover rounded-md flex-shrink-0" />
           <div className="min-w-0 flex-1">
             <h4 ref={headingRef} tabIndex={-1} className="rounded-sm font-semibold leading-snug break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">{title}</h4>
             {subtitle && <p className="mt-1 text-sm text-fg-muted">{subtitle}</p>}

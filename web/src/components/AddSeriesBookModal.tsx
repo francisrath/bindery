@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react'
 import { api, Author, Book, Series } from '../api/client'
 import { foldedIncludes } from '../util/foldForSearch'
 import { useModal } from './useModal'
+import CoverImage from './CoverImage'
 
 interface Props {
   series: Series
@@ -143,11 +144,11 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
                       onChange={e => setBookId(e.target.value)}
                       className="text-emerald-500 focus:ring-emerald-500"
                     />
-                    {book.imageUrl ? (
-                      <img loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0" />
-                    ) : (
-                      <div className="w-8 h-10 bg-slate-300 dark:bg-zinc-700 rounded flex-shrink-0" />
-                    )}
+                    <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0"
+                      fallback={
+                        <div className="w-8 h-10 bg-slate-300 dark:bg-zinc-700 rounded flex-shrink-0" />
+                      }
+                    />
                     <span className="min-w-0">
                       <span className="block text-sm font-medium truncate">{book.title}</span>
                       {authorName && <span className="block text-xs text-slate-600 dark:text-zinc-500 truncate">{authorName}</span>}

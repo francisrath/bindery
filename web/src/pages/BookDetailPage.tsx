@@ -28,6 +28,7 @@ import { formatBytes } from '../util/format'
 import MetadataLinksMenu from '../components/MetadataLinksMenu'
 import { usePolling } from '../components/usePolling'
 import { languageName } from '../util/language'
+import CoverImage from '../components/CoverImage'
 
 function formatDuration(seconds?: number): string {
   if (!seconds || seconds <= 0) return ''
@@ -867,11 +868,11 @@ function BookDetailPageInner() {
       {/* ===== Header: cover + metadata ===== */}
       <div className="flex flex-col sm:flex-row gap-6">
         <div className="w-32 flex-shrink-0">
-          {book.imageUrl ? (
-            <img src={book.imageUrl} alt={book.title} className="w-full rounded-lg" />
-          ) : (
-            <CoverPlaceholder id={book.id} title={book.title} className="aspect-[2/3] rounded-lg" />
-          )}
+          <CoverImage src={book.imageUrl} alt={book.title} className="w-full rounded-lg"
+            fallback={
+              <CoverPlaceholder id={book.id} title={book.title} className="aspect-[2/3] rounded-lg" />
+            }
+          />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">

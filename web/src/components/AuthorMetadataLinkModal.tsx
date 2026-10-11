@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { api, ApiError, Author, AuthorConflictBody, RelinkAuthorLinkCandidate } from '../api/client'
 import { metadataSourceLink } from '../util/metadataSource'
 import { useModal } from './useModal'
+import CoverImage from './CoverImage'
 
 interface Props {
   author: Author
@@ -150,13 +151,13 @@ export default function AuthorMetadataLinkModal({ author, onClose, onLinked }: P
                 className="flex items-center gap-3 justify-between p-3 rounded-md bg-slate-200/50 dark:bg-zinc-800/50"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  {candidate.imageUrl ? (
-                    <img loading="lazy" decoding="async" src={candidate.imageUrl} alt={candidate.authorName} className="w-12 h-12 rounded-full object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-12 h-12 rounded-full bg-slate-300 dark:bg-zinc-700 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-zinc-300 flex-shrink-0">
-                      {candidate.authorName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  <CoverImage loading="lazy" decoding="async" src={candidate.imageUrl} alt={candidate.authorName} className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                    fallback={
+                      <div className="w-12 h-12 rounded-full bg-slate-300 dark:bg-zinc-700 flex items-center justify-center text-sm font-bold text-slate-600 dark:text-zinc-300 flex-shrink-0">
+                        {candidate.authorName.charAt(0).toUpperCase()}
+                      </div>
+                    }
+                  />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-medium text-sm truncate">{candidate.authorName}</span>

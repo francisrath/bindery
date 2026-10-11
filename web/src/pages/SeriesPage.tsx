@@ -11,6 +11,7 @@ import MergeSeriesModal from '../components/MergeSeriesModal'
 import { btn, btnSize } from '../components/buttons'
 import Switch from '../components/Switch'
 import { useConfirmDialog } from '../components/useConfirmDialog'
+import CoverImage from '../components/CoverImage'
 
 // Series page filters (#2871). Each is computed from the series list the page
 // already loaded; none of them marks, monitors, searches or fills anything.
@@ -580,15 +581,12 @@ export default function SeriesPage() {
                         <span className="text-xs text-slate-600 dark:text-zinc-500 w-10 flex-shrink-0 font-mono">
                           #{entry.positionInSeries || '?'}
                         </span>
-                        {entry.book?.imageUrl ? (
-                          <img loading="lazy" decoding="async"
-                            src={entry.book.imageUrl}
-                            alt={entry.book.title}
-                            className="w-8 h-10 object-cover rounded flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-8 h-10 bg-slate-200 dark:bg-zinc-800 rounded flex-shrink-0" />
-                        )}
+                        <CoverImage loading="lazy" decoding="async"
+                          src={entry.book?.imageUrl}
+                          alt={entry.book?.title}
+                          className="w-8 h-10 object-cover rounded flex-shrink-0"
+                          fallback={<div className="w-8 h-10 bg-slate-200 dark:bg-zinc-800 rounded flex-shrink-0" />}
+                        />
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">
                             {entry.book?.title ?? t('series.bookFallback', { id: entry.bookId })}
@@ -699,11 +697,11 @@ export default function SeriesPage() {
                               <span className="text-xs text-slate-600 dark:text-zinc-500 w-10 flex-shrink-0 font-mono">
                                 #{book.position || '?'}
                               </span>
-                              {book.imageUrl ? (
-                                <img loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-8 h-10 object-cover rounded flex-shrink-0" />
-                              ) : (
-                                <div className="w-8 h-10 bg-slate-200 dark:bg-zinc-800 rounded flex-shrink-0" />
-                              )}
+                              <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-8 h-10 object-cover rounded flex-shrink-0"
+                                fallback={
+                                  <div className="w-8 h-10 bg-slate-200 dark:bg-zinc-800 rounded flex-shrink-0" />
+                                }
+                              />
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">{book.title}</p>
                                 {book.authorName && <p className="text-xs text-slate-600 dark:text-zinc-500 truncate">{book.authorName}</p>}

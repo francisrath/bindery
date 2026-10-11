@@ -20,6 +20,7 @@ import SetupChecklist from '../components/SetupChecklist'
 import { btn, btnSize } from '../components/buttons'
 import Switch from '../components/Switch'
 import { ModalPanel } from '../components/useModal'
+import CoverImage from '../components/CoverImage'
 
 // 'az' | 'za' sort by name and back the existing toolbar buttons; the rest are
 // the column-header sorts (#1349), whitelisted server-side by authorSortOrder.
@@ -603,13 +604,13 @@ export default function AuthorsPage() {
                     </td>
                     <td className="px-3 py-2">
                       <Link to={`/author/${author.id}`} state={authorNavState(i)} className="flex items-center gap-2">
-                        {author.imageUrl ? (
-                          <img loading="lazy" decoding="async" src={author.imageUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-                        ) : (
-                          <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-zinc-600 flex-shrink-0">
-                            {author.authorName.charAt(0)}
-                          </div>
-                        )}
+                        <CoverImage loading="lazy" decoding="async" src={author.imageUrl} alt="" className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                          fallback={
+                            <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-xs font-bold text-slate-500 dark:text-zinc-600 flex-shrink-0">
+                              {author.authorName.charAt(0)}
+                            </div>
+                          }
+                        />
                         <span className="text-slate-800 dark:text-zinc-200 truncate hover:text-emerald-500">{author.authorName}</span>
                       </Link>
                     </td>
@@ -659,13 +660,13 @@ export default function AuthorsPage() {
                   title={`Select ${author.authorName}`}
                 />
                 <Link to={`/author/${author.id}`} state={authorNavState(i)} className="flex gap-3 p-4 hover:bg-slate-200/40 dark:hover:bg-zinc-800/40 transition-colors">
-                  {author.imageUrl ? (
-                    <img loading="lazy" decoding="async" src={author.imageUrl} alt={author.authorName} className="w-16 h-16 rounded-full object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0 text-xl font-bold text-slate-500 dark:text-zinc-600">
-                      {author.authorName.charAt(0)}
-                    </div>
-                  )}
+                  <CoverImage loading="lazy" decoding="async" src={author.imageUrl} alt={author.authorName} className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+                    fallback={
+                      <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0 text-xl font-bold text-slate-500 dark:text-zinc-600">
+                        {author.authorName.charAt(0)}
+                      </div>
+                    }
+                  />
                   <div className="min-w-0">
                     <h3 className="font-semibold truncate">{author.authorName}</h3>
                     <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1 line-clamp-2">

@@ -14,6 +14,7 @@ import { usePolling } from '../components/usePolling'
 import { safeHref } from '../util/safeHref'
 import { formatBytes } from '../util/format'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
+import CoverImage from '../components/CoverImage'
 
 // Shared grid template so the header row and every list row line up exactly.
 // columns: checkbox · cover · title+author · format · actions
@@ -325,20 +326,16 @@ export default function WantedPage() {
                   />
 
                   {/* uniform cover slot */}
-                  {book.imageUrl ? (
-                    <img loading="lazy" decoding="async"
-                      src={book.imageUrl}
-                      alt=""
-                      className="w-8 h-11 object-cover rounded bg-slate-200 dark:bg-zinc-800"
-                    />
-                  ) : (
-                    <div
-                      className="w-8 h-11 rounded bg-slate-200 dark:bg-zinc-800 grid place-items-center text-[8px] text-slate-400 dark:text-zinc-600 text-center leading-tight"
-                      aria-hidden
-                    >
-                      {t('wanted.noCover')}
-                    </div>
-                  )}
+                  <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-11 object-cover rounded bg-slate-200 dark:bg-zinc-800"
+                    fallback={
+                      <div
+                        className="w-8 h-11 rounded bg-slate-200 dark:bg-zinc-800 grid place-items-center text-[8px] text-slate-400 dark:text-zinc-600 text-center leading-tight"
+                        aria-hidden
+                      >
+                        {t('wanted.noCover')}
+                      </div>
+                    }
+                  />
 
                   {/* title + author · year */}
                   <div className="min-w-0">

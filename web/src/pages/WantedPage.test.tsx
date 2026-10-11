@@ -231,6 +231,22 @@ describe('WantedPage', () => {
     expect(screen.getByText('Author unknown')).toBeInTheDocument()
   })
 
+  // A cover that fails to load, such as a stored cover the list returned raw
+  // before #3146, shows the No cover slot rather than a broken image.
+  it('shows the No cover slot when a cover fails to load', async () => {
+    vi.mocked(api.listWanted).mockResolvedValue([
+      makeBook({ id: 1, title: 'Fjellvinden', imageUrl: '/api/v1/images?url=bindery-cover%3Agone.jpg' }),
+    ])
+
+    const { container } = renderWantedPage()
+
+    await screen.findByRole('link', { name: 'Fjellvinden' })
+    expect(screen.queryByText('No cover')).toBeNull()
+    fireEvent.error(container.querySelector('img')!)
+    expect(container.querySelector('img')).toBeNull()
+    expect(screen.getByText('No cover')).toBeInTheDocument()
+  })
+
   it('renders the column header row with a select-all checkbox', async () => {
     vi.mocked(api.listWanted).mockResolvedValue([makeBook({ id: 1, title: 'Dune' })])
 

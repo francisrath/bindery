@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { api, LibrarySearchResponse } from '../api/client'
 import AddToLibraryModal, { AddedToLibrary } from './AddToLibraryModal'
+import CoverImage from './CoverImage'
 
 // LibrarySearch is the header typeahead over the caller's own catalogue
 // (#2551). It only ever talks to /search/library; the metadata providers are
@@ -233,9 +234,11 @@ export default function LibrarySearch({ className = '', onNavigate, autoFocus }:
           onMouseEnter={() => setActive(i)}
         >
           {row.kind !== 'series' && (
-            row.imageUrl
-              ? <img loading="lazy" decoding="async" src={row.imageUrl} alt="" className={`flex-shrink-0 object-cover rounded ${row.kind === 'author' ? 'w-7 h-7 rounded-full' : 'w-7 h-10'}`} />
-              : <span aria-hidden="true" className={`flex-shrink-0 bg-slate-300 dark:bg-zinc-700 ${row.kind === 'author' ? 'w-7 h-7 rounded-full' : 'w-7 h-10 rounded'}`} />
+            <CoverImage
+              loading="lazy" decoding="async" src={row.imageUrl} alt=""
+              className={`flex-shrink-0 object-cover rounded ${row.kind === 'author' ? 'w-7 h-7 rounded-full' : 'w-7 h-10'}`}
+              fallback={<span aria-hidden="true" className={`flex-shrink-0 bg-slate-300 dark:bg-zinc-700 ${row.kind === 'author' ? 'w-7 h-7 rounded-full' : 'w-7 h-10 rounded'}`} />}
+            />
           )}
           <span className="min-w-0">
             <span className="block truncate">{row.label}</span>

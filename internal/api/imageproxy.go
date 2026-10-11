@@ -505,3 +505,17 @@ func proxyAuthorImages(a *models.Author) {
 func proxyBookImages(b *models.Book) {
 	b.ImageURL = ProxyImageURL(b.ImageURL)
 }
+
+// proxySeriesImages rewrites ImageURL on the books each series embeds. A
+// stored cover (bindery-cover:) only loads through the proxy, so a series
+// returned raw showed it as a broken image (#3146).
+func proxySeriesImages(series []models.Series) {
+	for i := range series {
+		// Book is a pointer, so the copy range hands out still reaches it.
+		for _, sb := range series[i].Books {
+			if sb.Book != nil {
+				proxyBookImages(sb.Book)
+			}
+		}
+	}
+}

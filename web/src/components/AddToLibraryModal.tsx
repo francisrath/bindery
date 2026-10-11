@@ -12,6 +12,7 @@ import AddBookConfirm from './AddBookConfirm'
 import { authorProviderKey } from '../util/authorMetadata'
 import { providerDisplayName } from '../util/metadataSource'
 import { useModal } from './useModal'
+import CoverImage from './CoverImage'
 
 // What the modal reports back once something is in the library. Callers that
 // only refresh a list ignore the payload; the header search navigates to it.
@@ -240,11 +241,11 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
         data-testid="add-result-book"
         className="flex items-center gap-3 p-3 rounded-md bg-slate-200/50 dark:bg-zinc-800/50 hover:bg-slate-200 dark:hover:bg-zinc-800"
       >
-        {book.imageUrl ? (
-          <img src={book.imageUrl} alt="" className="w-14 h-20 object-cover rounded flex-shrink-0" />
-        ) : (
-          <div aria-hidden="true" className="w-14 h-20 rounded bg-slate-300 dark:bg-zinc-800 flex-shrink-0" />
-        )}
+        <CoverImage src={book.imageUrl} alt="" className="w-14 h-20 object-cover rounded flex-shrink-0"
+          fallback={
+            <div aria-hidden="true" className="w-14 h-20 rounded bg-slate-300 dark:bg-zinc-800 flex-shrink-0" />
+          }
+        />
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{book.title}</div>
           {book.author?.authorName && (
