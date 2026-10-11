@@ -294,8 +294,10 @@ func enrichmentInputKey(book *models.Book) string {
 	if book.Author != nil {
 		author = book.Author.Name
 	}
-	var isbns []string
+	var isbns, languages []string
 	for _, edition := range book.Editions {
+		// The cover guard reads each edition's language (#3018).
+		languages = append(languages, edition.Language)
 		isbn := ""
 		if edition.ISBN13 != nil && *edition.ISBN13 != "" {
 			isbn = *edition.ISBN13
@@ -304,8 +306,9 @@ func enrichmentInputKey(book *models.Book) string {
 		}
 		isbns = append(isbns, isbn)
 	}
-	input := fmt.Sprintf("%q|%q|%q|%q|%g|%d|%q|%q", book.Title, author,
-		book.Description, book.ImageURL, book.AverageRating, book.RatingsCount, book.Genres, isbns)
+	input := fmt.Sprintf("%q|%q|%q|%q|%g|%d|%q|%q|%q|%q", book.Title, author,
+		book.Description, book.ImageURL, book.AverageRating, book.RatingsCount, book.Genres, isbns,
+		book.Language, languages)
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(input)))
 }
 
