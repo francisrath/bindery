@@ -1,0 +1,2 @@
+### Fixed
+- **A newly added author's page shows that the catalogue is still being fetched** (#3058). Adding an author starts a catalogue sync that can spend minutes fetching a large catalogue, and meanwhile the page said "No books tracked for this author yet" until it was reloaded by hand. It now says the catalogue is being fetched, watches the sync, and shows the books when it ends. The same applies when a Refresh outlasts its one-minute wait: the button is freed as before, and the page keeps watching the sync.

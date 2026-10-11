@@ -486,6 +486,7 @@
       "completedAt": "Refreshed {{when}}"
     },
     "booksHeading": "Books",
+    "syncing": "Fetching this author’s catalogue. Books appear here when it finishes, which can take a few minutes for a large catalogue.",
     "filteredCount": "{{shown}} of {{total}}",
     "groupBySeries": "Group by series",
     "showFlatList": "Show flat list",

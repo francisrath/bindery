@@ -117,7 +117,9 @@ The same response carries `"syncInProgress": true` while a catalogue sync for
 the author is running in this process, and omits it otherwise. The author page
 polls it after **Refresh metadata** to show the result once the sync is done,
 and `POST /api/v1/author/{id}/refresh` answers **409 Conflict** while it is set
-instead of starting a second sync (#2601).
+instead of starting a second sync (#2601). It is also set from the moment
+`POST /api/v1/author` answers, for the catalogue sync the add starts, so a page
+opened straight after the add sees it (#3058).
 
 `POST /api/v1/author` accepts an optional `monitorNewItems` (#2541), the same
 field `PUT /api/v1/author/{id}` takes: `all` (the default) lets a refresh add
