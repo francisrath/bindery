@@ -1197,8 +1197,15 @@ func TestSigWords(t *testing.T) {
 		{"the and for", nil},
 		// apostrophe stripped: "Ender's" → "enders"
 		{"Ender's Game", []string{"enders", "game"}},
-		// German umlaut transliteration
-		{"Märchen", []string{"maerchen"}},
+		// A real umlaut is kept on the keyword (#3123), so the regex builder
+		// can tell it from an ASCII "ae"; the digraph is not expanded here.
+		{"Märchen", []string{"märchen"}},
+		// A digraph typed in ASCII stays as typed.
+		{"Maerchen", []string{"maerchen"}},
+		// Decomposed input composes first, so it is the same keyword.
+		{"Ma\u0308rchen", []string{"märchen"}},
+		// ß still expands: nothing reads it as optional.
+		{"Straße", []string{"strasse"}},
 		// Hyphenated titles split into separate keywords so the title
 		// side matches a NormalizeRelease'd release-side string (#871).
 		// "to" is dropped as a stopword; "five"/"mother" survive.

@@ -499,7 +499,9 @@ func (h *SeriesHandler) RemoveBook(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": "series not found"})
 		return
 	}
-	if err := h.series.UnlinkBook(r.Context(), id, bookID); err != nil {
+	// The user is taking the book out of this series, so it is recorded: a
+	// refresh that still reports the book in it leaves it out (#2554).
+	if _, err := h.series.RemoveBookFromSeries(r.Context(), id, bookID); err != nil {
 		writeServerError(w, r, err)
 		return
 	}
@@ -1902,7 +1904,7 @@ func (h *SeriesHandler) createMissingHardcoverBooks(ctx context.Context, seriesI
 		if !ok {
 			continue
 		}
-		if _, err := h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, format, true); err != nil {
+		if _, err := h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, format, true, false); err != nil {
 			if errors.Is(err, errSeriesBookFilteredByProfile) {
 				filtered++
 				continue
@@ -1960,7 +1962,7 @@ func (h *SeriesHandler) createMissingHardcoverBook(ctx context.Context, seriesID
 		if !ok {
 			return nil, errSeriesCatalogBookNotFound
 		}
-		return h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, selector.format(), false)
+		return h.ensureHardcoverCatalogBook(ctx, series, catalog.AuthorName, catalogBook, selector.format(), false, true)
 	}
 	return nil, errSeriesCatalogBookNotFound
 }
@@ -1999,9 +2001,24 @@ func findCatalogBook(books []metadata.SeriesCatalogBook, foreignID, position str
 // it and an explicit single add does not. A book that already exists is
 // linked whatever the profile says, the same way an author sync keeps
 // maintaining books it already has.
-func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *models.Series, fallbackAuthor string, catalogBook metadata.SeriesCatalogBook, format requestedFormat, applyProfile bool) (*models.Book, error) {
+//
+// explicit marks the user asking for this one book (the Add button), as
+// opposed to a bulk fill. It forgets a record of the user having taken the
+// book out of this series before linking it, the way adding by hand does;
+// without it the exclusion silently refused the link and the book stayed
+// missing for good (#2554). A bulk fill keeps honouring the exclusion.
+func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *models.Series, fallbackAuthor string, catalogBook metadata.SeriesCatalogBook, format requestedFormat, applyProfile, explicit bool) (*models.Book, error) {
 	if series == nil {
 		return nil, errSeriesNotFound
+	}
+	link := func(target *models.Book) error {
+		if explicit {
+			if err := h.series.ClearBookSeriesExclusion(ctx, series.ID, target.ID); err != nil {
+				return err
+			}
+		}
+		_, err := h.series.LinkBookPreservingPrimary(ctx, series.ID, target.ID, catalogBook.Position)
+		return err
 	}
 	// A series catalog is a metadata ingestion source like an author
 	// catalogue, so the unconditional bundle prune (#1780) has to apply here
@@ -2041,8 +2058,7 @@ func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *
 			"matchedForeignID", existing.ForeignID,
 			"matchedStatus", existing.Status,
 			"matchedBy", "identity")
-		_, err := h.series.LinkBookPreservingPrimary(ctx, series.ID, existing.ID, catalogBook.Position)
-		return existing, err
+		return existing, link(existing)
 	}
 
 	author := book.Author
@@ -2206,8 +2222,7 @@ func (h *SeriesHandler) ensureHardcoverCatalogBook(ctx context.Context, series *
 			"matchedStatus", best.Status,
 			"matchedBy", "title",
 			"score", bestScore)
-		_, err := h.series.LinkBookPreservingPrimary(ctx, series.ID, best.ID, catalogBook.Position)
-		return best, err
+		return best, link(best)
 	}
 	if blockedByExcludedTitle {
 		return nil, nil

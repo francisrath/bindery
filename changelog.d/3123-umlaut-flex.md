@@ -1,0 +1,2 @@
+### Fixed
+- **A release naming "Michal" no longer matches the author Michael** (#3123): release matching let every "ae", "oe" and "ue" in a name be optional, so Michael matched Michal, Samuel matched Samul, and Joel, Noel, Raphael and Manuel had the same problem. Only a real ä, ö or ü is flexible now, so "Müller" still finds Müller, Mueller and Muller releases, and "Schönberg" and "Björn" keep their compact spellings. The catch is that a name typed in plain ASCII is taken as typed: a book by "Mueller" no longer matches a release spelled "Muller".

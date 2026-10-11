@@ -262,18 +262,25 @@ func (r *AuthorRepo) ListPageFiltered(ctx context.Context, f AuthorListFilter, l
 	// user infer how many books another user's author has — a small leak, but
 	// the same class as the one #1872 closed, and free to avoid here. NULL-owned
 	// books stay visible to everyone, matching listAuthorsByUser.
-	bookCountExpr := "(SELECT COUNT(*) FROM books b WHERE b.author_id = authors.id) AS book_count"
+	//
+	// available_count is the subset the library already holds, by
+	// InLibraryPredicate: imported, or wanted with at least one tracked file, the
+	// same rule as the Books page and the author page. The predicate has no bind
+	// parameters, so it adds nothing to selectArgs below.
+	bookScope := "b.author_id = authors.id"
 	var selectArgs []any
 	if f.UserID != 0 {
-		bookCountExpr = "(SELECT COUNT(*) FROM books b WHERE b.author_id = authors.id" +
-			" AND (b.owner_user_id = ? OR b.owner_user_id IS NULL)) AS book_count"
-		selectArgs = append(selectArgs, f.UserID)
+		bookScope += " AND (b.owner_user_id = ? OR b.owner_user_id IS NULL)"
+		// One bind per subquery below.
+		selectArgs = append(selectArgs, f.UserID, f.UserID)
 	}
+	bookCountExpr := "(SELECT COUNT(*) FROM books b WHERE " + bookScope + ") AS book_count, " +
+		"(SELECT COUNT(*) FROM books b WHERE " + bookScope + " AND " + InLibraryPredicate("b", "") + ") AS available_count"
 
 	//nolint:gosec // query is built only from static columns, a parameterised WHERE, and a whitelisted ORDER BY (authorSortOrder); all user values are bound via args
 	listQuery := "SELECT " + authorSelectCols + ", " + bookCountExpr + " FROM authors" + where +
 		" ORDER BY " + searchOrder + authorSortOrder(f.Sort) + " LIMIT ? OFFSET ?"
-	// Order matters: the subquery's placeholder sits in the SELECT list, ahead
+	// Order matters: the subqueries' placeholders sit in the SELECT list, ahead
 	// of every WHERE placeholder, and the ranking placeholders sit in ORDER BY,
 	// which the parser reaches last. The count query has neither, so it takes
 	// args alone.
@@ -287,12 +294,12 @@ func (r *AuthorRepo) ListPageFiltered(ctx context.Context, f AuthorListFilter, l
 
 	var authors []models.Author
 	for rows.Next() {
-		var bookCount int
-		a, err := scanAuthorFrom(trailingScanner{s: rows, extra: []any{&bookCount}})
+		var bookCount, availableCount int
+		a, err := scanAuthorFrom(trailingScanner{s: rows, extra: []any{&bookCount, &availableCount}})
 		if err != nil {
 			return nil, 0, err
 		}
-		a.Statistics = &models.AuthorStats{BookCount: bookCount}
+		a.Statistics = &models.AuthorStats{BookCount: bookCount, AvailableBooks: availableCount}
 		authors = append(authors, a)
 	}
 	if err := rows.Err(); err != nil {

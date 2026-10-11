@@ -57,7 +57,7 @@ Most series rows are not created on the Series page at all. They arrive when Bin
 
 When Hardcover enriches an author whose works come from OpenLibrary, both providers can claim a series for the same book. Hardcover wins. Its series carry a stable catalog id and a position, while OpenLibrary parses a free text string, and keeping both would create two local series for one real one and put the book in each. Providers other than Hardcover only fill in a series when the work has none yet.
 
-Refreshing an author links the series of the books you already have, not only the ones the refresh creates. That is how an imported library gains its series: point the author at the metadata record you want and refresh, and each book the provider puts in a series is filed under it. A link that is already stored is left exactly as it is, position included, so a position you corrected by hand survives every later refresh. Nothing is unlinked, and a book already in a series keeps that series even when the provider now names the same one under a different catalog id. Matching those two up ignores case, spacing, apostrophes and a parenthetical suffix, but not an inverted article, so a stored "Expanse, The" and an incoming "The Expanse" still end up as two series.
+Refreshing an author links the series of the books you already have, not only the ones the refresh creates. That is how an imported library gains its series: point the author at the metadata record you want and refresh, and each book the provider puts in a series is filed under it. A link that is already stored is left exactly as it is, position included, so a position you corrected by hand survives every later refresh. Nothing is unlinked, and a book already in a series keeps that series even when the provider now names the same one under a different catalog id. Matching those two up ignores case, spacing, apostrophes, a parenthetical suffix and an inverted article, so a stored "Expanse, The" and an incoming "The Expanse" count as the same series.
 
 Two more limits are worth knowing:
 
@@ -110,6 +110,12 @@ One series can end up as several rows, when a provider names it in more than one
 The dialog previews every change, including books whose positions differ, before anything is applied. Merging is for admins.
 
 Undoing an import (ABS, Calibre) made before a merge does not take the merged books back out of the series you kept.
+
+## Fixing One Book's Series
+
+When one book is filed under the wrong series, or is missing its number, fix it from the book: **Edit metadata** has a **Series** field with the author's series, a position, and **New series…** to create one. Picking a series makes it the book's primary series and takes the book out of the one it was filed under; **No series** takes it out of every series it is in. A position is optional.
+
+A refresh does not put a book back into a series you took it out of, here or from the series page, even when the provider still lists it there or the series was merged into another. The book page lists those series with **Restore**, and **Unlock all fields** in Edit metadata hands the book's series back to refresh. Changing series is for admins.
 
 ## Known Behavior
 

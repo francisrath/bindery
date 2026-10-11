@@ -34,6 +34,22 @@ names arrive from providers in every romanisation and the goal is one identity
 per human. That divergence is deliberate and is asserted by
 `TestDiacriticSchemesAreTheDocumentedOnes`.
 
+Alphabet 1 has one variant, `textutil.FoldForKeyword`, for the keyword side
+(`newznab.SigWords`, `indexer.authorTokens`, the title identity keywords). It is
+the same fold except that ä, ö and ü are kept instead of expanded. The reason is
+the compact release spelling: a release for "Müller" may be named Müller,
+Mueller or Muller, so the keyword regex makes the "e" of an umlaut digraph
+optional. That flex used to apply to every `ae`, `oe` and `ue`, which let
+"Michael" match a release naming "Michal" and "Samuel" match "Samul" (#3123).
+Once folded, "Michael" and "Mueller" look alike, so the knowledge of which
+digraph began as an umlaut has to travel on the keyword, and the umlaut is how.
+`indexer.keywordPattern` turns ü into `ue?` and treats a typed `ue` literally.
+The cost is deliberate: a source typed in ASCII ("Mueller", "Bjoern") no longer
+matches a release that dropped the umlaut ("Muller", "Bjorn"), because a typed
+digraph is taken at its word. A keyword is not in the release alphabet, so it
+must not be compared to a release string with `==` or `Contains` without
+`TransliterateUmlauts` first.
+
 **Alphabets 3, 4 and 6 are lossy and must never decide identity.** 6 in
 particular is a *recall* key: two distinct works may share a `search_key`, which
 only means both are offered to someone who typed either spelling. The `unmatched_units` key is rebuilt whenever a scan re-upserts the row, so unlike the other three it is not part of the `FoldForSearchRev` backfill.
@@ -190,6 +206,22 @@ and in the edition dedup key, alphabet 1a. The dedup key does expand because
 providers send both spellings for one book and both must produce one key. That
 change bumped `indexer.CanonicalDedupKeyRev` to 2, and the startup backfill
 rewrites `books.dedup_key` once on the boot after the bump.
+
+The key also folds the library filing form (#3122): a lone article after the
+last comma moves back to the front, so `Trace of Death, A` and `A Trace of
+Death` share the key `a trace of death`. The article is kept, so the key stays
+lossless; it is not dropped the way Review duplicates drops it for detection.
+The article list and the recognition rule live in `textutil.SplitFilingForm`,
+used by both, so they cannot disagree. That change bumped
+`CanonicalDedupKeyRev` to 3. There is no SQL migration: SQLite cannot run the
+Go normalizer, `idx_books_author_dedup_key` is a plain index with no uniqueness
+constraint, and the startup backfill is the existing way to recompute a key.
+Rows that converge on one key stay separate rows, and no new twin is created
+for that work. The Audiobookshelf importer sees more than one match and routes
+the item to review instead of binding. The Calibre importer, Add Book and the
+Hardcover list sync pick the first match, as they already do for any other pair
+that shares a key. Review duplicates reads titles, not this column, so the pair
+is listed there either way.
 
 ### Ranking: exact word beats prefix
 

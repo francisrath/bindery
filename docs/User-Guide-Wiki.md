@@ -87,6 +87,22 @@ nothing populated the catalogue first. That list is where you can adopt them.
 The sequence that works is always: **populate the catalogue, then scan**. See
 [Bringing in an existing library](#bringing-in-an-existing-library) below.
 
+The scan leaves out folders that are not library content: known junk and sync
+folders (`.torrents`, `.Trash-*`, `.Trashes`, `.incomplete`,
+`.bindery-stage-*`, `.AppleDouble`, `.AppleDB`, `.Spotlight-V100`,
+`.fseventsd`, `.TemporaryItems`, `.DocumentRevisions-V100`, `.thumbnails`,
+`.stfolder`, `.stversions`, `.syncthing.*`, `.sync`, `.git`, `.svn`,
+`.recycle` and `.snapshot`, in any letter case), any folder holding a
+`.binderyignore` file (an empty file is enough; everything under that folder
+is skipped), and the download folders (`BINDERY_DOWNLOAD_DIR`,
+`BINDERY_AUDIOBOOK_DOWNLOAD_DIR`) when they sit inside a library folder. Other
+folders that start with a dot are scanned, because a book folder can start
+with one (`...And Then There Were None`, `.hack Sign`); to leave one out, put
+a `.binderyignore` file in it. The same goes for the check that skips
+searching for books you already have, and for importing a folder from
+**Import**. Entries an earlier scan listed from those folders disappear on the
+next scan.
+
 ### 2. Status and Monitored are two different switches
 
 Every book has a **status** — its acquisition lifecycle:
@@ -1098,6 +1114,12 @@ author's own window would: titles are only compared with other titles by the
 same author. After you exclude rows, a group that no longer has two included
 rows drops off the list. On a shared install with per user libraries, each
 person sees only the authors they could open themselves.
+
+A title filed with its article last ("Trace of Death, A") counts as the same
+title as "A Trace of Death", both here and when a refresh decides whether a
+book is already in your library, so a refresh no longer adds a second row for
+it. Pairs that already exist are never merged for you. They stay as two rows
+and appear here as a group, and you choose which to exclude.
 
 ## How author names are filed
 
