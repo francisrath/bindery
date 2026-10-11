@@ -1,0 +1,2 @@
+### Fixed
+- **Recommendations favour the genres you read, not the ones you read least** (#3172). The genre profile behind Discover weighed a genre by how rare it was among your genres rather than among your books, so the genre most of your library is in came out negative: books in it were scored down, and it was left out of the genre-based searches. Weights are now never negative, and your main genres count for recommendations. A genre on nearly every book is still discounted.
