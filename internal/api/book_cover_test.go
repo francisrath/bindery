@@ -162,3 +162,31 @@ func TestUploadCover_StoreWriteFails(t *testing.T) {
 		t.Errorf("image_url changed to %q", got.ImageURL)
 	}
 }
+
+// The page replaces its book with this response, so it must carry what the
+// book detail GET does: the tracked files and the provider identifiers.
+// Without them a multi file book loses its files table until a reload.
+func TestUploadCover_ResponseMatchesDetail(t *testing.T) {
+	h, book, post := coverFixture(t)
+	ctx := t.Context()
+	if err := h.books.AddBookFile(ctx, book.ID, "ebook", filepath.Join(t.TempDir(), "a.epub")); err != nil {
+		t.Fatal(err)
+	}
+	if err := h.books.UpsertBookIdentifier(ctx, book.ID, "hc:42"); err != nil {
+		t.Fatal(err)
+	}
+	rec := post(pngBytes)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	var resp models.Book
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if len(resp.BookFiles) != 1 {
+		t.Errorf("response bookFiles = %d, want the tracked file", len(resp.BookFiles))
+	}
+	if len(resp.Identifiers) == 0 {
+		t.Errorf("response identifiers is empty, want the provider identifiers")
+	}
+}

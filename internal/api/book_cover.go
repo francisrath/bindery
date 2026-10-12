@@ -58,8 +58,9 @@ func (h *BookHandler) UploadCover(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	book.ImageURL = ref
-	cleanBookDescription(book)
-	// The same shape GET /book/{id} answers with: the stored reference is
-	// rewritten to the image route a browser can load.
+	// The same shape GET /book/{id} answers with, files and identifiers
+	// included since the page replaces its book with this: the stored
+	// reference is rewritten to the image route a browser can load.
+	h.prepareBookDetail(r.Context(), book)
 	writeBook(w, http.StatusOK, book)
 }

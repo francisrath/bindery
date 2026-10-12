@@ -409,11 +409,19 @@ func (h *BookHandler) Get(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	cleanBookDescription(book)
-	h.attachBookFiles(r.Context(), book)
-	h.attachBookIdentifiers(r.Context(), book)
-	h.attachImportInFlight(r.Context(), book)
+	h.prepareBookDetail(r.Context(), book)
 	writeBook(w, http.StatusOK, book)
+}
+
+// prepareBookDetail shapes a book as the book page expects it: description
+// cleaned, tracked files, provider identifiers and the import flag attached.
+// GET /book/{id} and every response the page swaps in for its book use it, so
+// a mutation cannot answer with less than the page already had.
+func (h *BookHandler) prepareBookDetail(ctx context.Context, book *models.Book) {
+	cleanBookDescription(book)
+	h.attachBookFiles(ctx, book)
+	h.attachBookIdentifiers(ctx, book)
+	h.attachImportInFlight(ctx, book)
 }
 
 // attachImportInFlight marks a book whose download is still on its way into
