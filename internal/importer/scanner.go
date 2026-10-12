@@ -608,8 +608,16 @@ func importSourcePresent(downloadPath string, explicitFiles []string) bool {
 	// Stat'd rather than run through importableSourceFile: a symlinked
 	// download root is an ordinary deployment shape, and discoverBookFiles
 	// decides what inside it is importable.
-	_, err := os.Stat(downloadPath)
-	return err == nil
+	if _, err := os.Stat(downloadPath); err != nil {
+		return false
+	}
+	// A release packed as a RAR set has nothing to import until an unpacker
+	// extracts it (#3203). Counted as present, every poll spent a retry and the
+	// download was blocked about 90 seconds after completing, before unpackerr
+	// (one minute start delay by default) had begun. As not present, it waits
+	// on the skip streak, up to importSkipLimit, and imports once the extracted
+	// files appear.
+	return archiveAwaitingExtraction(downloadPath) == ""
 }
 
 // importSkipState is one download's consecutive-skip streak, plus a snapshot of
@@ -675,6 +683,10 @@ func importContentMissingReason(savePath string) string {
 // skip streak runs out. It must not tell the user to wait: by the time it is
 // written, waiting is precisely what has already failed importSkipLimit times.
 func importSourceGoneReason(downloadPath string) string {
+	if archive := archiveAwaitingExtraction(downloadPath); archive != "" {
+		return fmt.Sprintf("this download holds only an archive (%s), and nothing extracted it in the %d checks Bindery waited. Bindery does not unpack archives: an unpacker such as unpackerr has to extract it into %s (see Storage and Hardlinks, RAR-packed torrent releases). Once the files are there, use Retry import on the Queue page.",
+			filepath.Base(archive), importSkipLimit, downloadPath)
+	}
 	return fmt.Sprintf("the download client still reports this download as complete, but none of its files are on this host — checked %d times at %s and found nothing to import. Either the files were moved or deleted after the download finished, or the client's paths do not map into Bindery (set PathRemap on the download client). Fix that and use Retry import on the Queue page, or grab the release again from search.",
 		importSkipLimit, downloadPath)
 }
@@ -1609,6 +1621,16 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 				"path", downloadPath, "title", dl.Title)
 			s.failImport(ctx, dl, models.StateImportFailed,
 				fmt.Sprintf("nothing at %q on this host — the download may still be finishing (qBittorrent writes to its temp/incomplete directory first), the files may have been moved or deleted since, or Bindery and the download client may see different filesystem roots (set PathRemap on the download client)", downloadPath))
+			return
+		}
+		if archive := archiveAwaitingExtraction(downloadPath); archive != "" {
+			// A RAR-packed release (#3203). The retries that follow wait for an
+			// unpacker without spending attempts (importSourcePresent), and the
+			// message says what the download is waiting for.
+			slog.Info("download holds only an archive; waiting for it to be extracted",
+				"path", downloadPath, "archive", filepath.Base(archive))
+			s.failImport(ctx, dl, models.StateImportFailed,
+				fmt.Sprintf("waiting for %s to be extracted: this download holds only an archive, and Bindery does not unpack archives. An unpacker such as unpackerr has to extract it into %q; the import runs once the files are there.", filepath.Base(archive), downloadPath))
 			return
 		}
 		slog.Warn("no book files found in download", "path", downloadPath)

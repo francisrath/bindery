@@ -98,6 +98,10 @@ If the files never appear, it does not wait forever: after about 30 minutes of f
 
 **Stuck at `grabbed` rather than `importFailed`?** On Bindery 1.35.x and earlier, a qBittorrent download the client called complete while sending no content path sat at `grabbed` forever, with the log repeating *will retry next cycle*. Upgrade: from 1.36.0 that case fails the import with the missing path message above, retries if the files turn up, and blocks once they never do.
 
+### "Waiting for … to be extracted"
+
+The download is a RAR-packed release: its folder holds an archive (`Title.part1.rar`, or `Title.rar` and `Title.r00`…) and no book file yet. Bindery does not unpack archives, so it waits, without spending import retries, for an unpacker such as unpackerr to extract the files into the download's folder, and imports them as soon as they appear. If nothing extracts it within about 30 minutes, the download is blocked with *this download holds only an archive*. Set up an unpacker as described in [Storage and Hardlinks, RAR-packed torrent releases](Storage-And-Hardlinks-Wiki.md#rar-packed-torrent-releases), or extract the archive into the folder yourself, then use **Retry import**.
+
 ### "Already grabbed" when re-grabbing a release
 
 Clicking **Grab** on a release you already have a Queue entry for is refused with *already grabbed*, and the message now names the state that entry is in.

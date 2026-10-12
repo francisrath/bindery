@@ -34,7 +34,60 @@ var downloadArtifactExts = map[string]bool{
 // (case-insensitive). PAR2 volumes like "x.vol01+02.par2" resolve to ".par2"
 // via filepath.Ext, so they are covered without special-casing.
 func isDownloadArtifact(name string) bool {
-	return downloadArtifactExts[strings.ToLower(filepath.Ext(name))]
+	return downloadArtifactExts[strings.ToLower(filepath.Ext(name))] || isArchivePart(name)
+}
+
+// archiveVolumeRe matches the volumes of a RAR set: "x.rar", which covers the
+// RAR 5 "x.part1.rar" naming, and the RAR 4 overflow volumes "x.r00" to
+// "x.r99", then "x.s00" onwards.
+var archiveVolumeRe = regexp.MustCompile(`(?i)\.(rar|[rs][0-9]{2})$`)
+
+// isArchivePart reports whether name is a volume of a RAR set. Bindery does
+// not unpack archives (#3203): a release packed as one waits for an unpacker
+// such as unpackerr to extract it into the download's folder, and once it has,
+// the volumes are left out of the library like the other download artifacts
+// (and stay with the client, still seeding). The name is all it looks at; no
+// archive is opened.
+func isArchivePart(name string) bool {
+	return archiveVolumeRe.MatchString(name)
+}
+
+// archiveAwaitingExtraction reports the first volume of the RAR set under dir
+// when dir holds one and no book file yet: a release packed as an archive
+// that nothing has extracted. Empty when dir holds a book file, no archive,
+// or cannot be read. It stops at the first book file it finds.
+//
+// The first volume is the one an unpacker opens: "x.rar" in the RAR 4 naming,
+// "x.part1.rar" in RAR 5. Both are the first ".rar" in walk order (".part1."
+// sorts before ".part10."); ".r00" sorts before ".rar", so a ".rar" volume
+// wins over an earlier ".rNN" one.
+func archiveAwaitingExtraction(dir string) string {
+	archive, firstRar := "", ""
+	errBookFound := errors.New("book file found")
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || !d.Type().IsRegular() {
+			return nil
+		}
+		if IsBookFile(path) {
+			return errBookFound
+		}
+		if isArchivePart(d.Name()) {
+			if archive == "" {
+				archive = path
+			}
+			if firstRar == "" && strings.EqualFold(filepath.Ext(d.Name()), ".rar") {
+				firstRar = path
+			}
+		}
+		return nil
+	})
+	if errors.Is(err, errBookFound) {
+		return ""
+	}
+	if firstRar != "" {
+		return firstRar
+	}
+	return archive
 }
 
 // removeDownloadArtifacts deletes download-artifact files anywhere under dir.
