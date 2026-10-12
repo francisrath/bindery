@@ -2,6 +2,7 @@ package importer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -35,6 +36,10 @@ type DestinationPreview struct {
 	Message string `json:"message,omitempty"`
 }
 
+// ErrPreviewBookNotFound is returned by PreviewImportDestination when the
+// target book id names no book.
+var ErrPreviewBookNotFound = errors.New("book not found")
+
 // PreviewImportDestination reports where importing srcPath against bookID would
 // place the file, without modifying anything. formatHint ("ebook"/"audiobook")
 // overrides extension-based detection, exactly as it does in ImportFromPath.
@@ -50,7 +55,7 @@ func (s *Scanner) PreviewImportDestination(ctx context.Context, bookID int64, sr
 		return DestinationPreview{}, err
 	}
 	if book == nil {
-		return DestinationPreview{}, fmt.Errorf("book %d not found", bookID)
+		return DestinationPreview{}, fmt.Errorf("%w: %d", ErrPreviewBookNotFound, bookID)
 	}
 
 	var author *models.Author

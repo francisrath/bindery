@@ -12,6 +12,17 @@ import (
 	"github.com/vavallee/bindery/internal/models"
 )
 
+// Errors a rollback or its preview returns for a request that cannot be
+// carried out, as opposed to a storage fault. The API maps these to 404 and
+// 503 and answers anything else with a generic 500.
+var (
+	// ErrRunNotFound is returned when the run id names no import run.
+	ErrRunNotFound = errors.New("abs import run not found")
+	// ErrRollbackUnavailable is returned when the importer was built without
+	// the repositories a rollback needs.
+	ErrRollbackUnavailable = errors.New("abs rollback is unavailable")
+)
+
 type RollbackStats struct {
 	ActionsPlanned     int `json:"actionsPlanned"`
 	EntitiesDeleted    int `json:"entitiesDeleted"`
@@ -99,20 +110,20 @@ func (i *Importer) Rollback(ctx context.Context, runID int64) (*RollbackResult, 
 
 func (i *Importer) rollback(ctx context.Context, runID int64, preview bool) (*RollbackResult, error) {
 	if i.runs == nil || i.runEntities == nil {
-		return nil, errors.New("abs rollback is unavailable")
+		return nil, ErrRollbackUnavailable
 	}
 	// Nil-repo guards: every case below relies on at least one of these, and a
 	// silent nil-deref would turn "safe rollback" into a crash that leaves the
 	// run in an inconsistent half-rolled state.
 	if i.provenance == nil || i.books == nil || i.authors == nil || i.series == nil || i.editions == nil {
-		return nil, errors.New("abs rollback is unavailable: one or more repositories are not configured")
+		return nil, fmt.Errorf("%w: one or more repositories are not configured", ErrRollbackUnavailable)
 	}
 	run, err := i.runs.GetByID(ctx, runID)
 	if err != nil {
 		return nil, err
 	}
 	if run == nil {
-		return nil, fmt.Errorf("abs import run %d not found", runID)
+		return nil, fmt.Errorf("%w: %d", ErrRunNotFound, runID)
 	}
 	result := &RollbackResult{
 		RunID:   runID,

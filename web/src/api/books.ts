@@ -37,6 +37,9 @@ export interface Book {
   imageUrl: string
   releaseDate?: string
   createdAt?: string
+  // When this book's metadata was last fetched from its provider (a rebind);
+  // null until then. Shown with the BnF credit (#3144).
+  lastMetadataRefreshAt?: string | null
   genres: string[]
   // Community rating from the metadata providers; 0 when none is known.
   averageRating?: number

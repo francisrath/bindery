@@ -767,6 +767,25 @@ describe('AddToLibraryModal - selection and confirm steps', () => {
     expect(notice.textContent).toContain('Hardcover')
   })
 
+  // #3144: BnF is an accepted primary, so a result from elsewhere is flagged
+  // and a BnF result is not.
+  it('honours BnF as the configured primary provider', async () => {
+    vi.mocked(api.getSetting).mockImplementation(async (key: string) => {
+      if (key === 'metadata.primary_provider') return { key, value: 'bnf' }
+      throw new Error('HTTP 404')
+    })
+    vi.mocked(api.searchAuthors).mockResolvedValue([
+      author({ foreignAuthorId: 'OL3101279A', authorName: 'Matt Dinniman', metadataProvider: 'openlibrary' }),
+      author({ foreignAuthorId: 'bnf:author:11885918', authorName: 'Lewis Carroll', metadataProvider: 'bnf' }),
+    ])
+    vi.mocked(api.searchBooks).mockResolvedValue([])
+    render(<AddToLibraryModal onClose={onClose} onAdded={onAdded} />)
+    typeAndSearch('carroll')
+    await waitFor(() => expect(screen.getByText('Lewis Carroll')).toBeInTheDocument())
+    expect(await screen.findByText('from OpenLibrary')).toBeInTheDocument()
+    expect(screen.getAllByText(/^from /)).toHaveLength(1)
+  })
+
   it('does not flag a result from the configured primary provider', async () => {
     vi.mocked(api.getSetting).mockImplementation(async (key: string) => {
       if (key === 'metadata.primary_provider') return { key, value: 'openlibrary' }

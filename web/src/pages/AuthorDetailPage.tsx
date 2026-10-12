@@ -13,8 +13,8 @@ import RenameFilesModal from '../components/RenameFilesModal'
 import BulkActionBar from '../components/BulkActionBar'
 import { useView } from '../components/useView'
 import MarkdownDescription from '../components/MarkdownDescription'
-import { canLinkAuthorMetadata } from '../util/authorMetadata'
-import { metadataSourceLink } from '../util/metadataSource'
+import { authorProviderKey, canLinkAuthorMetadata } from '../util/authorMetadata'
+import { metadataRetrievedDate, metadataSourceLink } from '../util/metadataSource'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
 import { canonicalLanguage, languageName } from '../util/language'
 import { btn, btnSize } from '../components/buttons'
@@ -1090,6 +1090,16 @@ export default function AuthorDetailPage() {
                 >
                   {t('common.viewOnSource', { source: src.label, defaultValue: 'View on {{source}} ↗' })}
                 </a>
+              ) : null
+            })()}
+            {/* BnF's Licence Ouverte asks for the source and the date
+                wherever its data is shown (#3144). */}
+            {(() => {
+              const date = authorProviderKey(author) === 'bnf' ? metadataRetrievedDate(author) : null
+              return date ? (
+                <span data-testid="bnf-source-credit">
+                  {t('common.bnfSourceCredit', { date, defaultValue: 'Data from the BnF, Licence Ouverte / Open Licence 2.0, retrieved {{date}}' })}
+                </span>
               ) : null
             })()}
           </div>

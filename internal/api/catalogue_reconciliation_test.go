@@ -847,64 +847,72 @@ func TestBuildCatalogueReconciliation_UsesConservativeEditionAndIdentityEvidence
 	}
 }
 
-// NB works arrive from the author catalogue with every edition attached, so
-// the per-work editions lookup (a full GetBook each) is skipped and the
-// work's own editions are the evidence. A work that somehow has none stays
-// indeterminate: no editions is not proof of no ISBN or too few pages. On a
-// partial catalogue (page cap, failed series recall) a work may be missing
-// editions, so none of them is judged on that evidence.
+// NB and BnF works arrive from the author catalogue with every edition
+// attached, so the per-work editions lookup (a full GetBook each) is skipped
+// and the work's own editions are the evidence. A work that somehow has none
+// stays indeterminate: no editions is not proof of no ISBN or too few pages.
+// On a partial catalogue (page cap, failed series recall, BnF's unlinked 2026
+// records) a work may be missing editions, so none of them is judged on that
+// evidence.
 func TestBuildCatalogueReconciliation_NBUsesTheWorksOwnEditions(t *testing.T) {
-	for _, complete := range []bool{true, false} {
-		pages100, pages300 := 100, 300
-		isbn := "9788200000011"
-		lookupErr := errors.New("per-work editions lookup must not run for nb works")
-		provider := &editionResultsProvider{
-			partialSnapshotProvider: partialSnapshotProvider{
-				stubMetaProvider: stubMetaProvider{name: "nb", works: []models.Book{
-					{ForeignID: "nb:long", Title: "Long Work", Language: "eng", MetadataProvider: "nb",
-						Editions: []models.Edition{{NumPages: &pages300, ISBN13: &isbn}}},
-					{ForeignID: "nb:short", Title: "Short Work", Language: "eng", MetadataProvider: "nb",
-						Editions: []models.Edition{{NumPages: &pages100, ISBN13: &isbn}}},
-					{ForeignID: "nb:bare", Title: "Bare Work", Language: "eng", MetadataProvider: "nb"},
-				}},
-				complete: complete,
-			},
-			errors: map[string]error{"nb:long": lookupErr, "nb:short": lookupErr, "nb:bare": lookupErr},
-		}
-		f := newReconciliationFixture(t, provider)
-		profile, err := f.profiles.GetByID(context.Background(), models.DefaultMetadataProfileID)
-		if err != nil || profile == nil {
-			t.Fatalf("load profile: profile=%+v err=%v", profile, err)
-		}
-		profile.MinPages = 200
-		if err := f.profiles.Update(context.Background(), profile); err != nil {
-			t.Fatal(err)
-		}
-		long := f.createBook(t, "nb:long", "Long Work", "nb", models.BookStatusWanted)
-		short := f.createBook(t, "nb:short", "Short Work", "nb", models.BookStatusWanted)
-		bare := f.createBook(t, "nb:bare", "Bare Work", "nb", models.BookStatusWanted)
-		f.author.ForeignID = "nb:author:10000001" // an NB author: the snapshot routes by prefix
-
-		ctx := auth.WithUserRole(auth.WithUserID(context.Background(), 7), "user")
-		got, err := f.handler.buildCatalogueReconciliation(ctx, f.author)
-		if err != nil {
-			t.Fatal(err)
-		}
-		assertIndeterminateRow(t, got, bare, reconcileIndeterminateReasonEditionUnavailable)
-		if !complete {
-			if len(got.Candidates) != 0 {
-				t.Errorf("partial catalogue: candidates = %+v, want none judged on its editions", got.Candidates)
+	for _, tc := range []struct{ provider, authorID string }{
+		{"nb", "nb:author:10000001"},
+		{"bnf", "bnf:author:11885918"},
+	} {
+		for _, complete := range []bool{true, false} {
+			name := tc.provider
+			id := func(s string) string { return name + ":" + s }
+			pages100, pages300 := 100, 300
+			isbn := "9788200000011"
+			lookupErr := errors.New("per-work editions lookup must not run for " + name + " works")
+			provider := &editionResultsProvider{
+				partialSnapshotProvider: partialSnapshotProvider{
+					stubMetaProvider: stubMetaProvider{name: name, works: []models.Book{
+						{ForeignID: id("long"), Title: "Long Work", Language: "eng", MetadataProvider: name,
+							Editions: []models.Edition{{NumPages: &pages300, ISBN13: &isbn}}},
+						{ForeignID: id("short"), Title: "Short Work", Language: "eng", MetadataProvider: name,
+							Editions: []models.Edition{{NumPages: &pages100, ISBN13: &isbn}}},
+						{ForeignID: id("bare"), Title: "Bare Work", Language: "eng", MetadataProvider: name},
+					}},
+					complete: complete,
+				},
+				errors: map[string]error{id("long"): lookupErr, id("short"): lookupErr, id("bare"): lookupErr},
 			}
-			assertIndeterminateRow(t, got, short, reconcileIndeterminateReasonEditionUnavailable)
-			assertIndeterminateRow(t, got, long, reconcileIndeterminateReasonEditionUnavailable)
-			continue
-		}
-		if len(got.Candidates) != 1 || got.Candidates[0].BookID != short.ID || got.Candidates[0].Reason != reconcileReasonPages {
-			t.Errorf("candidates = %+v, want only the short work, for pages", got.Candidates)
-		}
-		for _, row := range got.IndeterminateRows {
-			if row.BookID == long.ID || row.BookID == short.ID {
-				t.Errorf("%q is indeterminate (%s): its own editions were not used", row.Title, row.Reason)
+			f := newReconciliationFixture(t, provider)
+			profile, err := f.profiles.GetByID(context.Background(), models.DefaultMetadataProfileID)
+			if err != nil || profile == nil {
+				t.Fatalf("load profile: profile=%+v err=%v", profile, err)
+			}
+			profile.MinPages = 200
+			if err := f.profiles.Update(context.Background(), profile); err != nil {
+				t.Fatal(err)
+			}
+			long := f.createBook(t, id("long"), "Long Work", name, models.BookStatusWanted)
+			short := f.createBook(t, id("short"), "Short Work", name, models.BookStatusWanted)
+			bare := f.createBook(t, id("bare"), "Bare Work", name, models.BookStatusWanted)
+			f.author.ForeignID = tc.authorID // the snapshot routes by prefix
+
+			ctx := auth.WithUserRole(auth.WithUserID(context.Background(), 7), "user")
+			got, err := f.handler.buildCatalogueReconciliation(ctx, f.author)
+			if err != nil {
+				t.Fatal(err)
+			}
+			assertIndeterminateRow(t, got, bare, reconcileIndeterminateReasonEditionUnavailable)
+			if !complete {
+				if len(got.Candidates) != 0 {
+					t.Errorf("%s partial catalogue: candidates = %+v, want none judged on its editions", name, got.Candidates)
+				}
+				assertIndeterminateRow(t, got, short, reconcileIndeterminateReasonEditionUnavailable)
+				assertIndeterminateRow(t, got, long, reconcileIndeterminateReasonEditionUnavailable)
+				continue
+			}
+			if len(got.Candidates) != 1 || got.Candidates[0].BookID != short.ID || got.Candidates[0].Reason != reconcileReasonPages {
+				t.Errorf("%s candidates = %+v, want only the short work, for pages", name, got.Candidates)
+			}
+			for _, row := range got.IndeterminateRows {
+				if row.BookID == long.ID || row.BookID == short.ID {
+					t.Errorf("%s %q is indeterminate (%s): its own editions were not used", name, row.Title, row.Reason)
+				}
 			}
 		}
 	}

@@ -174,6 +174,36 @@ func TestDoKeepsTransportErrorChain(t *testing.T) {
 	}
 }
 
+// Redact is opt in because it drops the error chain. A provider that does not
+// set it still must not print a credential from its request URL, so the URL in
+// the *url.Error is scrubbed in place: the message is clean and the chain
+// (errors.As to *url.Error and net.Error, errors.Is to context errors, which
+// metadata.IsProviderUnavailable and the discovery breaker rely on) survives.
+func TestDoScrubsURLSecretsWithoutDroppingTheChain(t *testing.T) {
+	c := &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
+		return nil, context.DeadlineExceeded
+	})}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	err := doErr(ctx, c, nil, Request{Provider: "example", URL: "https://example.invalid/v?apikey=SECRETKEY123&q=dune"})
+	if err == nil {
+		t.Fatal("want an error")
+	}
+	if strings.Contains(err.Error(), "SECRETKEY123") {
+		t.Errorf("err = %q still carries the key", err)
+	}
+	if !strings.HasPrefix(err.Error(), "example request: ") || !strings.Contains(err.Error(), "q=dune") {
+		t.Errorf("err = %q lost its prefix or the harmless part of the URL", err)
+	}
+	var urlErr *url.Error
+	if !errors.As(err, &urlErr) {
+		t.Errorf("err = %v no longer unwraps to *url.Error", err)
+	}
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("err = %v no longer matches context.DeadlineExceeded", err)
+	}
+}
+
 // A hold set by an outage turns other requests away as unavailable, not as a
 // rate limit: the provider is down, it did not ask us to slow down.
 func TestDoHoldCauseClassification(t *testing.T) {

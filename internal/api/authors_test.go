@@ -7942,6 +7942,80 @@ func TestFetchAuthorBooks_MinPagesKeptWhenZero(t *testing.T) {
 	}
 }
 
+// TestFetchAuthorBooks_BnFWorksJudgedOnTheirOwnEditions: BnF's author
+// catalogue arrives with every edition attached, and its per work editions
+// lookup is a full GetBook (up to four paced requests, one a second). So
+// MinPages and SkipMissingISBN judge a BnF work on the editions it carries,
+// with no GetEditions call, and reach the same verdicts.
+func TestFetchAuthorBooks_BnFWorksJudgedOnTheirOwnEditions(t *testing.T) {
+	database, err := db.OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer database.Close()
+
+	authorRepo := db.NewAuthorRepo(database)
+	bookRepo := db.NewBookRepo(database)
+	profileRepo := db.NewMetadataProfileRepo(database)
+	settingsRepo := db.NewSettingsRepo(database)
+	ctx := context.Background()
+
+	profile, err := profileRepo.GetByID(ctx, models.DefaultMetadataProfileID)
+	if err != nil || profile == nil {
+		t.Fatalf("GetByID(default profile) failed: %v", err)
+	}
+	profile.MinPages = 200
+	profile.SkipMissingISBN = true
+	profile.AllowedLanguages = "fre"
+	if err := profileRepo.Update(ctx, profile); err != nil {
+		t.Fatal(err)
+	}
+	author := &models.Author{
+		ForeignID: "bnf:author:11885918", Name: "Lewis Carroll", SortName: "Carroll, Lewis",
+		MetadataProvider: "bnf", Monitored: false,
+	}
+	if err := authorRepo.Create(ctx, author); err != nil {
+		t.Fatal(err)
+	}
+	work := func(ark, title string, pages int, isbn string) models.Book {
+		ed := models.Edition{ForeignID: "bnf:" + ark, Title: title, NumPages: intPtr(pages)}
+		if isbn != "" {
+			ed.ISBN13 = strPtr(isbn)
+		}
+		return models.Book{ForeignID: "bnf:" + ark, Title: title, SortTitle: title, Language: "fre",
+			MediaType: models.MediaTypeEbook, Status: models.BookStatusWanted, MetadataProvider: "bnf",
+			Editions: []models.Edition{ed}}
+	}
+	works := []models.Book{
+		work("cb10000001b", "Court", 50, "9782070000017"),
+		work("cb10000002c", "Long", 350, "9782070000024"),
+		work("cb10000003d", "Sans ISBN", 300, ""),
+	}
+	provider := &stubMetaProvider{name: "bnf", works: works}
+	agg := metadata.NewAggregator(provider)
+	h := NewAuthorHandler(authorRepo, nil, bookRepo, nil, agg, settingsRepo, profileRepo, nil)
+	h.FetchAuthorBooks(author, false, models.MediaTypeEbook)
+
+	got, err := bookRepo.ListByAuthor(ctx, author.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var titles []string
+	for _, b := range got {
+		titles = append(titles, b.Title)
+	}
+	if len(titles) != 1 || titles[0] != "Long" {
+		t.Errorf("created %v, want only Long: Court is under the page floor and Sans ISBN has no ISBN", titles)
+	}
+	if calls := provider.editionCalls; len(calls) != 0 {
+		t.Errorf("GetEditions called for %v, want none: BnF works carry their editions", calls)
+	}
+	summary := h.syncSummaries.get(author.ID)
+	if summary == nil || summary.SkippedMinPages != 1 || summary.SkippedMissingISBN != 1 {
+		t.Errorf("summary = %+v, want one skipped for pages and one for the missing ISBN", summary)
+	}
+}
+
 // TestFetchAuthorBooks_EditionLookupSkipsFreeFilterRejects verifies that the
 // edition prefetch only runs for works surviving the free (in-memory)
 // filters ahead of it — a junk-title work and a wrong-language work should

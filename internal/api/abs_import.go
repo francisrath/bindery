@@ -74,7 +74,9 @@ func (h *ABSImportHandler) Start(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": err.Error()})
 		return
 	case err != nil:
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		// Start validates nothing itself (runCfg.Validate ran above), so what
+		// is left is a fault inside the importer, not a bad request.
+		writeServerError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusAccepted, h.importer.Progress())
@@ -97,6 +99,22 @@ func (h *ABSImportHandler) Runs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, resp)
 }
 
+// writeRollbackError answers an error from a rollback or its preview. A run
+// that does not exist is a 404 and a rollback the importer was built without is
+// a 503; both are the importer's own sentinels. Anything else came from the
+// repositories underneath and is a generic 500 rather than the storage text,
+// which this handler used to relay as a 400.
+func writeRollbackError(w http.ResponseWriter, r *http.Request, err error) {
+	switch {
+	case errors.Is(err, abs.ErrRunNotFound):
+		writeJSON(w, http.StatusNotFound, map[string]string{"error": "import run not found"})
+	case errors.Is(err, abs.ErrRollbackUnavailable):
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "rollback is unavailable"})
+	default:
+		writeServerError(w, r, err)
+	}
+}
+
 func (h *ABSImportHandler) RollbackPreview(w http.ResponseWriter, r *http.Request) {
 	runID, err := absImportRunID(r)
 	if err != nil {
@@ -105,7 +123,7 @@ func (h *ABSImportHandler) RollbackPreview(w http.ResponseWriter, r *http.Reques
 	}
 	result, err := h.importer.RollbackPreview(r.Context(), runID)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		writeRollbackError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, result)
@@ -119,7 +137,7 @@ func (h *ABSImportHandler) Rollback(w http.ResponseWriter, r *http.Request) {
 	}
 	result, err := h.importer.Rollback(r.Context(), runID)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		writeRollbackError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, result)

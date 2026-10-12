@@ -110,7 +110,8 @@ func (e *primaryProviderUnavailableError) Error() string {
 
 // addBookLookupError wraps a failed book metadata lookup while resolving the
 // author for a result that carried no author id. The handler answers 502
-// with the wrapped error's text.
+// through writeUpstreamError; the wrapped error's text, which can embed the
+// provider's request URL, is logged and never sent.
 type addBookLookupError struct {
 	Err error
 }
@@ -133,7 +134,7 @@ func (h *AuthorHandler) writeAddBookError(w http.ResponseWriter, r *http.Request
 	}
 	var lookup *addBookLookupError
 	if errors.As(err, &lookup) {
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": lookup.Err.Error()})
+		writeUpstreamError(w, lookup.Err)
 		return
 	}
 	for _, resp := range addBookErrorResponses {

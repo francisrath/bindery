@@ -2472,7 +2472,7 @@ func TestReassignPreview_UnknownBookIsBadRequest(t *testing.T) {
 	t.Parallel()
 	root := t.TempDir()
 	src := makeBookPath(t, root, "book.epub", false)
-	stub := &stubManualImportScanner{previewErr: errors.New("book 99 not found")}
+	stub := &stubManualImportScanner{previewErr: fmt.Errorf("%w: 99", importer.ErrPreviewBookNotFound)}
 	h := NewManualImportHandler(stub, nil, nil).WithRoots(NewLibraryRoots(nil, root))
 
 	rec := httptest.NewRecorder()

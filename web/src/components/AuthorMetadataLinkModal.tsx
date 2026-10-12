@@ -17,6 +17,7 @@ function providerLabel(author: Author): string {
   if (provider === 'openlibrary' || author.foreignAuthorId.startsWith('OL')) return 'OpenLibrary'
   if (provider === 'dnb' || author.foreignAuthorId.startsWith('dnb:')) return 'DNB'
   if (provider === 'nb' || author.foreignAuthorId.startsWith('nb:')) return 'Nasjonalbiblioteket'
+  if (provider === 'bnf' || author.foreignAuthorId.startsWith('bnf:')) return 'BnF'
   if (provider) return provider
   return 'Metadata'
 }

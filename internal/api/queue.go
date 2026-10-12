@@ -18,6 +18,7 @@ import (
 	"github.com/vavallee/bindery/internal/concurrency"
 	"github.com/vavallee/bindery/internal/db"
 	"github.com/vavallee/bindery/internal/downloader"
+	"github.com/vavallee/bindery/internal/downloader/nethint"
 	"github.com/vavallee/bindery/internal/indexer"
 	"github.com/vavallee/bindery/internal/indexer/newznab"
 	"github.com/vavallee/bindery/internal/models"
@@ -38,6 +39,83 @@ const queueClientPollConcurrency = 4
 var queueClientPollTimeout = 1 * time.Second
 
 var errAlreadyGrabbed = errors.New("already grabbed")
+
+// errNoDownloadClient marks a grab or retry that no enabled download client
+// can take. It is a setup problem the user can fix, so the handlers answer 400
+// with the actionable text and a code the web app keys on, never a 502.
+var errNoDownloadClient = errors.New("no enabled download client configured")
+
+// noClientError is the actionable "no enabled download client" message
+// (see noProtocolClientError). Its text names the protocol and the clients the
+// user does have, and it matches errNoDownloadClient through errors.Is.
+type noClientError struct{ msg string }
+
+func (e *noClientError) Error() string { return e.msg }
+func (e *noClientError) Unwrap() error { return errNoDownloadClient }
+
+// errSendFailed marks a release the download client refused or could not be
+// reached for. The text of the underlying failure comes from the client, so it
+// stays in the log, the download row and the history; the API answers with
+// sendFailedMessage.
+var errSendFailed = errors.New("failed to send to downloader")
+
+// sendFailedMessage is what a client is told when errSendFailed happens.
+const sendFailedMessage = "failed to send the release to the download client"
+
+// sendError carries the download client's own failure for the logs and the
+// download row. Error() keeps the full text; only errSendFailed is matched by
+// errors.Is, so callers branch on the kind without relaying the cause.
+type sendError struct{ cause error }
+
+func (e *sendError) Error() string   { return errSendFailed.Error() + ": " + e.cause.Error() }
+func (e *sendError) Unwrap() []error { return []error{errSendFailed, e.cause} }
+
+// sendFailedText is sendFailedMessage plus Bindery's own hint when the cause is
+// a network failure (refused, timed out, unknown container name). The hint is
+// fixed text chosen by the class of failure, so it names no host and no URL,
+// and it is what tells a user the client is down, not that the release is bad.
+func sendFailedText(err error) string {
+	return sendFailedMessage + nethint.ForErr(err)
+}
+
+// writeGrabError answers an error from grab or resendRelease. A missing client
+// is a setup problem the user can fix (400, with a code the web app keys on);
+// a refused or unreachable client is a generic 502, since the text comes from
+// the client; anything else is a storage fault and a generic 500.
+func writeGrabError(w http.ResponseWriter, r *http.Request, err error) {
+	switch {
+	case errors.Is(err, errNoDownloadClient):
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error(), "code": codeNoDownloadClient})
+	case errors.Is(err, errSendFailed):
+		slog.Warn("grab: download client did not take the release", "method", r.Method, "path", r.URL.Path, "error", err)
+		writeJSON(w, http.StatusBadGateway, map[string]string{"error": sendFailedText(err)})
+	default:
+		writeServerError(w, r, err)
+	}
+}
+
+// codeNoDownloadClient is the machine readable code on a "no download client"
+// 400, matched by isNoDownloadClientError in web/src/api/core.ts.
+const codeNoDownloadClient = "no_download_client"
+
+// queueItemMessage is the per row message of a bulk queue response, which the
+// page shows verbatim. It follows the single-item routes: the messages the
+// handlers already treat as safe (a conflict, a missing book, no client) pass
+// through, a send failure is generic, and a storage fault is logged and
+// replaced.
+func queueItemMessage(err error) string {
+	switch {
+	case errors.Is(err, errNoDownloadClient), errors.Is(err, errAlreadyGrabbed),
+		errors.Is(err, errRetryNotResendable), errors.Is(err, errGrabBookNotFound):
+		return err.Error()
+	case errors.Is(err, errSendFailed):
+		slog.Warn("bulk queue item: download client did not take the release", "error", err)
+		return sendFailedText(err)
+	default:
+		slog.Error("bulk queue item failed", "error", err)
+		return "internal server error"
+	}
+}
 
 // errRegrabForceable marks an "already grabbed" refusal the caller may
 // override by sending the grab again with force set (#2289). It is only ever
@@ -875,8 +953,7 @@ type grabRequest struct {
 
 func (h *QueueHandler) Grab(w http.ResponseWriter, r *http.Request) {
 	var req grabRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
+	if !decodeJSON(w, r, &req) {
 		return
 	}
 	if req.GUID == "" || req.NZBURL == "" {
@@ -918,11 +995,7 @@ func (h *QueueHandler) Grab(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		status := http.StatusBadGateway
-		if strings.Contains(err.Error(), "no enabled") && strings.Contains(err.Error(), "download client configured") {
-			status = http.StatusBadRequest
-		}
-		writeJSON(w, status, map[string]string{"error": err.Error()})
+		writeGrabError(w, r, err)
 		return
 	}
 
@@ -1106,11 +1179,7 @@ func (h *QueueHandler) RetryDownload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusNotFound, map[string]string{"error": err.Error()})
 		return
 	case err != nil:
-		status := http.StatusBadGateway
-		if strings.Contains(err.Error(), "no enabled") && strings.Contains(err.Error(), "download client configured") {
-			status = http.StatusBadRequest
-		}
-		writeJSON(w, status, map[string]string{"error": err.Error()})
+		writeGrabError(w, r, err)
 		return
 	}
 
@@ -1203,7 +1272,7 @@ func (h *QueueHandler) BulkRetry(w http.ResponseWriter, r *http.Request) {
 			accepted, found, err := h.downloads.ResetImportRetry(ctx, id)
 			switch {
 			case err != nil:
-				setResult(id, queueRetryResult{Error: err.Error()})
+				setResult(id, queueRetryResult{Error: queueItemMessage(err)})
 			case !found:
 				setResult(id, queueRetryResult{Error: "download not found"})
 			case !accepted:
@@ -1215,7 +1284,7 @@ func (h *QueueHandler) BulkRetry(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if _, err := h.resendRelease(ctx, target); err != nil {
-			setResult(id, queueRetryResult{Error: err.Error()})
+			setResult(id, queueRetryResult{Error: queueItemMessage(err)})
 			return
 		}
 		setResult(id, queueRetryResult{OK: true, Action: retryActionResend})
@@ -1253,15 +1322,15 @@ func (h *QueueHandler) noProtocolClientError(ctx context.Context, protocol strin
 	otherEnabled, err := h.clients.GetEnabledByProtocol(ctx, other)
 	if err != nil {
 		// Don't mask the real failure with a guess about other clients.
-		return fmt.Errorf("no enabled %s download client configured", protocolLabel(protocol))
+		return &noClientError{msg: fmt.Sprintf("no enabled %s download client configured", protocolLabel(protocol))}
 	}
 	if len(otherEnabled) == 0 {
-		return fmt.Errorf("no enabled download client configured — add a download client")
+		return &noClientError{msg: "no enabled download client configured — add a download client"}
 	}
-	return fmt.Errorf(
+	return &noClientError{msg: fmt.Sprintf(
 		"no enabled %s download client configured — this release is %s but your only enabled client(s) are %s; add a %s client (%s)",
 		protocolLabel(protocol), protocol, other, other, protocolClientSuggestions(protocol),
-	)
+	)}
 }
 
 // otherProtocol returns the protocol opposite to the one given. Anything that
@@ -1494,7 +1563,7 @@ func (h *QueueHandler) grab(ctx context.Context, req grabRequest) (*models.Downl
 		if h.notif != nil {
 			h.notif.Send(ctx, notifier.EventDownloadFailed, map[string]any{"title": req.Title, "message": err.Error()})
 		}
-		return nil, fmt.Errorf("failed to send to downloader: %w", err)
+		return nil, &sendError{cause: err}
 	}
 
 	if remoteID := sendRes.RemoteID; remoteID != "" {
@@ -1792,7 +1861,7 @@ func (h *QueueHandler) BulkDelete(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := h.removeQueueItem(ctx, &target, opts); err != nil {
-			setResult(id, bulkItemResult{Error: err.Error()})
+			setResult(id, bulkItemResult{Error: queueItemMessage(err)})
 			return
 		}
 		setResult(id, bulkItemResult{OK: true})

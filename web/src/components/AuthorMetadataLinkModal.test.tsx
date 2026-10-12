@@ -174,6 +174,25 @@ describe('AuthorMetadataLinkModal', () => {
     expect(screen.queryByRole('link', { name: /View on/ })).toBeNull()
   })
 
+  // #3144: a BnF candidate is labelled by its foreign-ID prefix, not shown as
+  // the raw provider key or "Metadata".
+  it('labels a BnF candidate', async () => {
+    vi.mocked(api.searchAuthorLinkCandidates).mockResolvedValue([
+      author({ id: 0, foreignAuthorId: 'bnf:author:11885918', authorName: 'Lewis Carroll', metadataProvider: '' }),
+    ])
+
+    render(
+      <AuthorMetadataLinkModal
+        author={author({ foreignAuthorId: 'calibre:author:9', authorName: 'Lewis Carroll' })}
+        onClose={vi.fn()}
+        onLinked={vi.fn()}
+      />,
+    )
+
+    await screen.findByRole('button', { name: 'Link' })
+    expect(screen.getByText('BnF')).toBeInTheDocument()
+  })
+
   // #2688: a record the author was linked to before is offered again rather
   // than hidden, so relinking is not a one way door. It has to stay linkable,
   // and it has to be distinguishable from a record that was never used.

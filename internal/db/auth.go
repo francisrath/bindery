@@ -310,6 +310,16 @@ var (
 	ErrUserStillReferenced = errors.New("rows still reference this user")
 )
 
+// Errors returned by SetRole when the change cannot be made.
+var (
+	// ErrInvalidRole is returned when the role is not one of admin, user or
+	// requester.
+	ErrInvalidRole = errors.New("invalid role: must be admin, user or requester")
+	// ErrLastAdminDemote is returned when a role change would leave the
+	// install with no admin account.
+	ErrLastAdminDemote = errors.New("cannot demote the last admin user")
+)
+
 // ErrUserNotFound is returned by a mutation aimed at a user id that does not
 // exist, so an admin typo is a 404 rather than a silent no-op.
 var ErrUserNotFound = errors.New("user not found")
@@ -570,7 +580,7 @@ func (r *UserRepo) Delete(ctx context.Context, id int64, plan UserDeletePlan) er
 // to requester is refused exactly like a demotion to user.
 func (r *UserRepo) SetRole(ctx context.Context, id int64, role string) error {
 	if !auth.ValidRole(role) {
-		return fmt.Errorf("invalid role %q: must be admin, user or requester", role)
+		return fmt.Errorf("%w (got %q)", ErrInvalidRole, role)
 	}
 
 	tx, err := r.db.BeginTx(ctx, nil)
@@ -583,6 +593,9 @@ func (r *UserRepo) SetRole(ctx context.Context, id int64, role string) error {
 	if role != auth.RoleAdmin {
 		var targetRole string
 		if err := tx.QueryRowContext(ctx, "SELECT role FROM users WHERE id=?", id).Scan(&targetRole); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return ErrUserNotFound
+			}
 			return fmt.Errorf("get user role: %w", err)
 		}
 		if targetRole == "admin" {
@@ -593,14 +606,24 @@ func (r *UserRepo) SetRole(ctx context.Context, id int64, role string) error {
 				return fmt.Errorf("check admin count: %w", err)
 			}
 			if adminCount == 0 {
-				return fmt.Errorf("cannot demote the last admin user")
+				return ErrLastAdminDemote
 			}
 		}
 	}
 
-	if _, err := tx.ExecContext(ctx,
-		"UPDATE users SET role=?, updated_at=? WHERE id=?", role, time.Now().UTC(), id); err != nil {
+	res, err := tx.ExecContext(ctx,
+		"UPDATE users SET role=?, updated_at=? WHERE id=?", role, time.Now().UTC(), id)
+	if err != nil {
 		return err
+	}
+	// Promoting to admin skips the lookup above, so an unknown id shows up
+	// here as an update that touched nothing.
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return ErrUserNotFound
 	}
 	return tx.Commit()
 }

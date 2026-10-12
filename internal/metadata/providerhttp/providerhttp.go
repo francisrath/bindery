@@ -219,8 +219,11 @@ type Request struct {
 	// Redact flattens transport errors into their redacted text. Set it when
 	// the URL carries a credential: a *url.Error's message embeds the full
 	// URL, so the key would otherwise reach any log line that prints the
-	// error (#1144). It costs the error chain, so keyless providers leave it
-	// off and keep errors.Is(err, context.Canceled) working.
+	// error (#1144). It costs the error chain, so providers whose callers
+	// classify the failure (errors.Is(err, context.Canceled), or a
+	// *url.Error or net.Error through metadata.IsProviderUnavailable) leave it
+	// off. Without it the URL inside the error is still scrubbed of
+	// credentials, in place, so the chain survives.
 	Redact bool
 }
 
@@ -337,6 +340,11 @@ func transportErr(r Request, err error) error {
 	if r.Redact {
 		return errors.New(httpsec.RedactSecrets(err.Error()))
 	}
+	// Every provider's transport errors are scrubbed, not only those that set
+	// Redact: the *url.Error prints the request URL, and a credential in it
+	// would reach logs and any caller that relays the text. This scrubs the
+	// URL inside the error and keeps the chain.
+	err = httpsec.RedactURLError(err)
 	if r.Provider != "" {
 		return fmt.Errorf("%s request: %w", r.Provider, err)
 	}

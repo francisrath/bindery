@@ -24,7 +24,7 @@ interface Props {
 // failures so an auth error on localhost doesn't get a misleading hint.
 function isLoopbackConnFailure(host: string, error: string): boolean {
   const loopback = host === 'localhost' || host === '127.0.0.1' || host === '::1'
-  return loopback && /refused|timeout|timed out|unreachable|no route|EOF|connect/i.test(error)
+  return loopback && /refused|timeout|timed out|not responding|unreachable|no route|EOF|connect/i.test(error)
 }
 
 export default function ClientsTab({ clients, setClients }: Props) {

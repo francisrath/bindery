@@ -192,7 +192,7 @@ func (h *BookHandler) EnrichAudiobook(w http.ResponseWriter, r *http.Request) {
 		expectedUpdatedAt := book.UpdatedAtRaw
 		if err := h.meta.EnrichAudiobook(ctx, book); err != nil {
 			slog.Warn("audnex enrich failed", "bookId", book.ID, "error", err)
-			writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
+			writeUpstreamError(w, err)
 			return
 		}
 		var updated bool
@@ -1251,7 +1251,7 @@ func (h *BookHandler) Rebind(w http.ResponseWriter, r *http.Request) {
 	upstream, err := h.lookup.GetBookFromProvider(r.Context(), req.Provider, req.ForeignID)
 	if err != nil {
 		slog.Warn("rebind: upstream fetch failed", "bookId", book.ID, "provider", req.Provider, "foreignId", req.ForeignID, "error", err)
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
+		writeUpstreamError(w, err)
 		return
 	}
 	if upstream == nil {

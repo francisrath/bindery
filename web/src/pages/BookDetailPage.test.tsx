@@ -1466,6 +1466,30 @@ describe('BookDetailPage metadata source (#1707)', () => {
     expect(within(list).getByText('hc:12345')).toBeInTheDocument()
   })
 
+  // #3144: BnF's Licence Ouverte asks for the source and the date.
+  it('credits the BnF with the date its record was retrieved', async () => {
+    vi.mocked(api.getBook).mockResolvedValue(
+      makeBook({
+        foreignBookId: 'bnf:cb48780493c', metadataProvider: 'bnf',
+        createdAt: '2026-10-02T09:00:00Z', lastMetadataRefreshAt: '2026-10-09T18:30:00Z',
+      }),
+    )
+    renderBookDetailPage()
+
+    const credit = await screen.findByTestId('bnf-source-credit')
+    expect(credit.textContent).toBe('Data from the BnF, Licence Ouverte / Open Licence 2.0, retrieved 2026-10-09')
+  })
+
+  it('shows no BnF credit on a book from another provider', async () => {
+    vi.mocked(api.getBook).mockResolvedValue(
+      makeBook({ foreignBookId: 'OL27448W', metadataProvider: 'openlibrary', createdAt: '2026-10-02T09:00:00Z' }),
+    )
+    renderBookDetailPage()
+
+    await screen.findByTestId('metadata-source-list')
+    expect(screen.queryByTestId('bnf-source-credit')).toBeNull()
+  })
+
   it('falls back to the foreign-id prefix when the provider column is empty', async () => {
     vi.mocked(api.getBook).mockResolvedValue(
       makeBook({ foreignBookId: 'dnb:1234567890', metadataProvider: '' }),

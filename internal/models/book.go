@@ -327,6 +327,8 @@ func BookProviderFromForeignID(foreignID string) string {
 		return "dnb"
 	case strings.HasPrefix(foreignID, "nb:"):
 		return "nb"
+	case strings.HasPrefix(foreignID, "bnf:"):
+		return "bnf"
 	case strings.HasPrefix(foreignID, "calibre:"):
 		return "calibre"
 	case strings.HasPrefix(foreignID, "abs:"):

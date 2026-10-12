@@ -23,7 +23,7 @@ import ClipboardManualFallback from '../components/ClipboardManualFallback'
 import { useClipboardCopy } from '../components/useClipboardCopy'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
 import { safeHref } from '../util/safeHref'
-import { metadataSourceLink, providerDisplayName, providerFromBookForeignId } from '../util/metadataSource'
+import { metadataRetrievedDate, metadataSourceLink, providerDisplayName, providerFromBookForeignId } from '../util/metadataSource'
 import FixMatchModal from '../components/FixMatchModal'
 import EditBookModal from '../components/EditBookModal'
 import { formatBytes } from '../util/format'
@@ -842,6 +842,7 @@ function BookDetailPageInner() {
     return rows
   })()
   const sourceLinks = identityRows.flatMap(row => row.link ? [row.link] : [])
+  const bnfRetrieved = metadataRetrievedDate(book)
 
   // Display truth is the file inventory, never the declared media type.
   const rows = fileRows(book)
@@ -1471,6 +1472,13 @@ function BookDetailPageInner() {
                   >
                     {t('common.viewOnSource', { source: row.link.label, defaultValue: 'View on {{source}} ↗' })}
                   </a>
+                )}
+                {/* BnF's Licence Ouverte asks for the source and the date
+                    wherever its data is shown (#3144). */}
+                {row.primary && row.provider === 'bnf' && bnfRetrieved && (
+                  <span className="text-xs text-slate-600 dark:text-zinc-500 basis-full" data-testid="bnf-source-credit">
+                    {t('common.bnfSourceCredit', { date: bnfRetrieved, defaultValue: 'Data from the BnF, Licence Ouverte / Open Licence 2.0, retrieved {{date}}' })}
+                  </span>
                 )}
               </li>
             ))}

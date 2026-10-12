@@ -15,6 +15,7 @@ func TestBookProviderFromForeignID(t *testing.T) {
 		"gb:xyz":                              "googlebooks",
 		"dnb:123":                             "dnb",
 		"nb:a0000000000000000000000000000001": "nb",
+		"bnf:cb48780493c":                     "bnf",
 		"":                                    "openlibrary",
 		"  hc:spaced  ":                       "hardcover",
 		"something-random":                    "openlibrary",

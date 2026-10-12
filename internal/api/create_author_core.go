@@ -123,7 +123,7 @@ func (h *AuthorHandler) writeCreateAuthorError(w http.ResponseWriter, r *http.Re
 	}
 	var lookup *createAuthorLookupError
 	if errors.As(err, &lookup) {
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": lookup.Err.Error()})
+		writeUpstreamError(w, lookup.Err)
 		return
 	}
 	for _, resp := range createAuthorErrorResponses {

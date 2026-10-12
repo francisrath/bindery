@@ -18,6 +18,10 @@ export interface Author {
   averageRating: number
   monitored: boolean
   metadataProvider?: string
+  createdAt?: string
+  // When this author's metadata was last refreshed from its provider; null
+  // until the first refresh. Shown with the BnF credit (#3144).
+  lastMetadataRefreshAt?: string | null
   monitorMode?: AuthorMonitorMode
   monitorLatestCount?: number
   // Policy for works discovered after the initial sync (#1348): 'all' follows

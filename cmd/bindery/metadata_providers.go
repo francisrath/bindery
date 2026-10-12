@@ -4,7 +4,35 @@ import (
 	"log/slog"
 
 	"github.com/vavallee/bindery/internal/api"
+	"github.com/vavallee/bindery/internal/metadata"
+	"github.com/vavallee/bindery/internal/metadata/bnf"
+	"github.com/vavallee/bindery/internal/metadata/nb"
 )
+
+// primaryMetadataProvider is the provider wired as primary for name, a value
+// resolveMetadataPrimaryProvider returned. The clients that are also
+// enrichers are passed in so primary and enricher share one instance; NB and
+// BnF are built here because they are never enrichers.
+func primaryMetadataProvider(name string, openLibrary, dnbClient, hardcover metadata.Provider) metadata.Provider {
+	switch name {
+	case "dnb":
+		return dnbClient
+	case "nb":
+		// Opt-in only: unlike the others, NB is never added as an enricher,
+		// so an install that did not choose it sends NB no traffic. NB
+		// publishes no rate limits for a fleet of independent installs.
+		return nb.New()
+	case "bnf":
+		// Opt-in only, like NB: never an enricher, so an install that did not
+		// choose it sends BnF no traffic. BnF publishes no rate limits; the
+		// client paces itself at one request a second (internal/metadata/bnf).
+		return bnf.New()
+	case "hardcover":
+		return hardcover
+	default:
+		return openLibrary
+	}
+}
 
 // metadataPrimaryProviderDefault is the provider used when
 // metadata.primary_provider is empty, unknown, or unusable.

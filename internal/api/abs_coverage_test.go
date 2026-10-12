@@ -368,12 +368,13 @@ func TestABSImportCoverage_RollbackValidatesRunID(t *testing.T) {
 		t.Fatalf("rollback status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
-	stub.rollbackErr = errors.New("run 12 is still running")
+	// An error the importer did not classify is a fault underneath it: generic 500.
+	stub.rollbackErr = errors.New("run 12: sql: database is locked")
 	for name, fn := range handlers {
 		rec := httptest.NewRecorder()
 		fn(rec, covSyChiReq(http.MethodPost, "/x", "", map[string]string{"runID": "12"}))
-		if rec.Code != http.StatusBadRequest || covSyErrorBody(t, rec) != "run 12 is still running" {
-			t.Fatalf("%s: status=%d body=%s, want 400 with importer error", name, rec.Code, rec.Body.String())
+		if rec.Code != http.StatusInternalServerError || covSyErrorBody(t, rec) != "internal server error" {
+			t.Fatalf("%s: status=%d body=%s, want a generic 500", name, rec.Code, rec.Body.String())
 		}
 	}
 }

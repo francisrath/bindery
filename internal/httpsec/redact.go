@@ -47,16 +47,16 @@ func IsSecretParam(name string) bool {
 
 // secretQueryParamRE matches a secret parameter and its value inside free
 // text, typically a URL embedded in an error string such as a *url.Error's
-// `Get "https://host/x?apikey=...": dial tcp ...`. The name must follow ?, &
-// or ; so only whole parameter names match, and the value stops at the next
-// parameter, whitespace, quote, fragment or angle bracket so the rest of the
-// message survives.
+// `Get "https://host/x?apikey=...": dial tcp ...`. The name must follow ?, &,
+// ; or # (an OAuth style fragment, #access_token=...) so only whole parameter
+// names match, and the value stops at the next parameter, whitespace, quote,
+// fragment or angle bracket so the rest of the message survives.
 var secretQueryParamRE = func() *regexp.Regexp {
 	quoted := make([]string, len(secretParamNames))
 	for i, n := range secretParamNames {
 		quoted[i] = regexp.QuoteMeta(n)
 	}
-	return regexp.MustCompile(`(?i)([?&;](?:` + strings.Join(quoted, "|") + `)=)[^&;\s"'#<>]*`)
+	return regexp.MustCompile(`(?i)([?&;#](?:` + strings.Join(quoted, "|") + `)=)[^&;\s"'#<>]*`)
 }()
 
 // secretPathPatterns match webhook URL shapes that carry the credential in the

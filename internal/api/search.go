@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -153,8 +154,30 @@ func NewSearchHandler(meta *metadata.Aggregator, books *db.BookRepo, authors *db
 func writeUpstreamError(w http.ResponseWriter, err error) {
 	slog.Warn("metadata provider request failed", "error", err)
 	writeJSON(w, http.StatusBadGateway, map[string]string{
-		"error": "metadata provider unavailable",
+		"error": upstreamErrorMessage(err),
 	})
+}
+
+// upstreamErrorMessage is the client-facing text for a metadata failure. It is
+// generic, except for a provider hold (a daily quota or a rejected token): that
+// is Bindery's own state, not the provider's words, and the user needs it to
+// know the call will keep failing until the reset time or a new token. The
+// token case is rebuilt here rather than relayed, since its Error() carries the
+// provider's answer.
+func upstreamErrorMessage(err error) string {
+	var daily *metadata.DailyQuotaError
+	if errors.As(err, &daily) {
+		return daily.Error()
+	}
+	var rejected *metadata.TokenRejectedError
+	if errors.As(err, &rejected) {
+		provider := rejected.Provider
+		if provider == "" {
+			provider = "the metadata provider"
+		}
+		return provider + " rejected the API token; requests are paused until the token is changed in Settings"
+	}
+	return "metadata provider unavailable"
 }
 
 func (h *SearchHandler) SearchAuthors(w http.ResponseWriter, r *http.Request) {

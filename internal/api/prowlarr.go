@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"time"
@@ -221,13 +222,17 @@ func (h *ProwlarrHandler) Test(w http.ResponseWriter, r *http.Request) {
 	}
 	p, err := h.instances.GetByID(r.Context(), id)
 	if err != nil || p == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		writeNotFoundOrServerError(w, r, err, p != nil)
 		return
 	}
 	client := h.newClient(r.Context(), p.URL, p.APIKey)
 	version, err := client.Test(r.Context())
 	if err != nil {
-		writeJSON(w, http.StatusOK, map[string]string{"ok": "false", "error": err.Error()})
+		// Stays a 200 with ok "false": that is the documented shape of this
+		// test endpoint, and the web app reads the reason from the body. The
+		// reason is the first line of what Prowlarr said, redacted and capped.
+		slog.Warn("prowlarr test failed", "id", id, "error", err)
+		writeJSON(w, http.StatusOK, map[string]string{"ok": "false", "error": upstreamDetail(err.Error())})
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"ok": "true", "version": version})
@@ -241,7 +246,7 @@ func (h *ProwlarrHandler) Sync(w http.ResponseWriter, r *http.Request) {
 	}
 	p, err := h.instances.GetByID(r.Context(), id)
 	if err != nil || p == nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		writeNotFoundOrServerError(w, r, err, p != nil)
 		return
 	}
 
@@ -253,7 +258,7 @@ func (h *ProwlarrHandler) Sync(w http.ResponseWriter, r *http.Request) {
 
 	result, err := syncer.Sync(ctx, id)
 	if err != nil {
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": err.Error()})
+		writeUpstreamDetail(w, r, http.StatusBadGateway, err.Error(), err)
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{

@@ -307,6 +307,28 @@ describe('AuthorDetailPage', () => {
     expect(api.searchAuthorWanted).not.toHaveBeenCalled()
   })
 
+  // #3144: BnF's Licence Ouverte asks for the source and the date.
+  it('credits the BnF with the date of the last metadata refresh for a BnF author', async () => {
+    renderAuthorDetailPage([], 'grid', {
+      foreignAuthorId: 'bnf:author:11885918',
+      authorName: 'Lewis Carroll',
+      sortName: 'Carroll, Lewis',
+      metadataProvider: 'bnf',
+      createdAt: '2026-10-01T08:00:00Z',
+      lastMetadataRefreshAt: '2026-10-10T07:00:00Z',
+    })
+
+    const credit = await screen.findByTestId('bnf-source-credit')
+    expect(credit.textContent).toContain('BnF')
+    expect(credit.textContent).toContain('2026-10-10')
+  })
+
+  it('shows no BnF credit for an author from another provider', async () => {
+    renderAuthorDetailPage([], 'grid', { createdAt: '2026-10-01T08:00:00Z' })
+    await screen.findByRole('heading', { level: 2 })
+    expect(screen.queryByTestId('bnf-source-credit')).toBeNull()
+  })
+
   it('shows link metadata for unlinked authors', async () => {
     renderAuthorDetailPage([], 'grid', {
       foreignAuthorId: 'abs:author:library:emilia-jae',

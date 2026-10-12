@@ -395,8 +395,9 @@ func TestDownloadClientTestConfig_Unreachable(t *testing.T) {
 	rec := httptest.NewRecorder()
 	body := `{"name":"qBit","type":"qbittorrent","host":"` + host + `","port":` + strconv.Itoa(port) + `,"username":"u","password":"p","enabled":true}`
 	h.TestConfig(rec, httptest.NewRequest(http.MethodPost, "/downloadclient/test", bytes.NewBufferString(body)))
-	if rec.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for unreachable client, got %d: %s", rec.Code, rec.Body.String())
+	// An unreachable client is the far side being down, not a bad request: 502.
+	if rec.Code != http.StatusBadGateway {
+		t.Fatalf("expected 502 for unreachable client, got %d: %s", rec.Code, rec.Body.String())
 	}
 	var out struct {
 		Error string `json:"error"`

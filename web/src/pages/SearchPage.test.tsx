@@ -106,7 +106,7 @@ describe('SearchPage no-download-client nudge', () => {
   it('shows the contextual setup nudge when a grab fails with the no-client error', async () => {
     const grabButton = await searchAndGetGrabButton()
     vi.mocked(api.grab).mockRejectedValue(
-      new ApiError(400, { error: 'no enabled usenet download client configured — add a download client' }, 'Bad Request'),
+      new ApiError(400, { error: 'no enabled usenet download client configured — add a download client', code: 'no_download_client' }, 'Bad Request'),
     )
 
     fireEvent.click(grabButton)

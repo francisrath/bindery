@@ -494,7 +494,7 @@ func (h *AdoptionHandler) writeAdoptionError(w http.ResponseWriter, r *http.Requ
 	}
 	var lookup *addBookLookupError
 	if errors.As(err, &lookup) {
-		writeJSON(w, http.StatusBadGateway, map[string]string{"error": lookup.Err.Error()})
+		writeUpstreamError(w, lookup.Err)
 		return
 	}
 	for _, resp := range addBookErrorResponses {

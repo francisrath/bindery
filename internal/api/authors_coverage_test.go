@@ -447,7 +447,7 @@ func TestAuthorRelinkUpstreamCoverage(t *testing.T) {
 		}, want: http.StatusConflict, wantMsg: "author is already linked to upstream metadata"},
 		{name: "no aggregator", want: http.StatusFailedDependency},
 		{name: "no match", meta: primary(&covAuSearchProvider{}), want: http.StatusConflict, wantMsg: "no confident upstream author match found"},
-		{name: "provider error", meta: primary(&covAuSearchProvider{searchErr: errors.New("boom")}), want: http.StatusBadGateway, wantMsg: "boom"},
+		{name: "provider error", meta: primary(&covAuSearchProvider{searchErr: errors.New("boom")}), want: http.StatusBadGateway, wantMsg: "metadata provider unavailable"},
 		{name: "primary down, enricher match", meta: func() *metadata.Aggregator {
 			return metadata.NewAggregator(
 				&covAuSearchProvider{stubMetaProvider: stubMetaProvider{name: "openlibrary"}, searchErr: errors.New("ol down")},
@@ -456,7 +456,7 @@ func TestAuthorRelinkUpstreamCoverage(t *testing.T) {
 		}, want: http.StatusServiceUnavailable},
 		{name: "matched but upstream record gone", meta: primary(&covAuSearchProvider{results: []models.Author{jay}}), want: http.StatusConflict, wantMsg: "no confident upstream author match found"},
 		{name: "explicit id not found", meta: primary(&covAuSearchProvider{}), body: `{"foreignAuthorId":"OL-NOPE"}`, want: http.StatusConflict, wantMsg: "no confident upstream author match found"},
-		{name: "explicit id lookup error", meta: primary(&covAuSearchProvider{getErr: errors.New("get failed")}), body: `{"foreignAuthorId":"OL-NOPE"}`, want: http.StatusBadGateway, wantMsg: "get failed"},
+		{name: "explicit id lookup error", meta: primary(&covAuSearchProvider{getErr: errors.New("get failed")}), body: `{"foreignAuthorId":"OL-NOPE"}`, want: http.StatusBadGateway, wantMsg: "metadata provider unavailable"},
 		{name: "upstream name already a local author", meta: primary(&covAuSearchProvider{byID: map[string]*models.Author{"OL-BOB": {ForeignID: "OL-BOB", Name: "Bob Writer"}}}),
 			body: `{"foreignAuthorId":"OL-BOB"}`, want: http.StatusConflict, wantMsg: "author name already resolves to an existing author — confirm merge"},
 		{name: "upstream id already local", meta: primary(&covAuSearchProvider{byID: map[string]*models.Author{"OL-BOB-A": {ForeignID: "OL-BOB-A", Name: "Robert Writer"}}}),
@@ -543,7 +543,7 @@ func TestAuthorRelinkCandidatesCoverage(t *testing.T) {
 		t.Fatalf("no aggregator: %d %s", rec.Code, rec.Body.String())
 	}
 	failing := metadata.NewAggregator(&covAuSearchProvider{searchErr: errors.New("search down")})
-	if rec := call(covAuHandler(env, failing), covAuID(env.aliceA.ID), env.alice); rec.Code != http.StatusBadGateway || !strings.Contains(covAuErrorBody(t, rec), "search down") {
+	if rec := call(covAuHandler(env, failing), covAuID(env.aliceA.ID), env.alice); rec.Code != http.StatusBadGateway || covAuErrorBody(t, rec) != "metadata provider unavailable" {
 		t.Fatalf("search error: %d %s", rec.Code, rec.Body.String())
 	}
 	empty := metadata.NewAggregator(&covAuSearchProvider{})
