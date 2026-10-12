@@ -1541,6 +1541,12 @@ describe('BookDetailPage metadata source (#1707)', () => {
     expect(screen.getByLabelText('Change cover')).toBeInTheDocument()
   })
 
+  it('gives the cover upload control a touch sized hit area', async () => {
+    renderBookDetailPage()
+    const input = await screen.findByLabelText('Upload cover')
+    expect(input.closest('label')).toHaveClass('touch-target')
+  })
+
   it('says why a cover upload was refused', async () => {
     vi.mocked(api.uploadBookCover).mockRejectedValue(new Error('send a JPEG, PNG, WebP or GIF image'))
     renderBookDetailPage()

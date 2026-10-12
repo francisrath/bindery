@@ -919,7 +919,7 @@ function BookDetailPageInner() {
               <CoverPlaceholder id={book.id} title={book.title} className="aspect-[2/3] rounded-lg" />
             }
           />
-          <label className={`mt-2 block text-center text-xs text-accent-text hover:underline cursor-pointer has-[:focus-visible]:underline ${uploadingCover ? 'opacity-50 pointer-events-none' : ''}`}>
+          <label className={`touch-target mt-2 block text-center text-xs text-accent-text hover:underline cursor-pointer has-[:focus-visible]:underline ${uploadingCover ? 'opacity-50 pointer-events-none' : ''}`}>
             {uploadingCover
               ? t('bookDetail.cover.uploading', 'Uploading…')
               : book.imageUrl ? t('bookDetail.cover.change', 'Change cover') : t('bookDetail.cover.upload', 'Upload cover')}

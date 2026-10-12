@@ -832,15 +832,6 @@ like everything else on that tab that names server paths.
   row. **Without an API token (Settings → API Keys) Hardcover is silently
   skipped everywhere.** The free token is the single highest-value config for
   metadata quality.
-- **Covers from your own files.** When no metadata provider has a cover for
-  a book, Bindery uses the art embedded in the file you import (M4B, MP3,
-  FLAC, EPUB), or a `cover.jpg` / `folder.jpg` in a multi-file audiobook's
-  folder. Books already in your library pick theirs up on the next library
-  scan. A provider's cover is never replaced, so this only fills blanks.
-- **Your own cover.** **Upload cover** (or **Change cover**) under a book's
-  cover sets it from a JPEG, PNG, WebP or GIF image of up to 10 MB. It
-  replaces whatever cover the book had, and a refresh keeps it, since
-  refresh only fills an empty cover.
 
   It can also be promoted to *primary*, which is worth doing if OpenLibrary
   refreshes bury your wanted list in translations and box sets. Hardcover's
@@ -874,6 +865,15 @@ like everything else on that tab that names server paths.
   to a small sample of its editions (and a cover in the sampled language) only
   for what that edition lacks. **Reconcile catalogue** treats a
   failed lookup as indeterminate rather than offering the row for removal.
+- **Covers from your own files.** When no metadata provider has a cover for
+  a book, Bindery uses the art embedded in the file you import (M4B, MP3,
+  FLAC, EPUB), or a `cover.jpg` / `folder.jpg` in a multi-file audiobook's
+  folder. Books already in your library pick theirs up on the next library
+  scan. A provider's cover is never replaced, so this only fills blanks.
+- **Your own cover.** **Upload cover** (or **Change cover**) under a book's
+  cover sets it from a JPEG, PNG, WebP or GIF image of up to 10 MB. It
+  replaces whatever cover the book had, and a refresh keeps it, since
+  refresh only fills an empty cover.
 - **Google Books** (free API key) and **Audnexus/Audible** (audiobook
   narrator, duration, by ASIN) enrich further.
 
