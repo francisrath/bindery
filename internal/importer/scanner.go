@@ -608,8 +608,16 @@ func importSourcePresent(downloadPath string, explicitFiles []string) bool {
 	// Stat'd rather than run through importableSourceFile: a symlinked
 	// download root is an ordinary deployment shape, and discoverBookFiles
 	// decides what inside it is importable.
-	_, err := os.Stat(downloadPath)
-	return err == nil
+	if _, err := os.Stat(downloadPath); err != nil {
+		return false
+	}
+	// A release packed as a RAR set has nothing to import until an unpacker
+	// extracts it (#3203). Counted as present, every poll spent a retry and the
+	// download was blocked about 90 seconds after completing, before unpackerr
+	// (one minute start delay by default) had begun. As not present, it waits
+	// on the skip streak, up to importSkipLimit, and imports once the extracted
+	// files appear.
+	return archiveAwaitingExtraction(downloadPath) == ""
 }
 
 // importSkipState is one download's consecutive-skip streak, plus a snapshot of
@@ -675,6 +683,10 @@ func importContentMissingReason(savePath string) string {
 // skip streak runs out. It must not tell the user to wait: by the time it is
 // written, waiting is precisely what has already failed importSkipLimit times.
 func importSourceGoneReason(downloadPath string) string {
+	if archive := archiveAwaitingExtraction(downloadPath); archive != "" {
+		return fmt.Sprintf("this download holds only an archive (%s), and nothing extracted it in the %d checks Bindery waited. Bindery does not unpack archives: an unpacker such as unpackerr has to extract it into %s (see Storage and Hardlinks, RAR-packed torrent releases). Once the files are there, use Retry import on the Queue page.",
+			filepath.Base(archive), importSkipLimit, downloadPath)
+	}
 	return fmt.Sprintf("the download client still reports this download as complete, but none of its files are on this host — checked %d times at %s and found nothing to import. Either the files were moved or deleted after the download finished, or the client's paths do not map into Bindery (set PathRemap on the download client). Fix that and use Retry import on the Queue page, or grab the release again from search.",
 		importSkipLimit, downloadPath)
 }
@@ -905,6 +917,18 @@ func (s *Scanner) failImport(ctx context.Context, dl *models.Download, status mo
 		"title":   dl.Title,
 		"message": reason,
 	})
+}
+
+// blockTinyOnlyDownload blocks a download whose only ebook files are under
+// MinPlausibleEbookBytes (#3224). Retrying cannot change that, so it is blocked
+// with the override named, and the path is kept for manual import.
+func (s *Scanner) blockTinyOnlyDownload(ctx context.Context, dl *models.Download, downloadPath string) {
+	s.recordUnmatchedImportPath(ctx, dl.ID, downloadPath)
+	// importPending cannot go straight to blocked.
+	s.updateDownloadStatus(ctx, dl.ID, models.StateImporting)
+	s.failImport(ctx, dl, models.StateImportBlocked, fmt.Sprintf(
+		"nothing was imported: the only ebook files in %q are under %d bytes, too small to be a book. If one of them really is the book, use manual import",
+		downloadPath, MinPlausibleEbookBytes))
 }
 
 // recordUnmatchedImportPath persists where a completed download's files are so a
@@ -1568,7 +1592,14 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 	// callers that can't (or don't yet) supply a file list (SABnzbd/NZBGet
 	// per-job destDir, plus the RPC-failure fallback path for torrent
 	// clients).
-	bookFiles := discoverBookFiles(downloadPath, explicitFiles)
+	//
+	// An ebook file under MinPlausibleEbookBytes is left out: a release's
+	// notes or link .txt is not a second format of the book (#3224). A manual
+	// import keeps every file, as it is the override for a book that small.
+	bookFiles, tooSmallFiles := discoverBookFilesSized(downloadPath, explicitFiles, !isManualImport(ctx))
+	for _, f := range tooSmallFiles {
+		slog.Info("skipping a file too small to be a book", "file", f, "minBytes", MinPlausibleEbookBytes)
+	}
 
 	if len(bookFiles) == 0 {
 		// Before failing, check whether the book is already in the library. This
@@ -1592,6 +1623,12 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 			}
 			return
 		}
+		// Everything the download held was too small to be a book. Retrying
+		// cannot change that, so block it and point at the override.
+		if len(tooSmallFiles) > 0 {
+			s.blockTinyOnlyDownload(ctx, dl, downloadPath)
+			return
+		}
 		// Distinguish "path doesn't exist on this host" from "path exists but has
 		// no recognised book files".
 		//
@@ -1609,6 +1646,16 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 				"path", downloadPath, "title", dl.Title)
 			s.failImport(ctx, dl, models.StateImportFailed,
 				fmt.Sprintf("nothing at %q on this host — the download may still be finishing (qBittorrent writes to its temp/incomplete directory first), the files may have been moved or deleted since, or Bindery and the download client may see different filesystem roots (set PathRemap on the download client)", downloadPath))
+			return
+		}
+		if archive := archiveAwaitingExtraction(downloadPath); archive != "" {
+			// A RAR-packed release (#3203). The retries that follow wait for an
+			// unpacker without spending attempts (importSourcePresent), and the
+			// message says what the download is waiting for.
+			slog.Info("download holds only an archive; waiting for it to be extracted",
+				"path", downloadPath, "archive", filepath.Base(archive))
+			s.failImport(ctx, dl, models.StateImportFailed,
+				fmt.Sprintf("waiting for %s to be extracted: this download holds only an archive, and Bindery does not unpack archives. An unpacker such as unpackerr has to extract it into %q; the import runs once the files are there.", filepath.Base(archive), downloadPath))
 			return
 		}
 		slog.Warn("no book files found in download", "path", downloadPath)
@@ -2008,7 +2055,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 						return s.renamer.AudiobookFileName(tmpl, author, book, seriesTitle, seriesNum, strings.TrimPrefix(ext, "."), index+1)
 					}
 					slog.Info("renaming audiobook files per template", "src", audiobookSource, "dst", destDir, "mode", flattenMode, "template", tmpl)
-					dirErr = flattenAudiobookDirNamed(importCtx, flattenMode, audiobookSource, destDir, namer)
+					dirErr = flattenAudiobookDirFiltered(importCtx, flattenMode, audiobookSource, destDir, namer, flattenSidecarSkip(mode))
 					if dirErr == nil && mode == "move" && importCtx.Err() == nil {
 						if rmErr := os.RemoveAll(audiobookSource); rmErr != nil {
 							slog.Warn("could not remove source after move-mode audiobook rename", "src", audiobookSource, "error", rmErr)
@@ -2034,7 +2081,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 						flattenMode = "copy"
 					}
 					slog.Info("flattening multi-disc audiobook", "src", audiobookSource, "dst", destDir, "mode", flattenMode)
-					dirErr = flattenAudiobookDir(importCtx, flattenMode, audiobookSource, destDir)
+					dirErr = flattenAudiobookDirFiltered(importCtx, flattenMode, audiobookSource, destDir, partName, flattenSidecarSkip(mode))
 					if dirErr == nil && mode == "move" && importCtx.Err() == nil {
 						if rmErr := os.RemoveAll(audiobookSource); rmErr != nil {
 							slog.Warn("flatten: could not remove source after move-mode flatten", "src", audiobookSource, "error", rmErr)
@@ -2318,7 +2365,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 	ebookRoot := s.effectiveLibraryDir(ctx, author)
 	ebookMode := s.resolveImportMode(configuredMode, downloadPath, ebookRoot)
 	calibreQueued := false
-	for _, srcFile := range bookFiles {
+	for _, srcFile := range orderByBookTitle(book, bookFiles) {
 		if book == nil {
 			// Try to match from filename
 			parsed := ParseFilename(srcFile)

@@ -98,6 +98,10 @@ If the files never appear, it does not wait forever: after about 30 minutes of f
 
 **Stuck at `grabbed` rather than `importFailed`?** On Bindery 1.35.x and earlier, a qBittorrent download the client called complete while sending no content path sat at `grabbed` forever, with the log repeating *will retry next cycle*. Upgrade: from 1.36.0 that case fails the import with the missing path message above, retries if the files turn up, and blocks once they never do.
 
+### "Waiting for … to be extracted"
+
+The download is a RAR-packed release: its folder holds an archive (`Title.part1.rar`, or `Title.rar` and `Title.r00`…) and no book file yet. Bindery does not unpack archives, so it waits, without spending import retries, for an unpacker such as unpackerr to extract the files into the download's folder, and imports them as soon as they appear. If nothing extracts it within about 30 minutes, the download is blocked with *this download holds only an archive*. Set up an unpacker as described in [Storage and Hardlinks, RAR-packed torrent releases](Storage-And-Hardlinks-Wiki.md#rar-packed-torrent-releases), or extract the archive into the folder yourself, then use **Retry import**.
+
 ### "Already grabbed" when re-grabbing a release
 
 Clicking **Grab** on a release you already have a Queue entry for is refused with *already grabbed*, and the message now names the state that entry is in.
@@ -425,6 +429,19 @@ Two more settings on the same profile drop books by looking at the work's **edit
 Both read the full edition list. Older versions fetched only the first 50 editions of an OpenLibrary work, in an order OpenLibrary does not sort, so a heavily reprinted title whose ISBN or page count happened to sit further down the list was skipped even though it qualified. If either setting is on and books went missing that way, refresh the author again after upgrading.
 
 The skip counts are also in the log (`Settings → Logs`): the `author books synced` line carries `added`, `matched`, `failed`, `total` and one counter per filter, including `skipped_language`, `skipped_junk`, `skipped_media_type`, `skipped_part_books`, `skipped_missing_date`, `skipped_min_pages` and `skipped_missing_isbn`. It is logged at WARN when a filter or a failed write dropped something, and at Info when the only skips were ones you configured on purpose (`skipped_excluded`, `skipped_not_accepted`). Per-book detail (which title, which language) is at DEBUG.
+
+## Ebooks lost their file extension after Rename files
+
+A template without a dot before `{ext}`, such as `{Title}{ext}`, renames
+`Title.epub` to `Titleepub`. Fix the ebook template (Settings → General → File
+Naming) to `{Title}.{ext}`, then run Rename files again. Bindery gets the
+extension back from the file's rename history or its contents and moves the
+file to the corrected name. A file where neither answers is listed as Error and
+left alone; rename it by hand or use the `from` path in its Rename history row.
+
+Folders named `Title.` (and `Title. (2)`) come from `{ext}` in the audiobook
+folder template, which has no extension to fill in. Remove it; Bindery now
+refuses to save that.
 
 ## A book shows a file path that no longer exists
 
