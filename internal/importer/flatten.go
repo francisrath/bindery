@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -247,7 +248,15 @@ func flattenAudiobookDirFiltered(ctx context.Context, mode, srcRoot, destDir str
 	// source root are considered; nested disc-folder sidecars are skipped to
 	// avoid name collisions and noise. Failures here are non-fatal — the audio
 	// is already placed and a missing cover must not block the import.
-	carryRootSidecars(ctx, mode, srcRoot, destDir, reserved, skip)
+	//
+	// The one exception is an archive volume (#3203): it only gets here when
+	// skip let it through, which is a move, and a move deletes the source
+	// folder afterwards. Failing to carry a volume then fails the flatten, so
+	// the source is kept rather than destroying the archive.
+	if err := carryRootSidecars(ctx, mode, srcRoot, destDir, reserved, skip); err != nil {
+		_ = os.RemoveAll(destDir)
+		return err
+	}
 	return nil
 }
 
@@ -265,11 +274,14 @@ func placeFlattened(ctx context.Context, mode, src, dst string) error {
 // source root into destDir, skipping symlinks, directories, audio files
 // (already flattened) and any name already reserved by a generated Part. It is
 // best-effort: individual failures are swallowed so a missing sidecar never
-// fails an otherwise-successful audio import.
-func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reserved map[string]struct{}, skip func(string) bool) {
+// fails an otherwise-successful audio import. Archive volumes are the
+// exception: skip lets them through only for a move, which deletes the source
+// afterwards, so a volume that cannot be carried (or whose name is already
+// taken by a different file) is returned as an error.
+func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reserved map[string]struct{}, skip func(string) bool) error {
 	entries, err := os.ReadDir(srcRoot)
 	if err != nil {
-		return
+		return nil
 	}
 	for _, e := range entries {
 		if e.IsDir() || e.Type()&os.ModeSymlink != 0 || !e.Type().IsRegular() {
@@ -286,16 +298,39 @@ func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reser
 			continue
 		}
 		dst := filepath.Join(destDir, name)
-		if _, statErr := os.Stat(dst); statErr == nil {
-			continue // never overwrite an existing destination file
-		}
 		src := filepath.Join(srcRoot, name)
+		if _, statErr := os.Stat(dst); statErr == nil {
+			// Never overwrite an existing destination file. A volume that is
+			// already there as an identical copy is carried; a different file
+			// under its name would leave the volume only in the source.
+			if isArchivePart(name) && !sameFileContent(src, dst) {
+				return fmt.Errorf("carry archive volume %q: a different file is already at the destination", name)
+			}
+			continue
+		}
+		var cerr error
 		if mode == "hardlink" {
-			_ = HardlinkFile(src, dst)
+			cerr = HardlinkFile(src, dst)
 		} else {
-			_ = CopyFileCtx(ctx, src, dst)
+			cerr = CopyFileCtx(ctx, src, dst)
+		}
+		if cerr != nil && isArchivePart(name) {
+			return fmt.Errorf("carry archive volume %q: %w", name, cerr)
 		}
 	}
+	return nil
+}
+
+// sameFileContent reports whether a and b are readable and byte for byte equal.
+func sameFileContent(a, b string) bool {
+	ai, errA := os.Stat(a)
+	bi, errB := os.Stat(b)
+	if errA != nil || errB != nil || ai.Size() != bi.Size() {
+		return false
+	}
+	da, errA := os.ReadFile(a)
+	db, errB := os.ReadFile(b)
+	return errA == nil && errB == nil && bytes.Equal(da, db)
 }
 
 // flattenSidecarSkip picks the root files a flatten leaves behind for the

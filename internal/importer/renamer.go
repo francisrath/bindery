@@ -45,9 +45,11 @@ var archiveVolumeRe = regexp.MustCompile(`(?i)\.(rar|[rs][0-9]{2})$`)
 // isArchivePart reports whether name is a volume of a RAR set. Bindery does
 // not unpack archives (#3203): a release packed as one waits for an unpacker
 // such as unpackerr to extract it into the download's folder, and once it has,
-// the volumes are left out of the library like the other download artifacts
-// (and stay with the client, still seeding). The name is all it looks at; no
-// archive is opened.
+// the volumes are kept out of the library by copy and hardlink placements, like
+// the other download artifacts, and stay with the client. A move of a whole
+// folder carries them along instead (a moved torrent cannot seed anyway), and a
+// per-file move leaves them in the download folder. The name is all it looks
+// at; no archive is opened.
 func isArchivePart(name string) bool {
 	return archiveVolumeRe.MatchString(name)
 }
@@ -92,8 +94,9 @@ func archiveAwaitingExtraction(dir string) string {
 
 // isReceiptOrRepairFile reports whether name has one of the receipt or repair
 // extensions in downloadArtifactExts. Unlike isDownloadArtifact it does not
-// count archive volumes: those are kept out of the library at placement time,
-// but a sweep of a folder that was renamed whole must never delete them.
+// count archive volumes: copy and hardlink placements keep those out of the
+// library, but a move takes the folder whole, so a sweep of it must never
+// delete them.
 func isReceiptOrRepairFile(name string) bool {
 	return downloadArtifactExts[strings.ToLower(filepath.Ext(name))]
 }
@@ -101,8 +104,8 @@ func isReceiptOrRepairFile(name string) bool {
 // removeDownloadArtifacts deletes receipt and repair files (not archive
 // volumes, see isReceiptOrRepairFile) anywhere under dir. Used after MoveDir's
 // same-filesystem rename fast path, which moves the job folder wholesale (a
-// rename cannot filter); the copy-based paths skip the artifacts at placement
-// time instead. Best-effort: a receipt that cannot be removed is not worth
+// rename cannot filter); the copy-based paths skip the receipt and repair files
+// at placement time instead. Archive volumes are never removed. Best-effort: a receipt that cannot be removed is not worth
 // failing an otherwise-successful import over.
 func removeDownloadArtifacts(dir string) {
 	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {

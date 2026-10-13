@@ -400,3 +400,70 @@ func TestMoveDir_FailedCopyKeepsTheSource(t *testing.T) {
 		t.Errorf("a half-copied destination was left behind (err=%v)", err)
 	}
 }
+
+// A move-mode flatten deletes its source once the copy is done. A root level
+// archive volume that cannot be read must therefore fail the flatten and leave
+// the source whole, instead of being swallowed like an unreadable cover and
+// destroyed with the folder. Copy mode keeps the source anyway, never carries
+// the volume, and so is not affected.
+func TestFlatten_UnreadableArchiveVolumeKeepsTheSource(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: permission bits do not deny access")
+	}
+	for _, tc := range []struct {
+		name, mode, key, value string
+		wantFailure            bool
+	}{
+		{"multi-disc move", "move", "import.audiobook.flatten_multi_disc", "true", true},
+		{"naming template move", "move", "naming.audiobook_file_template", "{Title} - Part {Part:3}.{ext}", true},
+		{"multi-disc copy", "copy", "import.audiobook.flatten_multi_disc", "true", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s, dl, dlRepo, settings, ctx := multiDiscFixture(t, tc.mode)
+			if err := settings.Set(ctx, tc.key, tc.value); err != nil {
+				t.Fatal(err)
+			}
+			src := filepath.Join(t.TempDir(), "Fjellvinden")
+			var audio []string
+			for _, name := range []string{"CD1/01 Spor 01.mp3", "CD2/01 Spor 01.mp3", "Fjellvinden.part1.rar", "cover.jpg"} {
+				p := filepath.Join(src, name)
+				if err := os.MkdirAll(filepath.Dir(p), 0o750); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(p, []byte(name), 0o644); err != nil {
+					t.Fatal(err)
+				}
+				if filepath.Ext(name) == ".mp3" {
+					audio = append(audio, p)
+				}
+			}
+			sort.Strings(audio)
+			locked := filepath.Join(src, "Fjellvinden.part1.rar")
+			if err := os.Chmod(locked, 0o000); err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { _ = os.Chmod(locked, 0o600) })
+
+			s.tryImportInternal(withTorrentOwnFolder(ctx, true), dl, src, "", "", "", nil, audio)
+
+			got, _ := dlRepo.GetByID(ctx, dl.ID)
+			if tc.wantFailure {
+				if got.Status == models.StateImported {
+					t.Errorf("imported although the archive volume could not be carried")
+				}
+				for _, name := range []string{"CD1/01 Spor 01.mp3", "CD2/01 Spor 01.mp3", "Fjellvinden.part1.rar", "cover.jpg"} {
+					if _, err := os.Lstat(filepath.Join(src, name)); err != nil {
+						t.Errorf("%s gone from the source after a failed move flatten: %v", name, err)
+					}
+				}
+				return
+			}
+			if got.Status != models.StateImported {
+				t.Fatalf("status = %q (%s), want imported", got.Status, got.ErrorMessage)
+			}
+			if _, err := os.Lstat(locked); err != nil {
+				t.Errorf("copy mode touched the volume in the source: %v", err)
+			}
+		})
+	}
+}

@@ -33,7 +33,7 @@ Correcting matches works the way you are used to: Bindery's **Fix match** defaul
 
 ## If you ran unpackerr for Readarr
 
-Bindery does not talk to unpackerr the way Readarr did. Point an unpackerr **folder** watch at your torrent download folder instead, with `move_back = true` and `delete_original = false`; see [RAR-packed torrent releases](Storage-And-Hardlinks-Wiki.md#rar-packed-torrent-releases).
+Bindery does not talk to unpackerr the way Readarr did. Point an unpackerr **folder** watch at your torrent download folder instead, with `move_back = true` and `delete_original = false` (the torrent only keeps seeding in copy or hardlink mode); see [RAR-packed torrent releases](Storage-And-Hardlinks-Wiki.md#rar-packed-torrent-releases).
 
 ## Importing your Goodreads library (CSV)
 
