@@ -16,6 +16,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/vavallee/bindery/internal/db"
+	"github.com/vavallee/bindery/internal/importer/formatsniff"
 	"github.com/vavallee/bindery/internal/models"
 	"github.com/vavallee/bindery/internal/textutil"
 )
@@ -215,12 +216,81 @@ func ResolveNamingTemplates(ctx context.Context, settings *db.SettingsRepo) (ebo
 	return ebook, get("naming_template_audiobook")
 }
 
+// ErrEbookNoExtension is returned by DestPath when the destination it would
+// propose carries no file extension: the source has none that can be recovered,
+// or the template does not put a "." in front of {ext}. Writing that name would
+// strand the file where Audiobookshelf and e-readers, which dispatch on the
+// extension, stop treating it as a book (#3217).
+var ErrEbookNoExtension = errors.New("the destination would have no file extension: check that the ebook naming template has a dot before {ext}, as in {Title}.{ext}")
+
+// ebookExtensionFormats are the formatsniff tokens an ebook extension may be
+// recovered as from the file's content. Audio tokens are excluded so a stray
+// audio signature never renames an ebook to .mp3.
+var ebookExtensionFormats = map[string]bool{
+	"azw":                  true,
+	formatsniff.FormatEPUB: true, formatsniff.FormatMOBI: true, formatsniff.FormatPDF: true,
+	formatsniff.FormatDJVU: true, formatsniff.FormatCBZ: true, formatsniff.FormatCBR: true,
+	formatsniff.FormatAZW3: true, formatsniff.FormatFB2: true, formatsniff.FormatTXT: true,
+	formatsniff.FormatRTF: true,
+}
+
+// sniffTimeout bounds how long a content sniff may take. formatsniff opens the
+// path to read its first bytes, and opening a FIFO blocks until a writer shows
+// up, so a tracked path that is a FIFO would otherwise hang a Reorganize preview
+// (#3217). A file that does not answer in time is treated as unreadable, which
+// leaves it without a recovered extension. The abandoned open stays parked on
+// its own goroutine until the FIFO gets a writer, a cost paid only by a tracked
+// book file that is a FIFO.
+const sniffTimeout = time.Second
+
+// sniffContent is formatsniff.DetectContent with a deadline.
+func sniffContent(path string) string {
+	done := make(chan string, 1)
+	go func() { done <- formatsniff.DetectContent(path) }()
+	select {
+	case format := <-done:
+		return format
+	case <-time.After(sniffTimeout):
+		return ""
+	}
+}
+
+// ebookExt returns the extension (no dot) DestPath will use for srcPath: the
+// path's own extension, or, when it has none, the format read from the file's
+// content. Empty when neither answers.
+func ebookExt(srcPath string) string {
+	if ext := strings.TrimPrefix(filepath.Ext(srcPath), "."); ext != "" {
+		return ext
+	}
+	if format := sniffContent(srcPath); ebookExtensionFormats[format] {
+		return format
+	}
+	return ""
+}
+
 // DestPath computes the destination path for an ebook file.
 // series and seriesNumber are the book's primary series title and position
 // (empty strings for standalone books without a series).
+//
+// The extension comes from srcPath, or from the file's content when srcPath has
+// none. A destination that would end up without an extension is refused with
+// ErrEbookNoExtension rather than returned (#3217).
 func (r *Renamer) DestPath(rootFolder string, author *models.Author, book *models.Book, series, seriesNumber, srcPath string) (string, error) {
-	ext := strings.TrimPrefix(filepath.Ext(srcPath), ".")
+	ext := ebookExt(srcPath)
 	dest := filepath.Join(rootFolder, r.apply(r.template, author, book, series, seriesNumber, ext))
+	if ext == "" || len(filepath.Ext(dest)) < 2 {
+		return "", ErrEbookNoExtension
+	}
+	if templateHasToken(r.template, "ext") {
+		if !strings.HasSuffix(strings.ToLower(dest), "."+strings.ToLower(ext)) {
+			return "", ErrEbookNoExtension
+		}
+	} else if strings.ContainsAny(filepath.Ext(dest), " \t") {
+		// A template with no {ext} must still end in a real extension. A space in
+		// what filepath.Ext found means a dot inside the title ("Dr. Book"), not
+		// an extension.
+		return "", ErrEbookNoExtension
+	}
 	return ensureContained(dest, rootFolder)
 }
 
@@ -290,15 +360,42 @@ func audiobookPartIsConditional(template string) bool {
 // validator uses it so the conditional form a single-file audiobook collapses
 // (#2900) can be saved; a plain substring test for "{Part" rejected it.
 func AudiobookTemplateHasPart(template string) bool {
+	return templateHasToken(template, "Part")
+}
+
+// templateHasToken reports whether any {...} group of template references the
+// named token, as a group of its own or inside a conditional group.
+func templateHasToken(template, name string) bool {
 	for _, g := range templateGroupRe.FindAllStringSubmatch(template, -1) {
 		if m := simpleGroupRe.FindStringSubmatch(g[1]); m != nil && !widthThenLiteralRe.MatchString(m[2]) {
-			if m[1] == "Part" {
+			if m[1] == name {
 				return true
 			}
 			continue
 		}
 		for _, w := range groupWordRe.FindAllStringSubmatch(g[1], -1) {
-			if w[1] == "Part" {
+			if w[1] == name {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// AudiobookTemplateUsesExt reports whether an audiobook folder template carries
+// an {ext} token. Audiobook folders render {ext} empty, so "{Title}.{ext}"
+// makes a folder named "Title." (#3217).
+func AudiobookTemplateUsesExt(template string) bool {
+	return templateHasToken(template, "ext")
+}
+
+// EbookTemplateExtNeedsDot reports whether an ebook template has a bare {ext}
+// group with no "." directly before it, as in "{Title}{ext}". That renders
+// "Titleepub", a file with no extension (#3217).
+func EbookTemplateExtNeedsDot(template string) bool {
+	for _, seg := range strings.Split(template, "/") {
+		for _, loc := range templateGroupRe.FindAllStringSubmatchIndex(seg, -1) {
+			if seg[loc[2]:loc[3]] == "ext" && !strings.HasSuffix(seg[:loc[0]], ".") {
 				return true
 			}
 		}
@@ -321,7 +418,7 @@ func (r *Renamer) AudiobookDestDir(rootFolder string, author *models.Author, boo
 // safe to filepath.Join under the drop folder. filepath.Base is defensive
 // insurance against a sanitizer change ever letting a separator through.
 func (r *Renamer) DropEbookName(author *models.Author, book *models.Book, srcPath string) string {
-	ext := strings.TrimPrefix(filepath.Ext(srcPath), ".")
+	ext := ebookExt(srcPath)
 	return filepath.Base(r.apply("{Title} - {Author}.{ext}", author, book, "", "", ext))
 }
 

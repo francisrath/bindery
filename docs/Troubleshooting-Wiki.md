@@ -430,6 +430,19 @@ Both read the full edition list. Older versions fetched only the first 50 editio
 
 The skip counts are also in the log (`Settings → Logs`): the `author books synced` line carries `added`, `matched`, `failed`, `total` and one counter per filter, including `skipped_language`, `skipped_junk`, `skipped_media_type`, `skipped_part_books`, `skipped_missing_date`, `skipped_min_pages` and `skipped_missing_isbn`. It is logged at WARN when a filter or a failed write dropped something, and at Info when the only skips were ones you configured on purpose (`skipped_excluded`, `skipped_not_accepted`). Per-book detail (which title, which language) is at DEBUG.
 
+## Ebooks lost their file extension after Rename files
+
+A template without a dot before `{ext}`, such as `{Title}{ext}`, renames
+`Title.epub` to `Titleepub`. Fix the ebook template (Settings → General → File
+Naming) to `{Title}.{ext}`, then run Rename files again. Bindery gets the
+extension back from the file's rename history or its contents and moves the
+file to the corrected name. A file where neither answers is listed as Error and
+left alone; rename it by hand or use the `from` path in its Rename history row.
+
+Folders named `Title.` (and `Title. (2)`) come from `{ext}` in the audiobook
+folder template, which has no extension to fill in. Remove it; Bindery now
+refuses to save that.
+
 ## A book shows a file path that no longer exists
 
 Symptom: you moved or renamed a book's file (or the folder holding it), scanned, and the book still shows the old path. It keeps saying **In Library**, download and delete act on a file that isn't there, and rescanning changes nothing.
