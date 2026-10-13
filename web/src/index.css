@@ -183,6 +183,20 @@ select:not([multiple]):not([size]):not(.bg-none) {
   }
 }
 
+/* Placeholder text in the secondary-text token (#3084). The forms plugin
+   gives every input and textarea a gray-500 placeholder, 3.9:1 on the light
+   fields and 3.1:1 on the dark ones, and a few search boxes overrode it with
+   slate-400 / zinc-600 (2.1:1 and 1.9:1). Placeholders here carry hints and
+   example values, so they are text that needs 4.5:1: fg-muted (slate-600 /
+   zinc-400) is the AA shade the app already uses for secondary text. html
+   in the selector outranks the plugin's input::placeholder. */
+@layer base {
+  html :is(input, textarea)::placeholder {
+    color: var(--fg-muted);
+    opacity: 1;
+  }
+}
+
 /* Native controls (select popups, date pickers, scrollbars) follow
    color-scheme, not the page colours, so the dark theme still opened white
    pickers. Tracks the .dark class rather than the OS setting because the

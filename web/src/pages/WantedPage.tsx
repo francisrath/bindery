@@ -289,7 +289,7 @@ export default function WantedPage() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder={t('wanted.searchPlaceholder')}
-        className="w-full mb-3 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-1.5 text-sm placeholder-slate-400 dark:placeholder-zinc-600"
+        className="w-full mb-3 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-1.5 text-sm"
       />
 
       {loading ? (

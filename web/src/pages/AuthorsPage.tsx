@@ -503,7 +503,7 @@ export default function AuthorsPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('authors.searchPlaceholder')}
-          className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm placeholder-slate-400 dark:placeholder-zinc-600"
+          className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm"
         />
       </div>
 
