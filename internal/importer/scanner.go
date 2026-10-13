@@ -2946,6 +2946,16 @@ func titleSigTokens(s string) []string {
 	return out
 }
 
+// titleTokenSet is the set of distinct titleSigTokens of s.
+func titleTokenSet(s string) map[string]bool {
+	toks := titleSigTokens(s)
+	set := make(map[string]bool, len(toks))
+	for _, w := range toks {
+		set[w] = true
+	}
+	return set
+}
+
 // titleMatch returns true when bookTitle and parsedTitle refer to the same work.
 // It handles numeric titles (1984, 2001), article normalization ("Title, The"),
 // and uses dynamic overlap thresholds so short titles still match correctly.
@@ -2986,29 +2996,28 @@ func titleWordsMatch(bookTitle, parsedTitle string) bool {
 		return true
 	}
 
-	btTok := titleSigTokens(bookTitle)
-	ptTok := titleSigTokens(parsedTitle)
-	if len(btTok) == 0 || len(ptTok) == 0 {
+	// Distinct words on both sides: a word repeated in one title is still one
+	// word of evidence. Counting each occurrence let a track file named
+	// "11. Track 11.mp3" share two words with any title holding "11" and
+	// clear the threshold below on a single number.
+	btSet := titleTokenSet(bookTitle)
+	ptSet := titleTokenSet(parsedTitle)
+	if len(btSet) == 0 || len(ptSet) == 0 {
 		return false
 	}
 
-	btSet := make(map[string]bool, len(btTok))
-	for _, w := range btTok {
-		btSet[w] = true
-	}
-
 	overlap := 0
-	for _, w := range ptTok {
+	for w := range ptSet {
 		if btSet[w] {
 			overlap++
 		}
 	}
 
-	// Dynamic threshold: require overlap >= min(len(ptTok), len(btTok), 2).
+	// Dynamic threshold: require overlap >= min(len(ptSet), len(btSet), 2).
 	// For single-token titles (e.g. "1984") require at least 1 match.
-	minLen := len(ptTok)
-	if len(btTok) < minLen {
-		minLen = len(btTok)
+	minLen := len(ptSet)
+	if len(btSet) < minLen {
+		minLen = len(btSet)
 	}
 	required := 2
 	if minLen < 2 {

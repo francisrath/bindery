@@ -344,8 +344,12 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
   const [skipMissingIsbn, setSkipMissingIsbn] = useState(profile?.skipMissingIsbn ?? false)
   const [skipPartBooks, setSkipPartBooks] = useState(profile?.skipPartBooks ?? false)
   const [unknownLanguageBehavior, setUnknownLanguageBehavior] = useState<'pass' | 'fail'>(profile?.unknownLanguageBehavior ?? 'pass')
-  const initialLangs = profile?.allowedLanguages
-    ? profile.allowedLanguages.split(',').map(c => c.trim().toLowerCase()).filter(Boolean)
+  // English is the default for a new profile only. An existing profile opens
+  // with what it stores, and an empty list means any language: defaulting it
+  // to English showed a filter that was not applied, and saving the form
+  // applied it (#3212).
+  const initialLangs = profile
+    ? (profile.allowedLanguages ?? '').split(',').map(c => c.trim().toLowerCase()).filter(c => c && c !== 'any')
     : ['eng']
   const [languages, setLanguages] = useState<string[]>(initialLangs)
   const [saving, setSaving] = useState(false)
@@ -399,6 +403,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
               <button
                 type="button"
                 key={l.code}
+                aria-pressed={on}
                 onClick={() => toggleLang(l.code)}
                 className={`text-xs px-2.5 py-1 rounded border transition-colors ${on
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
