@@ -1,6 +1,7 @@
 package importer
 
 import (
+	"context"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
@@ -233,5 +234,82 @@ func TestMoveMode_SweepKeepsArchiveVolumes(t *testing.T) {
 		if _, ok := placed[clutter]; ok {
 			t.Errorf("%s was not swept from the moved folder", clutter)
 		}
+	}
+}
+
+// archiveMoveSource builds a torrent folder holding a track, a RAR set and
+// receipt clutter, one level down as well as at the top.
+func archiveMoveSource(t *testing.T) string {
+	t.Helper()
+	src := filepath.Join(t.TempDir(), "Fjellvinden")
+	if err := os.MkdirAll(filepath.Join(src, "extra"), 0o750); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{
+		"01 Spor 01.mp3", "Fjellvinden.part1.rar", "Fjellvinden.r00", "Fjellvinden.nzb",
+		"extra/Fjellvinden.s00", "extra/Fjellvinden.vol01+02.par2",
+	} {
+		if err := os.WriteFile(filepath.Join(src, name), []byte(name), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return src
+}
+
+func checkArchiveMoved(t *testing.T, src, dst string) {
+	t.Helper()
+	placed := relFiles(t, dst)
+	for _, want := range []string{"01 Spor 01.mp3", "Fjellvinden.part1.rar", "Fjellvinden.r00", "extra/Fjellvinden.s00"} {
+		if _, ok := placed[want]; !ok {
+			t.Errorf("%s did not arrive (placed: %v)", want, placed)
+		}
+	}
+	for _, clutter := range []string{"Fjellvinden.nzb", "extra/Fjellvinden.vol01+02.par2"} {
+		if _, ok := placed[clutter]; ok {
+			t.Errorf("%s was moved into the library", clutter)
+		}
+	}
+	if _, err := os.Stat(src); !os.IsNotExist(err) {
+		t.Errorf("source folder still there after a clean move (err=%v)", err)
+	}
+}
+
+// The copy fallback of a move (a different filesystem, forced here by turning
+// the rename off) deletes the source once the copy is done, so it must carry
+// the archive volumes along rather than skip them like a copy-mode import.
+func TestMoveDir_CopyFallbackKeepsArchiveVolumes(t *testing.T) {
+	src := archiveMoveSource(t)
+	dst := filepath.Join(t.TempDir(), "lib", "Fjellvinden")
+	if err := moveDir(context.Background(), src, dst, false); err != nil {
+		t.Fatal(err)
+	}
+	checkArchiveMoved(t, src, dst)
+}
+
+// Same for a move that merges into an existing folder.
+func TestMoveDirMerge_KeepsArchiveVolumes(t *testing.T) {
+	src := archiveMoveSource(t)
+	dst := filepath.Join(t.TempDir(), "lib", "Fjellvinden")
+	if err := os.MkdirAll(dst, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	skipped, err := MoveDirMergeCtx(context.Background(), src, dst)
+	if err != nil || len(skipped) != 0 {
+		t.Fatalf("merge: skipped %v, err %v", skipped, err)
+	}
+	checkArchiveMoved(t, src, dst)
+}
+
+// Copy mode leaves the source alone, so the archive volumes stay out of the
+// library copy and the client keeps them (#3203).
+func TestCopyDir_StillSkipsArchiveVolumes(t *testing.T) {
+	src := archiveMoveSource(t)
+	dst := filepath.Join(t.TempDir(), "lib", "Fjellvinden")
+	if err := CopyDir(src, dst); err != nil {
+		t.Fatal(err)
+	}
+	placed := relFiles(t, dst)
+	if len(placed) != 1 || placed["01 Spor 01.mp3"] == "" {
+		t.Errorf("copy placed %v, want only the track", placed)
 	}
 }

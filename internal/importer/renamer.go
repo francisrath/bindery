@@ -806,7 +806,7 @@ func moveDir(ctx context.Context, src, dst string, allowRename bool) error {
 	}
 
 	// Slow path: recursive copy, then verify, then remove.
-	if err := copyDirContext(ctx, src, dst); err != nil {
+	if err := copyDirFiltered(ctx, src, dst, isReceiptOrRepairFile); err != nil {
 		_ = os.RemoveAll(dst)
 		return fmt.Errorf("copy dir: %w", err)
 	}
@@ -838,7 +838,7 @@ func MoveDirMergeCtx(ctx context.Context, src, dst string) (skipped []string, er
 	if err := checkDestNotInsideSource("move", src, dst); err != nil {
 		return nil, err
 	}
-	skipped, err = mergeCopyDirContext(ctx, src, dst)
+	skipped, err = mergeCopyDirFiltered(ctx, src, dst, isReceiptOrRepairFile)
 	if err != nil {
 		return skipped, fmt.Errorf("copy dir: %w", err)
 	}
@@ -977,6 +977,12 @@ func CopyDirMergeCtx(ctx context.Context, src, dst string) (skipped []string, er
 // mergeCopyDirContext is copyDirContext's merge-aware sibling — see
 // CopyDirMergeCtx. dst is created if absent and reused as-is if present.
 func mergeCopyDirContext(ctx context.Context, srcDir, dstDir string) (skipped []string, err error) {
+	return mergeCopyDirFiltered(ctx, srcDir, dstDir, isDownloadArtifact)
+}
+
+// mergeCopyDirFiltered is mergeCopyDirContext with the left-behind set chosen
+// by the caller, as copyDirFiltered is for copyDirContext.
+func mergeCopyDirFiltered(ctx context.Context, srcDir, dstDir string, skip func(string) bool) (skipped []string, err error) {
 	if dirContains(srcDir, dstDir) {
 		return nil, fmt.Errorf("%w: %s is inside %s", ErrDestInsideSource, dstDir, srcDir)
 	}
@@ -996,7 +1002,7 @@ func mergeCopyDirContext(ctx context.Context, srcDir, dstDir string) (skipped []
 	defer func() { _ = dstRoot.Close() }()
 
 	acc := &mergeSkipTracker{}
-	if err := mergeCopyDirRooted(ctx, srcRoot, dstRoot, ".", acc); err != nil {
+	if err := mergeCopyDirRooted(ctx, srcRoot, dstRoot, ".", acc, skip); err != nil {
 		return acc.skipped, err
 	}
 	return acc.skipped, nil
@@ -1010,7 +1016,7 @@ type mergeSkipTracker struct {
 	skipped []string
 }
 
-func mergeCopyDirRooted(ctx context.Context, srcRoot, dstRoot *os.Root, rel string, acc *mergeSkipTracker) error {
+func mergeCopyDirRooted(ctx context.Context, srcRoot, dstRoot *os.Root, rel string, acc *mergeSkipTracker, skip func(string) bool) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -1031,14 +1037,14 @@ func mergeCopyDirRooted(ctx context.Context, srcRoot, dstRoot *os.Root, rel stri
 		if !e.Type().IsRegular() && !e.IsDir() {
 			continue // skip symlinks and other non-regular entries
 		}
-		if e.Type().IsRegular() && isDownloadArtifact(e.Name()) {
+		if e.Type().IsRegular() && skip(e.Name()) {
 			continue // receipts/repair files never enter the library (#1542)
 		}
 		if e.IsDir() {
 			if err := dstRoot.Mkdir(child, 0o750); err != nil && !os.IsExist(err) {
 				return err
 			}
-			if err := mergeCopyDirRooted(ctx, srcRoot, dstRoot, child, acc); err != nil {
+			if err := mergeCopyDirRooted(ctx, srcRoot, dstRoot, child, acc, skip); err != nil {
 				return err
 			}
 			continue
@@ -1241,6 +1247,14 @@ func hardlinkDirRooted(srcRoot, dstRoot *os.Root, rel string) error {
 // what lets callers safely skip os.RemoveAll(src) on cancellation — the copy
 // never finishes, so the seeding source is never deleted.
 func copyDirContext(ctx context.Context, srcDir, dstDir string) error {
+	return copyDirFiltered(ctx, srcDir, dstDir, isDownloadArtifact)
+}
+
+// copyDirFiltered is copyDirContext with the set of files left behind chosen
+// by the caller. Copy mode passes isDownloadArtifact, which keeps archive
+// volumes out of the library. A move passes isReceiptOrRepairFile: the move
+// deletes the source afterwards, so leaving a volume behind would destroy it.
+func copyDirFiltered(ctx context.Context, srcDir, dstDir string, skip func(string) bool) error {
 	// A destination nested inside the source is unwalkable: the recursion below
 	// would descend into the directory tree it is creating and copy forever
 	// (#1809). Refuse before anything is created.
@@ -1262,10 +1276,10 @@ func copyDirContext(ctx context.Context, srcDir, dstDir string) error {
 	}
 	defer func() { _ = dstRoot.Close() }()
 
-	return copyDirRooted(ctx, srcRoot, dstRoot, ".")
+	return copyDirRooted(ctx, srcRoot, dstRoot, ".", skip)
 }
 
-func copyDirRooted(ctx context.Context, srcRoot, dstRoot *os.Root, rel string) error {
+func copyDirRooted(ctx context.Context, srcRoot, dstRoot *os.Root, rel string, skip func(string) bool) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -1286,14 +1300,14 @@ func copyDirRooted(ctx context.Context, srcRoot, dstRoot *os.Root, rel string) e
 		if !e.Type().IsRegular() && !e.IsDir() {
 			continue // skip symlinks and other non-regular entries
 		}
-		if e.Type().IsRegular() && isDownloadArtifact(e.Name()) {
+		if e.Type().IsRegular() && skip(e.Name()) {
 			continue // receipts/repair files never enter the library (#1542)
 		}
 		if e.IsDir() {
 			if err := dstRoot.Mkdir(child, 0o750); err != nil && !os.IsExist(err) {
 				return err
 			}
-			if err := copyDirRooted(ctx, srcRoot, dstRoot, child); err != nil {
+			if err := copyDirRooted(ctx, srcRoot, dstRoot, child, skip); err != nil {
 				return err
 			}
 			continue
