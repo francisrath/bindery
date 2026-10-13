@@ -313,3 +313,62 @@ func TestCopyDir_StillSkipsArchiveVolumes(t *testing.T) {
 		t.Errorf("copy placed %v, want only the track", placed)
 	}
 }
+
+// A flatten (multi-disc, or the per-file naming template) in move mode copies
+// the tracks and root sidecars, then deletes the source folder. It must carry
+// the archive volumes along, or the delete destroys them; copy mode still
+// leaves them with the client.
+func TestFlatten_MoveModeKeepsArchiveVolumes(t *testing.T) {
+	for _, tc := range []struct {
+		name, mode, key, value string
+		wantArchive            bool
+	}{
+		{"multi-disc move", "move", "import.audiobook.flatten_multi_disc", "true", true},
+		{"naming template move", "move", "naming.audiobook_file_template", "{Title} - Part {Part:3}.{ext}", true},
+		{"multi-disc copy", "copy", "import.audiobook.flatten_multi_disc", "true", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s, dl, dlRepo, settings, ctx := multiDiscFixture(t, tc.mode)
+			if err := settings.Set(ctx, tc.key, tc.value); err != nil {
+				t.Fatal(err)
+			}
+			src := filepath.Join(t.TempDir(), "Fjellvinden")
+			var audio []string
+			for _, name := range []string{
+				"CD1/01 Spor 01.mp3", "CD2/01 Spor 01.mp3", "Fjellvinden.part1.rar", "Fjellvinden.r00", "Fjellvinden.nzb",
+			} {
+				p := filepath.Join(src, name)
+				if err := os.MkdirAll(filepath.Dir(p), 0o750); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(p, []byte(name), 0o644); err != nil {
+					t.Fatal(err)
+				}
+				if filepath.Ext(name) == ".mp3" {
+					audio = append(audio, p)
+				}
+			}
+			sort.Strings(audio)
+
+			s.tryImportInternal(withTorrentOwnFolder(ctx, true), dl, src, "", "", "", nil, audio)
+
+			if got, _ := dlRepo.GetByID(ctx, dl.ID); got.Status != models.StateImported {
+				t.Fatalf("status = %q (%s), want imported", got.Status, got.ErrorMessage)
+			}
+			placed := relFiles(t, importedAudiobookDir(t, s))
+			for _, vol := range []string{"Fjellvinden.part1.rar", "Fjellvinden.r00"} {
+				_, inLibrary := placed[vol]
+				_, srcErr := os.Stat(filepath.Join(src, vol))
+				if tc.wantArchive && !inLibrary {
+					t.Errorf("%s lost: not carried into the library (placed: %v) before the source was deleted", vol, placed)
+				}
+				if !tc.wantArchive && (inLibrary || srcErr != nil) {
+					t.Errorf("%s: in library %v, source err %v; copy mode leaves it with the client", vol, inLibrary, srcErr)
+				}
+			}
+			if _, ok := placed["Fjellvinden.nzb"]; ok {
+				t.Error("the .nzb receipt was carried into the library")
+			}
+		})
+	}
+}

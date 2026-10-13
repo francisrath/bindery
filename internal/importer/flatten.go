@@ -177,10 +177,13 @@ func isMultiDiscAudiobook(srcRoot string) bool {
 // importer: every destination path is a direct child of destDir (Part NNN has
 // no separators), so book-derived strings cannot escape the library.
 func flattenAudiobookDir(ctx context.Context, mode, srcRoot, destDir string) error {
-	// Default "Part NNN.ext" naming: mirrors the historical multi-disc flatten.
-	return flattenAudiobookDirNamed(ctx, mode, srcRoot, destDir, func(index, _ int, ext string) string {
-		return fmt.Sprintf("Part %03d%s", index+1, ext)
-	})
+	return flattenAudiobookDirNamed(ctx, mode, srcRoot, destDir, partName)
+}
+
+// partName is the default "Part NNN.ext" naming: it mirrors the historical
+// multi-disc flatten.
+func partName(index, _ int, ext string) string {
+	return fmt.Sprintf("Part %03d%s", index+1, ext)
 }
 
 // flattenAudiobookDirNamed is flattenAudiobookDir with a caller-supplied namer,
@@ -191,6 +194,13 @@ func flattenAudiobookDir(ctx context.Context, mode, srcRoot, destDir string) err
 // basename. The count lets the template namer give a folder holding a single
 // track the same name as a lone audiobook file (#2900).
 func flattenAudiobookDirNamed(ctx context.Context, mode, srcRoot, destDir string, nameFor func(index, count int, ext string) string) error {
+	return flattenAudiobookDirFiltered(ctx, mode, srcRoot, destDir, nameFor, isDownloadArtifact)
+}
+
+// flattenAudiobookDirFiltered is flattenAudiobookDirNamed with the root files
+// left behind chosen by the caller, as copyDirFiltered is for copyDirContext.
+// See flattenSidecarSkip.
+func flattenAudiobookDirFiltered(ctx context.Context, mode, srcRoot, destDir string, nameFor func(index, count int, ext string) string, skip func(string) bool) error {
 	if mode != "copy" && mode != "hardlink" {
 		return fmt.Errorf("flatten supports copy/hardlink only, got %q", mode)
 	}
@@ -237,7 +247,7 @@ func flattenAudiobookDirNamed(ctx context.Context, mode, srcRoot, destDir string
 	// source root are considered; nested disc-folder sidecars are skipped to
 	// avoid name collisions and noise. Failures here are non-fatal — the audio
 	// is already placed and a missing cover must not block the import.
-	carryRootSidecars(ctx, mode, srcRoot, destDir, reserved)
+	carryRootSidecars(ctx, mode, srcRoot, destDir, reserved, skip)
 	return nil
 }
 
@@ -256,7 +266,7 @@ func placeFlattened(ctx context.Context, mode, src, dst string) error {
 // (already flattened) and any name already reserved by a generated Part. It is
 // best-effort: individual failures are swallowed so a missing sidecar never
 // fails an otherwise-successful audio import.
-func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reserved map[string]struct{}) {
+func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reserved map[string]struct{}, skip func(string) bool) {
 	entries, err := os.ReadDir(srcRoot)
 	if err != nil {
 		return
@@ -269,7 +279,7 @@ func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reser
 		if audioFlattenExtensions[strings.ToLower(filepath.Ext(name))] {
 			continue
 		}
-		if isDownloadArtifact(name) {
+		if skip(name) {
 			continue // receipts/repair files never enter the library (#1542)
 		}
 		if _, taken := reserved[name]; taken {
@@ -286,4 +296,16 @@ func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reser
 			_ = CopyFileCtx(ctx, src, dst)
 		}
 	}
+}
+
+// flattenSidecarSkip picks the root files a flatten leaves behind for the
+// import mode. A move flattens by copying and then deletes the source folder,
+// so it may skip only receipt and repair files: an archive volume left behind
+// would be deleted with the folder (#3203). Copy and hardlink keep the source,
+// so archive volumes stay out of the library with the client.
+func flattenSidecarSkip(mode string) func(string) bool {
+	if mode == "move" {
+		return isReceiptOrRepairFile
+	}
+	return isDownloadArtifact
 }

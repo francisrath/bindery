@@ -2030,7 +2030,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 						return s.renamer.AudiobookFileName(tmpl, author, book, seriesTitle, seriesNum, strings.TrimPrefix(ext, "."), index+1)
 					}
 					slog.Info("renaming audiobook files per template", "src", audiobookSource, "dst", destDir, "mode", flattenMode, "template", tmpl)
-					dirErr = flattenAudiobookDirNamed(importCtx, flattenMode, audiobookSource, destDir, namer)
+					dirErr = flattenAudiobookDirFiltered(importCtx, flattenMode, audiobookSource, destDir, namer, flattenSidecarSkip(mode))
 					if dirErr == nil && mode == "move" && importCtx.Err() == nil {
 						if rmErr := os.RemoveAll(audiobookSource); rmErr != nil {
 							slog.Warn("could not remove source after move-mode audiobook rename", "src", audiobookSource, "error", rmErr)
@@ -2056,7 +2056,7 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 						flattenMode = "copy"
 					}
 					slog.Info("flattening multi-disc audiobook", "src", audiobookSource, "dst", destDir, "mode", flattenMode)
-					dirErr = flattenAudiobookDir(importCtx, flattenMode, audiobookSource, destDir)
+					dirErr = flattenAudiobookDirFiltered(importCtx, flattenMode, audiobookSource, destDir, partName, flattenSidecarSkip(mode))
 					if dirErr == nil && mode == "move" && importCtx.Err() == nil {
 						if rmErr := os.RemoveAll(audiobookSource); rmErr != nil {
 							slog.Warn("flatten: could not remove source after move-mode flatten", "src", audiobookSource, "error", rmErr)

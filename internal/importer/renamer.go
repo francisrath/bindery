@@ -99,10 +99,11 @@ func isReceiptOrRepairFile(name string) bool {
 }
 
 // removeDownloadArtifacts deletes receipt and repair files (not archive
-// volumes, see isReceiptOrRepairFile) anywhere under dir. Used after MoveDir's same-filesystem rename fast path, which moves the job
-// folder wholesale (a rename cannot filter); the copy-based paths skip the
-// artifacts at placement time instead. Best-effort: a receipt that cannot be
-// removed is not worth failing an otherwise-successful import over.
+// volumes, see isReceiptOrRepairFile) anywhere under dir. Used after MoveDir's
+// same-filesystem rename fast path, which moves the job folder wholesale (a
+// rename cannot filter); the copy-based paths skip the artifacts at placement
+// time instead. Best-effort: a receipt that cannot be removed is not worth
+// failing an otherwise-successful import over.
 func removeDownloadArtifacts(dir string) {
 	_ = filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
