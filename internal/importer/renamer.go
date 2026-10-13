@@ -34,7 +34,7 @@ var downloadArtifactExts = map[string]bool{
 // (case-insensitive). PAR2 volumes like "x.vol01+02.par2" resolve to ".par2"
 // via filepath.Ext, so they are covered without special-casing.
 func isDownloadArtifact(name string) bool {
-	return downloadArtifactExts[strings.ToLower(filepath.Ext(name))] || isArchivePart(name)
+	return isReceiptOrRepairFile(name) || isArchivePart(name)
 }
 
 // archiveVolumeRe matches the volumes of a RAR set: "x.rar", which covers the
@@ -90,8 +90,16 @@ func archiveAwaitingExtraction(dir string) string {
 	return archive
 }
 
-// removeDownloadArtifacts deletes download-artifact files anywhere under dir.
-// Used after MoveDir's same-filesystem rename fast path, which moves the job
+// isReceiptOrRepairFile reports whether name has one of the receipt or repair
+// extensions in downloadArtifactExts. Unlike isDownloadArtifact it does not
+// count archive volumes: those are kept out of the library at placement time,
+// but a sweep of a folder that was renamed whole must never delete them.
+func isReceiptOrRepairFile(name string) bool {
+	return downloadArtifactExts[strings.ToLower(filepath.Ext(name))]
+}
+
+// removeDownloadArtifacts deletes receipt and repair files (not archive
+// volumes, see isReceiptOrRepairFile) anywhere under dir. Used after MoveDir's same-filesystem rename fast path, which moves the job
 // folder wholesale (a rename cannot filter); the copy-based paths skip the
 // artifacts at placement time instead. Best-effort: a receipt that cannot be
 // removed is not worth failing an otherwise-successful import over.
@@ -100,7 +108,7 @@ func removeDownloadArtifacts(dir string) {
 		if err != nil {
 			return nil
 		}
-		if d.Type().IsRegular() && isDownloadArtifact(d.Name()) {
+		if d.Type().IsRegular() && isReceiptOrRepairFile(d.Name()) {
 			if rmErr := os.Remove(path); rmErr != nil {
 				slog.Warn("could not remove download artifact from imported folder", "path", path, "error", rmErr)
 			}
@@ -786,9 +794,10 @@ func moveDir(ctx context.Context, src, dst string, allowRename bool) error {
 	}
 
 	// Fast path: same filesystem. Rename moves the folder wholesale, so any
-	// download artifacts (.nzb receipts, .par2 volumes) ride along — sweep
+	// download artifacts (.nzb receipts, .par2 volumes) ride along, so sweep
 	// them out of the destination afterwards to match the filtering the
-	// copy-based paths do at placement time.
+	// copy-based paths do at placement time. Archive volumes are not swept:
+	// the folder has left the client, so they are all that is left of them.
 	if allowRename {
 		if err := os.Rename(src, dst); err == nil {
 			removeDownloadArtifacts(dst)

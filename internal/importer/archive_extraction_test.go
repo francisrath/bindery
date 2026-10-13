@@ -4,6 +4,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -188,6 +189,49 @@ func TestQbittorrentRARRelease_WaitsThenImportsWithoutTheArchive(t *testing.T) {
 	for _, name := range names {
 		if _, err := os.Stat(filepath.Join(folder, name)); err != nil {
 			t.Errorf("%s gone from the torrent folder: %v", name, err)
+		}
+	}
+}
+
+// In move mode on one filesystem the torrent folder is renamed into the
+// library wholesale, and the sweep that follows is there for the receipt and
+// repair clutter. It must leave archive volumes alone: the move already took
+// the folder from the client, and deleting the volumes would destroy the
+// archive for good.
+func TestMoveMode_SweepKeepsArchiveVolumes(t *testing.T) {
+	s, dl, dlRepo, _, ctx := multiDiscFixture(t, "move")
+	folder := filepath.Join(t.TempDir(), "Fjellvinden")
+	if err := os.MkdirAll(folder, 0o750); err != nil {
+		t.Fatal(err)
+	}
+	var audio []string
+	for _, name := range []string{
+		"01 Spor 01.mp3", "02 Spor 02.mp3", "Fjellvinden.part1.rar", "Fjellvinden.r00", "Fjellvinden.nzb", "Fjellvinden.vol01+02.par2",
+	} {
+		p := filepath.Join(folder, name)
+		if err := os.WriteFile(p, []byte(name), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if filepath.Ext(name) == ".mp3" {
+			audio = append(audio, p)
+		}
+	}
+	sort.Strings(audio)
+
+	s.tryImportInternal(withTorrentOwnFolder(ctx, true), dl, folder, "", "", "", nil, audio)
+
+	if got, _ := dlRepo.GetByID(ctx, dl.ID); got.Status != models.StateImported {
+		t.Fatalf("status = %q (%s), want imported", got.Status, got.ErrorMessage)
+	}
+	placed := relFiles(t, importedAudiobookDir(t, s))
+	for _, want := range []string{"01 Spor 01.mp3", "Fjellvinden.part1.rar", "Fjellvinden.r00"} {
+		if _, ok := placed[want]; !ok {
+			t.Errorf("%s missing after the move (placed: %v)", want, placed)
+		}
+	}
+	for _, clutter := range []string{"Fjellvinden.nzb", "Fjellvinden.vol01+02.par2"} {
+		if _, ok := placed[clutter]; ok {
+			t.Errorf("%s was not swept from the moved folder", clutter)
 		}
 	}
 }
