@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -254,7 +255,7 @@ func flattenAudiobookDirFiltered(ctx context.Context, mode, srcRoot, destDir str
 	// folder afterwards. Failing to carry a volume then fails the flatten, so
 	// the source is kept rather than destroying the archive.
 	if err := carryRootSidecars(ctx, mode, srcRoot, destDir, reserved, skip); err != nil {
-		_ = os.RemoveAll(destDir)
+		removeFlattenDest(destDir)
 		return err
 	}
 	return nil
@@ -303,7 +304,7 @@ func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reser
 			// Never overwrite an existing destination file. A volume that is
 			// already there as an identical copy is carried; a different file
 			// under its name would leave the volume only in the source.
-			if isArchivePart(name) && !sameFileContent(src, dst) {
+			if isArchivePart(name) && !sameFileContent(srcRoot, destDir, name) {
 				return fmt.Errorf("carry archive volume %q: a different file is already at the destination", name)
 			}
 			continue
@@ -321,16 +322,50 @@ func carryRootSidecars(ctx context.Context, mode, srcRoot, destDir string, reser
 	return nil
 }
 
-// sameFileContent reports whether a and b are readable and byte for byte equal.
-func sameFileContent(a, b string) bool {
-	ai, errA := os.Stat(a)
-	bi, errB := os.Stat(b)
-	if errA != nil || errB != nil || ai.Size() != bi.Size() {
-		return false
+// sameFileContent reports whether the file called name is readable and byte for
+// byte equal in dirA and dirB. Both are read through os.Root, so a symlink in
+// either tree cannot lead the read out of it.
+func sameFileContent(dirA, dirB, name string) bool {
+	read := func(dir string) ([]byte, bool) {
+		root, err := os.OpenRoot(dir)
+		if err != nil {
+			return nil, false
+		}
+		defer func() { _ = root.Close() }()
+		f, err := root.Open(name)
+		if err != nil {
+			return nil, false
+		}
+		defer func() { _ = f.Close() }()
+		b, err := io.ReadAll(f)
+		return b, err == nil
 	}
-	da, errA := os.ReadFile(a)
-	db, errB := os.ReadFile(b)
-	return errA == nil && errB == nil && bytes.Equal(da, db)
+	a, okA := read(dirA)
+	b, okB := read(dirB)
+	return okA && okB && bytes.Equal(a, b)
+}
+
+// removeFlattenDest undoes a failed flatten by removing the files it placed
+// and then its destination folder, which it created itself. Copy and hardlink
+// leave the sources in place, and a move flatten only deletes its source after
+// success, so the placed files are redundant. It goes through
+// rollbackPlacedFiles, which removes through os.Root and never recurses.
+func removeFlattenDest(destDir string) {
+	root, err := os.OpenRoot(destDir)
+	if err != nil {
+		return
+	}
+	var names []string
+	if f, err := root.Open("."); err == nil {
+		if entries, err := f.ReadDir(-1); err == nil {
+			for _, e := range entries {
+				names = append(names, e.Name())
+			}
+		}
+		_ = f.Close()
+	}
+	_ = root.Close()
+	rollbackPlacedFiles(destDir, names)
 }
 
 // flattenSidecarSkip picks the root files a flatten leaves behind for the
