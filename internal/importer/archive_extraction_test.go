@@ -372,3 +372,31 @@ func TestFlatten_MoveModeKeepsArchiveVolumes(t *testing.T) {
 		})
 	}
 }
+
+// A move whose copy fallback fails part-way, here on an unreadable file in a
+// subfolder, must leave the source whole, archive volumes included: the
+// source is only removed once the copy has completed.
+func TestMoveDir_FailedCopyKeepsTheSource(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("running as root: permission bits do not deny access")
+	}
+	src := archiveMoveSource(t)
+	locked := filepath.Join(src, "extra", "Fjellvinden.s00")
+	if err := os.Chmod(locked, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(locked, 0o600) })
+	dst := filepath.Join(t.TempDir(), "lib", "Fjellvinden")
+
+	if err := moveDir(context.Background(), src, dst, false); err == nil {
+		t.Fatal("the move succeeded although a file could not be read")
+	}
+	for _, name := range []string{"01 Spor 01.mp3", "Fjellvinden.part1.rar", "Fjellvinden.r00", "extra/Fjellvinden.s00"} {
+		if _, err := os.Lstat(filepath.Join(src, name)); err != nil {
+			t.Errorf("%s gone from the source after a failed move: %v", name, err)
+		}
+	}
+	if _, err := os.Stat(dst); !os.IsNotExist(err) {
+		t.Errorf("a half-copied destination was left behind (err=%v)", err)
+	}
+}
