@@ -164,6 +164,25 @@ select:not([multiple]):not([size]):not(.bg-none) {
   }
 }
 
+/* One keyboard focus style for buttons and links (#3228), the other half of
+   #3085. Without it most of them got each browser's default outline: auto,
+   whose look changed from control to control and browser to browser, and
+   which in WebKit's dark theme was close to the page colour. Same emerald
+   pair as the form controls; the 2px offset puts the ring on the surface
+   behind the control, where that pair keeps 3:1 (WCAG 1.4.11), so it also
+   shows around an emerald button. :focus-visible, so a mouse click draws
+   nothing. A control with its own focus utility (buttons.ts, Switch, the
+   library tabs) keeps it: utilities beat the base layer. */
+@layer base {
+  :is(button, a[href], [role='button'], [role='tab'], summary):focus-visible {
+    outline: 2px solid var(--color-emerald-600);
+    outline-offset: 2px;
+  }
+  html.dark :is(button, a[href], [role='button'], [role='tab'], summary):focus-visible {
+    outline-color: var(--color-emerald-500);
+  }
+}
+
 /* Native controls (select popups, date pickers, scrollbars) follow
    color-scheme, not the page colours, so the dark theme still opened white
    pickers. Tracks the .dark class rather than the OS setting because the
