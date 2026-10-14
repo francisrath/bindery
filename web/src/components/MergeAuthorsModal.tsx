@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from './useConfirmDialog'
 import { api, Author } from '../api/client'
@@ -19,6 +19,7 @@ interface Props {
 // target's book count so the user sees the "post-merge" total before
 // committing.
 export default function MergeAuthorsModal({ authors, initialTargetId, onClose, onMerged }: Props) {
+  const fid = useId()
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const [targetId, setTargetId] = useState<number | ''>(initialTargetId ?? '')
@@ -97,8 +98,9 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
 
         <div className="p-4 space-y-3">
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('mergeAuthorsModal.removeLabel')}</label>
+            <label htmlFor={`${fid}-remove`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('mergeAuthorsModal.removeLabel')}</label>
             <select
+              id={`${fid}-remove`}
               value={sourceId}
               onChange={e => setSourceId(e.target.value ? Number(e.target.value) : '')}
               className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -111,8 +113,9 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
           </div>
 
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('mergeAuthorsModal.keepLabel')}</label>
+            <label htmlFor={`${fid}-keep`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('mergeAuthorsModal.keepLabel')}</label>
             <select
+              id={`${fid}-keep`}
               value={targetId}
               onChange={e => setTargetId(e.target.value ? Number(e.target.value) : '')}
               className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
