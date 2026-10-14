@@ -280,7 +280,7 @@ export default function LogsTab() {
       </div>
 
       {/* Log output */}
-      <div className="font-mono text-xs bg-slate-50 dark:bg-black rounded-lg border border-slate-200 dark:border-zinc-900 overflow-auto max-h-[60dvh]">
+      <div role="region" aria-label={t('settings.logs.heading')} tabIndex={0} className="font-mono text-xs bg-slate-50 dark:bg-black rounded-lg border border-slate-200 dark:border-zinc-900 overflow-auto max-h-[60dvh]">
         {(() => {
           const formatAttr = (k: string, v: unknown) => {
             const s = String(v)

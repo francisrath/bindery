@@ -241,7 +241,7 @@ export default function SettingsPage() {
             ))}
           </select>
         ) : (
-          <nav className="w-full md:w-44 flex-shrink-0 space-y-0.5">
+          <nav aria-label={t('settings.title')} className="w-full md:w-44 flex-shrink-0 space-y-0.5">
             <SettingsNavLink tab="general" active={tab} onSelect={setTab} label={t('settings.tabs.general')} />
             <SettingsNavLink tab="about" active={tab} onSelect={setTab} label={t('settings.tabs.about', 'About')} />
 

@@ -148,10 +148,10 @@ export default function LoginPage() {
 export function CardShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100">
-      <div className="w-full max-w-sm">
+      <main className="w-full max-w-sm">
         <div className="mb-6 text-center">
           <div className="flex items-center justify-center gap-2">
-            <Logo className="w-12 h-12 rounded-full" />
+            <Logo alt="" className="w-12 h-12 rounded-full" />
             <h1 className="text-2xl font-bold tracking-tight">Bindery</h1>
           </div>
           {subtitle && <div className="text-xs text-slate-500 dark:text-zinc-500 mt-2">{subtitle}</div>}
@@ -160,7 +160,7 @@ export function CardShell({ title, subtitle, children }: { title: string; subtit
           <h2 className="text-lg font-semibold mb-4">{title}</h2>
           {children}
         </div>
-      </div>
+      </main>
     </div>
   )
 }

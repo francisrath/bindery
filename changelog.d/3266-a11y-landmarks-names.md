@@ -1,0 +1,2 @@
+### Fixed
+- **Smaller accessibility fixes from an axe scan** (#3266). The Logs viewer can be focused and scrolled with the keyboard. The login page has a main landmark, and the Settings menu is a named navigation landmark. The header logo no longer repeats "Bindery" to screen readers, the Users actions column has a header, and the Add Series dialogs put their dialog role on a wrapper rather than on the form.

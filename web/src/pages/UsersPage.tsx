@@ -248,7 +248,7 @@ export default function UsersPage() {
                 <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-zinc-400">{t('users.colRole')}</th>
                 <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-zinc-400">{t('users.colAutoApprove')}</th>
                 <th className="px-4 py-3 text-left font-medium text-slate-600 dark:text-zinc-400">{t('users.colCreated')}</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3"><span className="sr-only">{t('wanted.colActions')}</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
