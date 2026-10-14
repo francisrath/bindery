@@ -1230,6 +1230,25 @@
       "credentialKeepHint": "Bindery no longer sends a saved password or API key back to the browser. Leave this blank to keep the one already stored.",
       "credentialUnsetHint": "No credential is stored for this client yet.",
       "unknownError": "Unknown error",
+      "remapAssist": {
+        "heading": "Suggest a path remap",
+        "intro": "Bindery can't see the folder the client writes to. If the client and Bindery share the same storage under different paths, pick the folder where Bindery sees it.",
+        "clientPath": "The client writes to",
+        "chooseLabel": "Bindery sees that storage at",
+        "source": {
+          "ebookDownloadDir": "ebook download folder",
+          "audiobookDownloadDir": "audiobook download folder",
+          "library": "library folder"
+        },
+        "note": {
+          "samePath": "Bindery uses this same path, so a remap would change nothing. The client's storage is not mounted into the Bindery container at that path. Mount it there, for example as a shared volume, instead of adding a remap.",
+          "unsupportedChars": "This path contains a comma or a colon, which the remap syntax cannot hold, so no rule can be suggested. Write the path remap by hand in the client's edit form, or rename the folder."
+        },
+        "previewLabel": "Preview",
+        "apply": "Apply this remap",
+        "applying": "Applying...",
+        "failed": "Could not save the remap: {{error}}"
+      },
       "diagnose": {
         "button": "Diagnose",
         "running": "Diagnosing…",

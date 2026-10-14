@@ -85,7 +85,7 @@ Every binding decision is logged at DEBUG as `series diff: local book bound to c
 
 Missing-book fill uses the linked Hardcover catalog as the source of truth for missing entries. Bindery skips catalog books that already exist locally as excluded titles, so excluded books are not silently re-added. That skip applies to the excluded title itself, not to other books whose titles it happens to contain, so an excluded box set does not stand in the way of the volume it is named after.
 
-Catalog entries whose titles name a box set rather than a book ("box set", "boxed set", "collection set", "3 Books Set") are never created by fill, the same way they are pruned from an author catalogue on ingestion. They are still listed in the diff, so clicking **add** on one does nothing and reports nothing queued.
+Catalog entries whose titles name a box set rather than a book ("box set", "boxed set", "collection set", "3 Books Set", a trailing "(Set)") are never created by fill, the same way they are pruned from an author catalogue on ingestion. They are still listed in the diff, so clicking **add** on one does nothing and reports nothing queued.
 
 The fill action may create new authors and books from Hardcover metadata when the catalog entry is not already in Bindery. Those books are linked back to the series with the catalog position.
 

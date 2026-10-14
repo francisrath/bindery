@@ -393,6 +393,8 @@ The same remaps also run in reverse, with the same precedence, when Bindery tell
 
 The download client **Test** button and the 15 minute health check look at the folder a grab actually lands in, the same one **Diagnose** reports: for rTorrent, and for a qBittorrent client with no category, the folder it is sent, and for qBittorrent with a category the folder that category saves to. A qBittorrent category with an empty save path saves to the default save path plus the category name, and a relative one under the default save path. qBittorrent creates that folder on its first download, so until then the check is satisfied by its parent. Earlier releases checked rTorrent's own default directory and qBittorrent's default save path instead, so a working setup whose default folder Bindery cannot see was reported as broken ([#2664](https://github.com/vavallee/bindery/issues/2664)). Because Bindery sends rTorrent its own download folder, the check now confirms Bindery can read that folder, not that rTorrent writes to the same storage; if grabs never import, run **Diagnose** on the client.
 
+When **Test** warns that Bindery cannot read the folder, and the client is qBittorrent, NZBGet or rTorrent, the warning gains a **Suggest a path remap** panel. It shows the folder the client reports and offers Bindery's own folders as the other half: the download folder (`BINDERY_DOWNLOAD_DIR`), the audiobook download folder (`BINDERY_AUDIOBOOK_DOWNLOAD_DIR`), the library folders and any root folders. Each is labelled as the ebook download folder, the audiobook download folder or a library folder. Pick one and the panel previews a sample path before and after the remap. **Apply this remap** saves it on the client through the normal edit route, then runs Test again; that Test is what confirms the folder exists, the panel does not check it first. An existing rule with the same client side path is replaced, because when two rules have equally long client paths the first one wins, and other rules are kept. If the client reports the same path Bindery already uses, the panel does not offer a remap that would change nothing. It says to mount the client's storage into the Bindery container at that path instead. A path that contains a comma or a colon cannot be written in the remap syntax, so for those the panel only says so and the rule has to be written by hand. Nothing is applied until you press that button, and Test itself never changes a setting. SABnzbd, Transmission and Deluge do not report a fixed completed folder, so they never show the panel; write the remap by hand for those. A Windows drive or share on the client side works the same way, for example `S:\Downloads:/data/downloads`.
+
 On the way out the global remap matches every client, because its right side is Bindery's own folder. If the global remap is written for one client (say SABnzbd sees Bindery's `/downloads` as `/data`) and an rTorrent or category-less qBittorrent mounts Bindery's folder at the same path, give that client an identity path remap, `/downloads:/downloads`. A client remap that covers the folder always wins, even when it maps it to itself, so that client keeps being sent `/downloads`. **Diagnose** on the client warns when the global remap produced the folder it sends while the client's own default save folder sits on Bindery's path, which is what that setup looks like. If the client really keeps that storage at the remapped path, ignore the warning.
 
 Per-client remaps are stored on each download client, so separate qBittorrent / SABnzbd / NZBGet instances can map different mount points. Existing download clients keep an empty remap after upgrade, which preserves the previous global-only behavior until you add a client-specific value.
@@ -781,6 +783,37 @@ committed records remain, and ABS keeps its checkpoint on the interrupted item.
 Scheduled jobs can run again on their next scheduled pass. This does not add
 automatic edition-hydration recovery or request accounting.
 Different tokens have separate holds, even if they belong to the same account.
+
+### Hardcover request volume of the author profile refresh
+
+The scheduled author profile refresh asks the metadata provider for one author
+profile per author. It runs as an hourly tick that refreshes only the authors
+whose profile is missing or older than 24 hours, stalest first, and records the
+time on each author after a successful refresh. Each author is therefore asked
+about roughly once a day, spread over the day instead of in one nightly burst.
+It refreshes profiles only; catalogue discovery, series refresh and edition
+hydration are separate jobs with their own request costs.
+
+A tick refreshes `ceil(authors / 24)` authors, at most 100, three seconds apart.
+For authors whose primary provider is Hardcover, the steady daily cost is one
+request per author:
+
+| Authors on Hardcover | Per tick | Requests per day | Free (5,000 per day) | Supporter (50,000 per day) |
+|-|-|-|-|-|
+| 250 | 11 | 250 | 5% | 0.5% |
+| 1,000 | 42 | 1,000 | 20% | 2% |
+| 2,400 | 100 | 2,400 | 48% | 4.8% |
+| 5,000 | 100 | about 2,400 (each author about every 50 hours) | 48% | 4.8% |
+
+The daily total matches the old nightly job, which also spent one request per
+author, so staggering does not lower it. What changes is how it is spent: a
+restart, an explicit refresh or a quota hold no longer costs a second full
+pass, because an author refreshed within the last 24 hours is skipped. A held
+daily quota or a rate limit stops the tick and leaves the remaining authors
+stale, and the next hourly tick resumes with the same authors. Authors on
+other providers cost no Hardcover requests. An explicit **Refresh Metadata** on
+one author is never delayed by this schedule and counts as that author's
+refresh for the day. See [#2595](https://github.com/vavallee/bindery/issues/2595).
 
 ### Hardcover rejected token pause
 

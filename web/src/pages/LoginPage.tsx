@@ -15,12 +15,16 @@ export default function LoginPage() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // Skip the state update once the page has unmounted, so a request that
+    // settles late does not call setState on a torn down component.
+    let cancelled = false
     api.oidcProviders()
       // Hide providers that failed startup discovery so users don't click
       // into a flow that's guaranteed to error. Older backends omit `status`
       // entirely — fall through and show those buttons unfiltered.
-      .then(ps => setOidcProviders(ps.filter(p => !p.status || p.status.state === 'ok')))
-      .catch(() => setOidcProviders([]))
+      .then(ps => { if (!cancelled) setOidcProviders(ps.filter(p => !p.status || p.status.state === 'ok')) })
+      .catch(() => { if (!cancelled) setOidcProviders([]) })
+    return () => { cancelled = true }
   }, [])
 
   // Read values from the form at submit time instead of React state.

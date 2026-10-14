@@ -790,6 +790,23 @@ refused, check the port ...)`), with no URL in it; anything else is the first
 line of what the client said, credentials redacted, at most 200 characters. The
 full text is in the Bindery log.
 
+`POST /api/v1/downloadclient/{id}/test` also reports whether Bindery can read the
+client's completed folder, as `pathVisibility` with `status` `ok` or `warning`, the
+remapped `path` Bindery checked and `remotePath`, the folder exactly as the client
+reports it (the left half of a path remap). The field is absent for client types
+that report no fixed completed folder. When `status` is `warning` for qBittorrent,
+NZBGet or rTorrent, the response also carries `remapCandidates`, one entry per
+folder Bindery could map it to: `path`, `source` (`ebookDownloadDir`,
+`audiobookDownloadDir` or `library`, in that order) and a `before` and `after` sample
+path. A folder identical on both sides is never offered, since a remap onto itself
+changes nothing. When that leaves nothing, `remapNote` is `samePath` (mount the
+storage into Bindery instead), and `unsupportedChars` when a path holds a comma or a
+colon the remap syntax cannot carry. The candidates are read only. They contain no remap
+string and nothing is saved; to apply one, send the normal `PUT
+/api/v1/downloadclient/{id}` with the new `pathRemap`. Both fields are admin only
+like the rest of the route, and `POST /api/v1/downloadclient/test` never carries
+candidates.
+
 #### Diagnosing a download client
 
 `POST /api/v1/downloadclient/{id}/diagnose` runs an ordered list of checks

@@ -1629,10 +1629,19 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 	if upstream == nil {
 		return
 	}
-	if !mergeAuthorProfileFields(author, upstream) {
-		return // provider returned nothing new — skip a no-op write
-	}
 	now := time.Now().UTC()
+	if !mergeAuthorProfileFields(author, upstream) {
+		// Nothing new, so skip the whole row write, but the profile was
+		// checked: stamp freshness with a single column write so the
+		// staggered background refresh does not fetch it again today (#2595).
+		// A failure is only logged, the stamp is an optimisation.
+		if err := h.authors.StampMetadataRefresh(ctx, author.ID, now); err != nil {
+			slog.Warn("author profile refresh: could not record freshness", "author", author.Name, "error", err)
+			return
+		}
+		author.LastMetadataRefreshAt = &now
+		return
+	}
 	author.LastMetadataRefreshAt = &now
 	if err := h.authors.Update(ctx, author); err != nil {
 		slog.Warn("author profile refresh: save failed", "author", author.Name, "error", err)

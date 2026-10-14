@@ -987,13 +987,19 @@ When metadata is wrong, you have three levels of fix:
    books already stored.
 
 Box sets need no setting. A work whose title plainly names a bundle ("... Box
-Set", "3 Books Set", "Carton of 10 Signed Copies") is dropped from every
-author catalogue as it is fetched, on any provider. **Skip part books** in the
-metadata profile adds the shapes that are a judgement call, and is off by
-default because each of them has real single books it would wrongly catch: a
-title ending in "Omnibus", slash-separated titles like "Title A / Title B",
-and "Books 1-3". Neither filter touches "Trilogy". A bundle already in your
-library is left alone; it just stops being offered back by the catalogue.
+Set", "3 Books Set", a title ending in "(Set)" such as "Just Beyond (Set)",
+"Carton of 10 Signed Copies") is dropped from every author catalogue as it is
+fetched, on any provider. **Skip part books** in the metadata profile adds the
+shapes that are a judgement call, and is off by default because each of them has
+real single books it would wrongly catch: a title ending in "Omnibus",
+slash-separated titles like "Title A / Title B", "Books 1-3", a parenthesised
+series range such as "Harry Potter (series) 1-3", and a count of books with no
+"set" word, either at the end of the title ("... - 10 Books") or as a retailer
+listing ("2 Daniel Silva Books!"). A real single title that ends in a count,
+such as "Top 100 Books", is caught too. A title that merely starts with a
+number, like "10 Books That Changed America", is not touched. Neither filter
+touches "Trilogy". A bundle already in your library is left alone; it just stops
+being offered back by the catalogue.
 
 A **metadata refresh** re-syncs an author's metadata from the provider:
 covers, descriptions, ratings, genres and series links on the books you

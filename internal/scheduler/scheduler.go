@@ -243,6 +243,14 @@ type Scheduler struct {
 	// save path through (#2665) and rTorrent removals resolve data with.
 	downloadHealth    *downloader.HealthStore
 	downloadPathRemap string
+
+	// metadataCooldown holds authors whose profile refresh failed for their
+	// own reasons, until when they are passed over (#2595). In memory only.
+	metadataCooldownMu sync.Mutex
+	metadataCooldown   map[int64]time.Time
+	// metadataBreakerTrips counts, per author, the tripped passes in a row it
+	// was part of; see metadataRefreshBreakerTripsToCool.
+	metadataBreakerTrips map[int64]breakerTrip
 }
 
 const scheduledWantedSearchConcurrency = 2
@@ -560,8 +568,10 @@ func (s *Scheduler) Start() {
 		s.searchWanted()
 	}))
 
-	// Refresh author metadata every 24 hours
-	s.cron.AddFunc("@every 24h", runJob("refresh-metadata", func() {
+	// Refresh author profiles a batch at a time, so each author is refreshed
+	// about once every 24 hours without a nightly burst (#2595). See
+	// metadata_refresh.go for the batch size and the staleness cursor.
+	s.cron.AddFunc("@every 1h", runJob("refresh-metadata", func() {
 		slog.Info("job: refresh metadata")
 		s.refreshMetadata()
 	}))
@@ -1712,94 +1722,6 @@ func downloadMediaType(dl *models.Download) string {
 		return models.MediaTypeEbook
 	default:
 		return ""
-	}
-}
-
-func (s *Scheduler) refreshMetadata() {
-	ctx := s.ctx()
-
-	authors, err := s.authors.List(ctx)
-	if err != nil {
-		slog.Error("failed to list authors", "error", err)
-		return
-	}
-
-	for _, listed := range authors {
-		if err := s.meta.CheckQuota(ctx); err != nil {
-			slog.Warn("metadata refresh stopped", "error", err)
-			return
-		}
-		if !listed.Monitored {
-			continue
-		}
-
-		// Calibre-imported authors have synthetic "calibre:author:N" IDs with
-		// no counterpart in OL/Hardcover; skip to avoid noisy 404 errors.
-		if strings.HasPrefix(listed.ForeignID, "calibre:") {
-			continue
-		}
-
-		// Re-read the row rather than writing back the snapshot listed at
-		// the start of the run: earlier authors' lookups take a while, and an
-		// edit saved meanwhile must neither be overwritten nor cost this
-		// author its refresh (#2926).
-		current, err := s.authors.GetByID(ctx, listed.ID)
-		if err != nil {
-			slog.Warn("failed to reload author for refresh", "author", listed.Name, "error", err)
-			continue
-		}
-		if current == nil || !current.Monitored || strings.HasPrefix(current.ForeignID, "calibre:") {
-			continue
-		}
-		author := *current
-
-		updated, err := s.meta.GetAuthor(ctx, author.ForeignID)
-		if err != nil {
-			slog.Warn("failed to refresh author", "author", author.Name, "error", err)
-			continue
-		}
-		// Aggregator returns (nil, nil) when no configured provider owns this
-		// foreignID prefix (e.g. a Hardcover-prefixed author after Hardcover
-		// was disabled, or any author whose ForeignID prefix no longer maps to
-		// a provider). Without this guard the deref below panics, which exits
-		// the range loop and kills every subsequent author's refresh that
-		// cycle.
-		if updated == nil {
-			slog.Debug("no metadata provider for author, skipping refresh", "author", author.Name, "foreignID", author.ForeignID)
-			continue
-		}
-
-		// Update changed fields. Only overwrite when the upstream record
-		// actually carries a value: a sparse OpenLibrary refresh must not
-		// clobber a previously enriched description/ratings with empties
-		// (#1463). Same guard the ImageURL update has always had.
-		if updated.Description != "" {
-			author.Description = updated.Description
-		}
-		if updated.ImageURL != "" {
-			author.ImageURL = updated.ImageURL
-		}
-		if updated.AverageRating != 0 {
-			author.AverageRating = updated.AverageRating
-		}
-		if updated.RatingsCount != 0 {
-			author.RatingsCount = updated.RatingsCount
-		}
-		// Guarded on the row as read before the provider call, so an edit
-		// saved during the call wins. The refresh is dropped, not retried:
-		// this job runs again on schedule.
-		written, err := s.authors.UpdateIfUnchanged(ctx, &author, current.UpdatedAtRaw)
-		if err != nil {
-			slog.Warn("failed to persist refreshed author", "author", author.Name, "error", err)
-			continue
-		}
-		if !written {
-			slog.Info("author refresh skipped: the author changed while its metadata was being fetched; the next refresh retries it",
-				"author", author.Name, "authorId", author.ID)
-			continue
-		}
-
-		slog.Debug("refreshed author", "author", author.Name)
 	}
 }
 

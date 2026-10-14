@@ -472,15 +472,45 @@ func (h *DownloadClientHandler) Test(w http.ResponseWriter, r *http.Request) {
 	health := h.refreshClientHealth(r.Context(), client)
 	pathVis := downloader.CheckCompletedPathVisibility(r.Context(), client, h.downloadDir, h.audiobookDownloadDir, h.downloadPathRemap)
 	resp := struct {
-		Message        string                       `json:"message"`
-		Health         *models.DownloadClientHealth `json:"health,omitempty"`
-		PathVisibility *downloader.PathVisibility   `json:"pathVisibility,omitempty"`
+		Message         string                       `json:"message"`
+		Health          *models.DownloadClientHealth `json:"health,omitempty"`
+		PathVisibility  *downloader.PathVisibility   `json:"pathVisibility,omitempty"`
+		RemapCandidates []downloader.RemapCandidate  `json:"remapCandidates,omitempty"`
+		// RemapNote says why no candidate is offered when that is worth
+		// telling the user: "samePath" or "unsupportedChars".
+		RemapNote string `json:"remapNote,omitempty"`
 	}{
 		Message:        "Connection verified",
 		Health:         health,
 		PathVisibility: pathVisibilityForResponse(pathVis),
 	}
+	resp.RemapCandidates, resp.RemapNote = h.remapCandidates(r.Context(), client, pathVis)
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// remapCandidates offers Bindery's own folders as the right hand side of a path
+// remap (#2031), only when the client's folder is not visible and the client
+// type reports one. The route is admin only like the rest of the download
+// client surface, because the folders are the operator's own configuration.
+//
+// Read only by construction: it returns folders and a previewed join, never a
+// remap string, and writes nothing. The UI saves a remap through the normal
+// update route.
+func (h *DownloadClientHandler) remapCandidates(ctx context.Context, client *models.DownloadClient, vis downloader.PathVisibility) ([]downloader.RemapCandidate, string) {
+	if vis.Status != downloader.PathNotVisible || vis.RemotePath == "" {
+		return nil, ""
+	}
+	// The folder the client is expected to write to comes first, then the
+	// other download folder, then the library roots. Existence is not checked
+	// here: the Test the UI re-runs after Apply is that check.
+	roots := []downloader.RemapRoot{
+		{Path: downloader.ExpectedDownloadDirForClient(client, models.MediaTypeEbook, h.downloadDir, h.audiobookDownloadDir), Source: downloader.RemapSourceEbookDir},
+		{Path: downloader.ExpectedDownloadDirForClient(client, models.MediaTypeAudiobook, h.downloadDir, h.audiobookDownloadDir), Source: downloader.RemapSourceAudiobookDir},
+	}
+	for _, p := range h.roots.Configured(ctx) {
+		roots = append(roots, downloader.RemapRoot{Path: p, Source: downloader.RemapSourceLibrary})
+	}
+	return downloader.RemapCandidates(client.Type, vis.RemotePath, roots)
 }
 
 // pathVisibilityForResponse returns the path-visibility result for the Test
