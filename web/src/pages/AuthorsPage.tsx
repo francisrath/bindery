@@ -670,6 +670,7 @@ export default function AuthorsPage() {
                   onChange={() => toggleSelect(author.id)}
                   className={`absolute top-2 left-2 z-10 rounded-full border-slate-400 dark:border-zinc-600 ${selectedIds.has(author.id) ? '' : 'bg-white/80 dark:bg-zinc-900/80'}`}
                   title={`Select ${author.authorName}`}
+                  aria-label={`Select ${author.authorName}`}
                 />
                 <Link to={`/author/${author.id}`} state={authorNavState(i)} className="flex gap-3 p-4 hover:bg-slate-200/40 dark:hover:bg-zinc-800/40 transition-colors">
                   <CoverImage loading="lazy" decoding="async" src={author.imageUrl} alt={author.authorName} className="w-16 h-16 rounded-full object-cover flex-shrink-0"

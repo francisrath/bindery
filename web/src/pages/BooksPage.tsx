@@ -523,6 +523,7 @@ export default function BooksPage() {
                     onChange={() => toggleSelect(book.id)}
                     className={`rounded-full border-slate-400 dark:border-zinc-600 ${selectedIds.has(book.id) ? '' : 'bg-white/80 dark:bg-zinc-900/80'}`}
                     title={`Select ${book.title}`}
+                    aria-label={`Select ${book.title}`}
                   />
                 </label>
                 <Link to={`/book/${book.id}`} state={bookNavState(i)} className="block w-full h-full">

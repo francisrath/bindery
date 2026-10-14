@@ -177,6 +177,7 @@ export default function HistoryPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-2xl font-bold">{t('history.title')}</h2>
         <select
+          aria-label={t('history.colType')}
           value={typeFilter}
           onChange={e => handleFilterChange(e.target.value)}
           className="bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-1.5 text-sm text-slate-800 dark:text-zinc-200"

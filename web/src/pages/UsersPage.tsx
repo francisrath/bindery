@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../components/useConfirmDialog'
 import { api, ManagedUser, UserOwnedRows, UserDeletePlan } from '../api/client'
@@ -13,6 +13,7 @@ const inputCls = 'w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 d
 const btnCls = 'px-3 py-1.5 rounded text-sm font-medium transition-colors'
 
 export default function UsersPage() {
+  const fid = useId()
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const { isAdmin, status } = useAuth()
@@ -286,8 +287,9 @@ export default function UsersPage() {
         <form onSubmit={handleCreate} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('users.fieldUsername')}</label>
+              <label htmlFor={`${fid}-username`} className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('users.fieldUsername')}</label>
               <input
+                id={`${fid}-username`}
                 {...literalInputAttrs}
                 className={inputCls}
                 value={newUsername}
@@ -297,8 +299,9 @@ export default function UsersPage() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('users.fieldPassword')}</label>
+              <label htmlFor={`${fid}-password`} className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('users.fieldPassword')}</label>
               <input
+                id={`${fid}-password`}
                 type="password"
                 className={inputCls}
                 value={newPassword}
@@ -309,8 +312,9 @@ export default function UsersPage() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('users.fieldRole')}</label>
+            <label htmlFor={`${fid}-role`} className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('users.fieldRole')}</label>
             <select
+              id={`${fid}-role`}
               className={inputCls}
               value={newRole}
               onChange={e => setNewRole(e.target.value as UserRole)}
