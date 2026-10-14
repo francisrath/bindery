@@ -13,6 +13,7 @@ import RenameFilesModal from '../../components/RenameFilesModal'
 import NamingTemplateField from './NamingTemplateField'
 import SaveButton from './SaveButton'
 import { useSaveResult } from './useSaveResult'
+import { slateFill } from '../../components/buttons'
 
 // Tab identifiers used by onNavigate for soft (no-reload) cross-tab links.
 // Kept loose (string) so GeneralTab doesn't need to import SettingsPage's Tab
@@ -665,7 +666,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             <button
               onClick={handleScan}
               disabled={scanningLibrary}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-4 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50 flex-shrink-0`}
             >
               {scanningLibrary ? t('settings.general.scanning') : t('settings.general.scanLibraryButton')}
             </button>
@@ -737,7 +738,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             <button
               type="button"
               onClick={() => setShowReorganize(true)}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-4 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50 flex-shrink-0`}
             >
               {t('settings.general.reorganizeLibraryButton')}
             </button>

@@ -6,6 +6,7 @@ import ABSConflictPanel from '../../components/ABSAuthorConflictsPanel'
 import { inputCls } from './formStyles'
 import PathRemapField from './PathRemapField'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
+import { slateFill } from '../../components/buttons'
 
 const absReviewResultLimit = 10
 
@@ -676,14 +677,14 @@ function AudiobookshelfSection() {
           <button
             onClick={testConnection}
             disabled={testing}
-            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium disabled:opacity-50"
+            className={`px-3 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50`}
           >
             {testing ? 'Testing…' : 'Test connection'}
           </button>
           <button
             onClick={() => loadLibraries(probePayload())}
             disabled={listing}
-            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium disabled:opacity-50"
+            className={`px-3 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50`}
           >
             {listing ? 'Loading…' : 'List libraries'}
           </button>
@@ -711,7 +712,7 @@ function AudiobookshelfSection() {
                   onClick={() => startImport(true)}
                   disabled={!canStartImport}
                   title={hasUnsavedABSConfig ? 'Save Audiobookshelf settings before starting an import' : undefined}
-                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium disabled:opacity-50"
+                  className={`px-3 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50`}
                 >
                   Preview changes
                 </button>
@@ -846,7 +847,7 @@ function AudiobookshelfSection() {
               </div>
               <button
                 onClick={() => refreshRuns().catch(() => {})}
-                className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium"
+                className={`px-3 py-2 ${slateFill} rounded text-sm font-medium`}
               >
                 Refresh runs
               </button>
@@ -874,14 +875,14 @@ function AudiobookshelfSection() {
                       <button
                         onClick={() => previewRollback(run.id)}
                         disabled={rolledBack || rollbackPreviewingRunId === run.id || rollbackApplyingRunId === run.id}
-                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                        className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                       >
                         {rollbackPreviewingRunId === run.id ? 'Previewing…' : 'Preview rollback'}
                       </button>
                       <button
                         onClick={() => applyRollback(run.id)}
                         disabled={rolledBack || rollbackApplyingRunId === run.id || rollbackPreviewingRunId === run.id}
-                        className={`px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 ${rolledBack ? 'bg-slate-500 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500'}`}
+                        className={`px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 ${rolledBack ? 'bg-slate-500 text-white cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500'}`}
                       >
                         {rolledBack ? 'Rolled back' : rollbackApplyingRunId === run.id ? 'Rolling back…' : 'Apply rollback'}
                       </button>
@@ -999,7 +1000,7 @@ function AudiobookshelfSection() {
             </button>
             <button
               onClick={() => refreshReviewItems().catch(() => {})}
-              className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium flex-shrink-0"
+              className={`px-3 py-2 ${slateFill} rounded text-sm font-medium flex-shrink-0`}
             >
               Refresh
             </button>
@@ -1073,7 +1074,7 @@ function AudiobookshelfSection() {
                         <button
                           onClick={() => searchReviewAuthors(item)}
                           disabled={authorSearchId === item.id}
-                          className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                          className={`px-3 py-2 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                         >
                           {authorSearchId === item.id ? 'Searching...' : 'Author'}
                         </button>
@@ -1106,7 +1107,7 @@ function AudiobookshelfSection() {
                         <button
                           onClick={() => searchReviewBooks(item)}
                           disabled={bookSearchId === item.id}
-                          className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                          className={`px-3 py-2 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                         >
                           {bookSearchId === item.id ? 'Searching...' : 'Book'}
                         </button>
@@ -1140,7 +1141,7 @@ function AudiobookshelfSection() {
                     <button
                       onClick={() => dismissReviewItem(item.id)}
                       disabled={reviewActionId === item.id}
-                      className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                      className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                     >
                       Dismiss
                     </button>

@@ -15,6 +15,7 @@ import CalibreDeliveryPanel from './CalibreDeliveryPanel'
 import { useSaveResult } from './useSaveResult'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
 import { useModal } from '../../components/useModal'
+import { slateFill } from '../../components/buttons'
 
 // The code the server puts on a calibredb mode it cannot run because there is
 // no calibredb where Bindery runs (#1940), on a Test failure and on a save.
@@ -562,7 +563,7 @@ function CalibreSection({
             <button
               onClick={runTest}
               disabled={testing}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-4 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50 flex-shrink-0`}
             >
               {testing ? 'Testing…' : 'Test connection'}
             </button>

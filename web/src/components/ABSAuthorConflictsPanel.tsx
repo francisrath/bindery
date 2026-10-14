@@ -1,4 +1,5 @@
 import { ABSMetadataConflict } from '../api/client'
+import { slateFill } from './buttons'
 
 type Props = {
   title: string
@@ -94,7 +95,7 @@ export default function ABSConflictPanel({
         </button>
         <button
           onClick={onRefresh}
-          className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium flex-shrink-0"
+          className={`px-3 py-2 ${slateFill} rounded text-sm font-medium flex-shrink-0`}
         >
           Refresh
         </button>
@@ -138,7 +139,7 @@ export default function ABSConflictPanel({
                     <button
                       onClick={() => onResolveConflict(conflict.id, 'abs')}
                       disabled={resolvingConflictId === conflict.id}
-                      className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                      className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                     >
                       Use ABS
                     </button>

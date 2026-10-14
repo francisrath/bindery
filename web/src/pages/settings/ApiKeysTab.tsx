@@ -7,6 +7,7 @@ import SaveButton from './SaveButton'
 import Toggle from './Toggle'
 import { useSaveResult } from './useSaveResult'
 import { secretInputAttrs } from '../../util/inputAttrs'
+import { slateFill } from '../../components/buttons'
 
 export default function ApiKeysTab() {
   const { t } = useTranslation()
@@ -273,7 +274,7 @@ export default function ApiKeysTab() {
               </code>
               <button
                 onClick={() => opdsClipboard.copy(window.location.origin + BINDERY_BASE + '/opds')}
-                className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-xs font-medium flex-shrink-0"
+                className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium flex-shrink-0`}
               >
                 {opdsClipboard.status === 'copied' ? t('common.copied', 'Copied') : t('settings.general.copy')}
               </button>
