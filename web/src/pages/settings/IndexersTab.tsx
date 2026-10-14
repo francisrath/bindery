@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, Indexer, IndexerTestResult, ProwlarrInstance } from '../../api/client'
@@ -42,6 +42,7 @@ function IndexerTestResultBanner({ r }: { r: IndexerTestResult }) {
 //   - >= 0           → that ratio (input shows it, toggle off)
 //   - -1             → unlimited (input disabled/blank, toggle on)
 function SeedRatioField({ value, onChange, source }: { value: number | null | undefined; onChange: (v: number | null) => void; source?: string }) {
+  const fid = useId()
   const { t } = useTranslation()
   const unlimited = value === -1
   // Text mirror of the numeric input so a half-typed "1." doesn't get clobbered.
@@ -68,9 +69,9 @@ function SeedRatioField({ value, onChange, source }: { value: number | null | un
 
   return (
     <div>
-      <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.seedRatio')}</label>
+      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.seedRatio')}</label>
       <div className="flex items-center gap-3">
-        <input
+        <input id={`${fid}-1`}
           type="number"
           min="0"
           step="0.1"
@@ -99,6 +100,7 @@ function SeedRatioField({ value, onChange, source }: { value: number | null | un
 // shows a value that will not be saved. Fractions round down, as the daily
 // query limit does.
 function MinutesField({ label, placeholder, value, onChange }: { label: string; placeholder: string; value: number | null | undefined; onChange: (v: number | null) => void }) {
+  const fid = useId()
   const [text, setText] = useState(value != null && value >= 1 ? String(value) : '')
 
   const parse = (raw: string): number | null => {
@@ -119,8 +121,8 @@ function MinutesField({ label, placeholder, value, onChange }: { label: string; 
 
   return (
     <div className="flex-1">
-      <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{label}</label>
-      <input
+      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{label}</label>
+      <input id={`${fid}-1`}
         type="number"
         min="1"
         step="1"
@@ -178,6 +180,7 @@ function SeedTimeFields({ seedTime, onSeedTime, inactive, onInactive, source }: 
 // SeedRatioField does: parsing on every keystroke would clobber a partially
 // typed number.
 function DailyQueryLimitField({ value, onChange }: { value: number | null | undefined; onChange: (v: number | null) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [text, setText] = useState(value != null && value > 0 ? String(value) : '')
 
@@ -204,8 +207,8 @@ function DailyQueryLimitField({ value, onChange }: { value: number | null | unde
 
   return (
     <div>
-      <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.dailyQueryLimit')}</label>
-      <input
+      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.dailyQueryLimit')}</label>
+      <input id={`${fid}-1`}
         type="number"
         min="0"
         step="1"
@@ -559,6 +562,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
 }
 
 function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onClose: () => void; onSaved: (idx: Indexer) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState(indexer.name)
   const [type, setType] = useState(indexer.type || 'newznab')
@@ -610,36 +614,36 @@ function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onCl
     <div className="mt-1 p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-200/50 dark:bg-zinc-800/50 space-y-3">
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className={labelCls}>{t('settings.indexers.form.name')}</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.indexers.form.namePlaceholder')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm" />
+          <label htmlFor={`${fid}-1`} className={labelCls}>{t('settings.indexers.form.name')}</label>
+          <input id={`${fid}-1`} value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.indexers.form.namePlaceholder')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm" />
         </div>
         <div className="w-48">
-          <label className={labelCls}>{t('settings.indexers.form.type')}</label>
-          <select value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
+          <label htmlFor={`${fid}-2`} className={labelCls}>{t('settings.indexers.form.type')}</label>
+          <select id={`${fid}-2`} value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
             <option value="newznab">{t('settings.indexers.form.typeNewznabUsenet')}</option>
             <option value="torznab">{t('settings.indexers.form.typeTorznabTorrent')}</option>
           </select>
         </div>
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.url')}</label>
-        <input {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.indexers.form.urlPlaceholder')} className={inputCls} />
+        <label htmlFor={`${fid}-3`} className={labelCls}>{t('settings.indexers.form.url')}</label>
+        <input id={`${fid}-3`} {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.indexers.form.urlPlaceholder')} className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.urlHintEdit')}</p>
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.apiKeyEditLabel')}</label>
-        <input {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="••••••••" type="password" className={inputCls} />
+        <label htmlFor={`${fid}-4`} className={labelCls}>{t('settings.indexers.form.apiKeyEditLabel')}</label>
+        <input id={`${fid}-4`} {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="••••••••" type="password" className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.apiKeyEditHint')}</p>
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.categories')}</label>
-        <input value={categories} onChange={e => setCategories(e.target.value)} placeholder={t('settings.indexers.form.categoriesPlaceholder')} className={inputCls} />
+        <label htmlFor={`${fid}-5`} className={labelCls}>{t('settings.indexers.form.categories')}</label>
+        <input id={`${fid}-5`} value={categories} onChange={e => setCategories(e.target.value)} placeholder={t('settings.indexers.form.categoriesPlaceholder')} className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.categoriesHint')}</p>
       </div>
       <ParentCategoriesField value={includeParentCategories} onChange={setIncludeParentCategories} />
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.priority')}</label>
-        <input type="number" value={priority} onChange={e => setPriority(e.target.value)} placeholder="0" className={inputCls} />
+        <label htmlFor={`${fid}-6`} className={labelCls}>{t('settings.indexers.form.priority')}</label>
+        <input id={`${fid}-6`} type="number" value={priority} onChange={e => setPriority(e.target.value)} placeholder="0" className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.priorityHint')}</p>
       </div>
       <SeedRatioField value={seedRatio} onChange={setSeedRatio} source={indexer.seedRatioSource} />
@@ -657,6 +661,7 @@ function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onCl
 }
 
 function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (idx: Indexer) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [type, setType] = useState<'newznab' | 'torznab'>('newznab')
@@ -696,35 +701,35 @@ function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (i
     <div className="mt-4 p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-200/50 dark:bg-zinc-800/50 space-y-3">
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className={labelCls}>{t('settings.indexers.form.name')}</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.indexers.form.namePlaceholderExample')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm" />
+          <label htmlFor={`${fid}-1`} className={labelCls}>{t('settings.indexers.form.name')}</label>
+          <input id={`${fid}-1`} value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.indexers.form.namePlaceholderExample')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm" />
         </div>
         <div className="w-40">
-          <label className={labelCls}>{t('settings.indexers.form.type')}</label>
-          <select value={type} onChange={e => setType(e.target.value as 'newznab' | 'torznab')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
+          <label htmlFor={`${fid}-2`} className={labelCls}>{t('settings.indexers.form.type')}</label>
+          <select id={`${fid}-2`} value={type} onChange={e => setType(e.target.value as 'newznab' | 'torznab')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
             <option value="newznab">{t('settings.indexers.form.typeNewznab')}</option>
             <option value="torznab">{t('settings.indexers.form.typeTorznab')}</option>
           </select>
         </div>
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.url')}</label>
-        <input {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.indexers.form.urlPlaceholderExample')} className={inputCls} />
+        <label htmlFor={`${fid}-3`} className={labelCls}>{t('settings.indexers.form.url')}</label>
+        <input id={`${fid}-3`} {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.indexers.form.urlPlaceholderExample')} className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.urlHintAdd')}</p>
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.apiKey')}</label>
-        <input {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={t('settings.indexers.form.apiKey')} type="password" className={inputCls} />
+        <label htmlFor={`${fid}-4`} className={labelCls}>{t('settings.indexers.form.apiKey')}</label>
+        <input id={`${fid}-4`} {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={t('settings.indexers.form.apiKey')} type="password" className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.categories')}</label>
-        <input value={categories} onChange={e => setCategories(e.target.value)} placeholder={t('settings.indexers.form.categoriesPlaceholder')} className={inputCls} />
+        <label htmlFor={`${fid}-5`} className={labelCls}>{t('settings.indexers.form.categories')}</label>
+        <input id={`${fid}-5`} value={categories} onChange={e => setCategories(e.target.value)} placeholder={t('settings.indexers.form.categoriesPlaceholder')} className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.categoriesHint')}</p>
       </div>
       <ParentCategoriesField value={includeParentCategories} onChange={setIncludeParentCategories} />
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.priority')}</label>
-        <input type="number" value={priority} onChange={e => setPriority(e.target.value)} placeholder="0" className={inputCls} />
+        <label htmlFor={`${fid}-6`} className={labelCls}>{t('settings.indexers.form.priority')}</label>
+        <input id={`${fid}-6`} type="number" value={priority} onChange={e => setPriority(e.target.value)} placeholder="0" className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.priorityHint')}</p>
       </div>
       <SeedRatioField value={seedRatio} onChange={setSeedRatio} />
@@ -742,6 +747,7 @@ function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (i
 }
 
 function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrInstance; onClose: () => void; onSaved: (p: ProwlarrInstance) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState(instance.name)
   const [url, setUrl] = useState(instance.url)
@@ -772,19 +778,19 @@ function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrIn
   return (
     <div className="mt-3 p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-200/50 dark:bg-zinc-800/50 space-y-3">
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.name')}</label>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.prowlarr.namePlaceholder')} className={inputCls} />
+        <label htmlFor={`${fid}-1`} className={labelCls}>{t('settings.indexers.form.name')}</label>
+        <input id={`${fid}-1`} value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.prowlarr.namePlaceholder')} className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.url')}</label>
-        <input {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.prowlarr.urlPlaceholder')} className={inputCls} />
+        <label htmlFor={`${fid}-2`} className={labelCls}>{t('settings.indexers.form.url')}</label>
+        <input id={`${fid}-2`} {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.prowlarr.urlPlaceholder')} className={inputCls} />
         {urlChanged && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">{t('settings.prowlarr.urlChangeWarning')}</p>
         )}
       </div>
       <div>
-        <label className={labelCls}>{t('settings.prowlarr.apiKeyEditLabel')}</label>
-        <input {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="••••••••" type="password" className={inputCls} />
+        <label htmlFor={`${fid}-3`} className={labelCls}>{t('settings.prowlarr.apiKeyEditLabel')}</label>
+        <input id={`${fid}-3`} {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="••••••••" type="password" className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.prowlarr.apiKeyEditHint')}</p>
       </div>
       <div className="flex items-center gap-2">
@@ -805,6 +811,7 @@ function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrIn
 }
 
 function AddProwlarrForm({ onClose, onAdded }: { onClose: () => void; onAdded: (p: ProwlarrInstance) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState('Prowlarr')
   const [url, setUrl] = useState('')
@@ -843,17 +850,17 @@ function AddProwlarrForm({ onClose, onAdded }: { onClose: () => void; onAdded: (
     <div className="mt-4 p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-200/50 dark:bg-zinc-800/50 space-y-3">
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className={labelCls}>{t('settings.indexers.form.name')}</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.prowlarr.namePlaceholder')} className={inputCls} />
+          <label htmlFor={`${fid}-1`} className={labelCls}>{t('settings.indexers.form.name')}</label>
+          <input id={`${fid}-1`} value={name} onChange={e => setName(e.target.value)} placeholder={t('settings.prowlarr.namePlaceholder')} className={inputCls} />
         </div>
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.url')}</label>
-        <input {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.prowlarr.urlPlaceholder')} className={inputCls} />
+        <label htmlFor={`${fid}-2`} className={labelCls}>{t('settings.indexers.form.url')}</label>
+        <input id={`${fid}-2`} {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder={t('settings.prowlarr.urlPlaceholder')} className={inputCls} />
       </div>
       <div>
-        <label className={labelCls}>{t('settings.indexers.form.apiKey')}</label>
-        <input {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={t('settings.prowlarr.apiKeyPlaceholder')} type="password" className={inputCls} />
+        <label htmlFor={`${fid}-3`} className={labelCls}>{t('settings.indexers.form.apiKey')}</label>
+        <input id={`${fid}-3`} {...secretInputAttrs} value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder={t('settings.prowlarr.apiKeyPlaceholder')} type="password" className={inputCls} />
       </div>
       <div className="flex items-center gap-2">
         <Toggle checked={syncOnStartup} onChange={() => setSyncOnStartup(!syncOnStartup)} />
