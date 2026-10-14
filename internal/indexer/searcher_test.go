@@ -839,6 +839,62 @@ func TestReleaseLanguageMarkersDoNotFalsePositive(t *testing.T) {
 	}
 }
 
+// TestFilterByAllowedLanguagesSceneSuffixCodes covers #3271: scene audiobook
+// releases carry their language only as a short code in the metadata suffix
+// ("-AUDIOBOOK-POR-", "-WEB-MP3-DE-", "-WEB-SE-"), so releaseLanguageCodes found
+// nothing and an eng-only profile auto-grabbed them. The shapes are the ones
+// reported, with the author, title and group names made up.
+func TestFilterByAllowedLanguagesSceneSuffixCodes(t *testing.T) {
+	for _, tc := range []struct {
+		title string
+		code  string
+	}{
+		{"Kari_Nordmann-Fjellvinden_Unabridged-2021-AUDIOBOOK-POR-2023-GRP", "por"},
+		{"Kari_Nordmann-Die_Fjellvinden_Trilogie_2-Bergwind-Audiobook-WEB-MP3-DE-2022-GRP", "ger"},
+		{"Kari_Nordmann_-_Fjellvinden-AUDiOBOOK-WEB-SE-2022-GRP_iNT", "swe"},
+		{"Kari Nordmann-Fjellvinden-2016-AUDIOBOOK-NO-GRP", "nor"},
+		{"Kari Nordmann - Fjellvinden-AUDiOBOOK-WEB-DK-2022-GRP", "dan"},
+		{"Kari Nordmann--Fjellvinden (Abook)-4CD-DE-2010-GRP", "ger"},
+		{"Kari.Nordmann-Fjellvinden.M4B.EN.2026-grp", "eng"},
+		{"[MP3] Kari Nordmann-Fjellvinden-4CD-AUDiOBOOK-DE-2005-GRP iNT", "ger"},
+		{"Kari Nordmann-Fjellvinden-WEB-PL-ABOOK-PL-2019-GRP", "pol"},
+	} {
+		codes := sceneLanguageCodes(NormalizeRelease(tc.title))
+		if !slices.Equal(codes, []string{tc.code}) {
+			t.Errorf("%q: expected scene code [%s], got %v", tc.title, tc.code, codes)
+		}
+		kept := FilterByAllowedLanguages(toResults(tc.title), []string{"eng"})
+		if wantKept := tc.code == "eng"; (len(kept) == 1) != wantKept {
+			t.Errorf("%q: eng-only profile kept=%v, want %v", tc.title, len(kept) == 1, wantKept)
+		}
+		if kept := FilterByAllowedLanguages(toResults(tc.title), []string{tc.code}); len(kept) != 1 {
+			t.Errorf("%q: a %s-allowed profile must keep it", tc.title, tc.code)
+		}
+	}
+}
+
+// TestSceneSuffixCodesIgnoreTitleWords pins why the codes are only read after
+// a scene marker (#3271): as bare words most of them are common ("de", "no",
+// "it", "por"), and #2274 left them out for exactly that reason.
+func TestSceneSuffixCodesIgnoreTitleWords(t *testing.T) {
+	for _, title := range []string{
+		"Kari Nordmann - De Fjellvinden (Unabridged) [M4B]",
+		"Kari Nordmann - No Wind on the Fjell - Audiobook",
+		"Kari Nordmann - It Came from the Fjell",
+		"Kari Nordmann - Por la Noche",
+		"Kari Nordmann - Fjellvinden SE Edition.epub",
+		"Kari Nordmann - Fjellvinden-AUDIOBOOK-WEB-2023-GRP",
+		"Kari Nordmann - Fjellvinden-SE161-ABOOK-2023-GRP",
+		"Kari Nordmann-Fjellvinden-16BIT-WEB-FLAC-2026-TR",  // TR is the release group
+		"[MP3] Kari Nordmann - De Fjellvinden (Unabridged)", // a leading marker starts no suffix
+		"Kari Nordmann M4B - In the Forest - Audiobook",
+	} {
+		if codes := sceneLanguageCodes(NormalizeRelease(title)); len(codes) != 0 {
+			t.Errorf("%q must carry no scene language code, got %v", title, codes)
+		}
+	}
+}
+
 func TestFilterByAllowedLanguagesTwoLetterAliases(t *testing.T) {
 	results := toResults(
 		"Il.Libro.ITALIANO.epub",

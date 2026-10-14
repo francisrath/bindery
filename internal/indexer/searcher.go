@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1473,6 +1474,58 @@ func releaseLanguageCodes(norm string) []string {
 	return out
 }
 
+// sceneMarkerTokens are the words that mark the metadata suffix of a scene
+// audiobook release name ("Author-Title-AUDIOBOOK-WEB-MP3-DE-2023-GRP").
+// Everything after the last of them is release metadata, not title (#3271).
+var sceneMarkerTokens = map[string]bool{
+	"audiobook": true, "abook": true, "mp3": true, "m4b": true, "flac": true, "aac": true,
+}
+
+// releaseLanguageCodeSet is every code releaseLanguageTags can produce. A
+// scene code only counts when it normalizes into this set, so it stays inside
+// the vocabulary the profile editor offers, and a token such as "web" or a
+// group name that NormalizeLanguageCode passes through unchanged is ignored.
+var releaseLanguageCodeSet = func() map[string]bool {
+	set := make(map[string]bool, len(releaseLanguageTags))
+	for _, code := range releaseLanguageTags {
+		set[code] = true
+	}
+	return set
+}()
+
+// sceneLanguageCodes returns the language codes in the scene suffix of a
+// normalized release title: tokens after the last scene marker that are a
+// language code ("de", "por", "nor"), read through
+// models.NormalizeReleaseLanguageCode so the country codes groups use ("SE",
+// "DK") count too. As bare words most of these are common ("de", "no", "it"),
+// which is why #2274 left them out; they are only read after a scene marker,
+// never in the title. NormalizeRelease turns the "-" and "_" separators into
+// spaces but keeps token order, so the suffix is still the tail of norm.
+func sceneLanguageCodes(norm string) []string {
+	toks := strings.Fields(norm)
+	// The suffix starts after the last marker. A marker in first position is
+	// a leading tag ("[MP3] Author - Title"), not a suffix, so it doesn't
+	// count. The last token is the release group, and a group can be named
+	// like a language code ("-2026-TR").
+	start := -1
+	for i, tok := range toks {
+		if i > 0 && sceneMarkerTokens[tok] {
+			start = i + 1
+		}
+	}
+	end := len(toks) - 1
+	if start < 0 || start >= end {
+		return nil
+	}
+	var out []string
+	for _, t := range toks[start:end] {
+		if code := models.NormalizeReleaseLanguageCode(t); releaseLanguageCodeSet[code] && !slices.Contains(out, code) {
+			out = append(out, code)
+		}
+	}
+	return out
+}
+
 // FilterByAllowedLanguages drops results whose release name is tagged with a
 // language outside the metadata profile's allowed set. Untagged releases
 // always pass — most releases carry no language marker, and dropping them
@@ -1506,7 +1559,7 @@ func FilterByAllowedLanguages(results []newznab.SearchResult, allowed []string) 
 	for _, r := range results {
 		norm := NormalizeRelease(r.Title)
 		ok := true
-		for _, code := range releaseLanguageCodes(norm) {
+		for _, code := range append(releaseLanguageCodes(norm), sceneLanguageCodes(norm)...) {
 			if !set[code] {
 				ok = false
 				break

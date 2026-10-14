@@ -1,0 +1,2 @@
+### Fixed
+- **Foreign-language audiobooks no longer slip past the language filter on a short scene code** (#3271). Scene releases often mark their language only as a code in the release name, such as `-AUDIOBOOK-POR-`, `-WEB-MP3-DE-` or `-WEB-SE-`, and the filter didn't recognise those, so an English-only profile could auto-grab and import a Portuguese or German edition. These codes are now read when they follow an audiobook marker in the release name, never in the title itself.
