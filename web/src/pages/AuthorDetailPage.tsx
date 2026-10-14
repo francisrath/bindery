@@ -949,6 +949,7 @@ export default function AuthorDetailPage() {
       {list.map(book => (
         <div
           key={book.id}
+          data-focus-card
           className={`relative border rounded-lg bg-slate-100 dark:bg-zinc-900 overflow-hidden group transition-colors ${selected.has(book.id) ? 'border-emerald-500' : 'border-slate-200 dark:border-zinc-800 hover:border-emerald-500'}`}
         >
           {/* The label is the tap area: 32px round the box, 44px on a touch
@@ -968,7 +969,7 @@ export default function AuthorDetailPage() {
           <Link
             to={`/book/${book.id}`}
             state={bookNavState(book)}
-            className="block"
+            className="block focus-visible:outline-hidden"
             onClick={e => { selectingClick(e, book) }}
           >
             <div className="aspect-[2/3] bg-slate-200 dark:bg-zinc-800 relative">

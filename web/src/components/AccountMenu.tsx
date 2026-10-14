@@ -109,7 +109,7 @@ export default function AccountMenu({
   }
 
   const triggerLabel = username ? `${t('login.signedInAs')} ${username}` : t('nav.account')
-  const itemClass = 'block w-full px-3 py-1.5 text-left text-sm whitespace-nowrap focus-visible:outline-none focus:bg-slate-200 dark:focus:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800'
+  const itemClass = 'block w-full px-3 py-1.5 text-left text-sm whitespace-nowrap rounded focus-visible:-outline-offset-2 focus:bg-slate-200 dark:focus:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-800'
   let index = 0
 
   return (

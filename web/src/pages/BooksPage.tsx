@@ -525,7 +525,7 @@ export default function BooksPage() {
                     title={`Select ${book.title}`}
                   />
                 </label>
-                <Link to={`/book/${book.id}`} state={bookNavState(i)} className="block w-full h-full">
+                <Link to={`/book/${book.id}`} state={bookNavState(i)} className="block w-full h-full rounded-t-lg focus-visible:-outline-offset-2">
                   <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-full h-full object-cover"
                     fallback={
                       <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-3 text-center">
