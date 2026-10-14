@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, AuthorMonitorMode, MetadataProfile } from '../../api/client'
@@ -51,6 +51,7 @@ function formatLanguageList(csv: string): string {
 }
 
 export default function MetadataTab() {
+  const fid = useId()
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const [profiles, setProfiles] = useState<MetadataProfile[]>([])
@@ -85,13 +86,13 @@ export default function MetadataTab() {
         {/* Metadata provider */}
         <div className="space-y-4">
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
-          <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+          <label htmlFor={`${fid}-5`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
             {t('settings.general.metadataProviderLabel', 'Primary metadata provider')}
           </label>
           <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
             {t('settings.general.metadataProviderHint', 'Selects the source used for author and book search, and decides what an author\'s catalogue looks like. DNB (Deutsche Nationalbibliothek) is recommended for German, Austrian, and Swiss catalogues — it covers German-language publications since 1913 where OpenLibrary coverage is thin. Nasjonalbiblioteket (the National Library of Norway) is recommended for Norwegian catalogues — it holds every Norwegian publication by legal deposit, under its original Norwegian title where OpenLibrary often has only the English translation. BnF (Bibliothèque nationale de France) is recommended for French-language libraries: legal deposit puts nearly every book published in France in its catalogue, under the French edition title, translator included, where OpenLibrary often has only the original English title. Contains data from the Bibliothèque nationale de France under the Licence Ouverte / Open Licence 2.0, with the date each record was retrieved shown on its book and author pages; BnF does not endorse Bindery. Hardcover is a curated catalogue: fewer translation editions, omnibus bundles, and non-book entries than OpenLibrary, at the cost of a thinner long tail. OpenLibrary remains the default. Whichever you pick, the other providers are still used as enrichers, except Nasjonalbiblioteket and BnF, which are only queried when chosen as the primary.')}
           </p>
-          <select
+          <select id={`${fid}-5`}
             value={settings['metadata.primary_provider'] ?? 'openlibrary'}
             onChange={async e => {
               const next = e.target.value
@@ -131,13 +132,13 @@ export default function MetadataTab() {
         {/* Author defaults */}
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+            <label htmlFor={`${fid}-6`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
               {t('settings.general.defaultMediaTypeLabel', 'Default media type')}
             </label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {t('settings.general.defaultMediaTypeHint', 'Applied to new authors, and to books you add on their own, when no explicit choice is made. Existing rows are unaffected: change authors with the Authors page bulk action, and books from the Books page with Set ebook, Set audiobook or Set both, which also covers your wanted list once Books is filtered to Wanted.')}
             </p>
-            <select
+            <select id={`${fid}-6`}
               value={settings['default.media_type'] ?? 'ebook'}
               onChange={async e => {
                 const next = e.target.value
@@ -172,13 +173,13 @@ export default function MetadataTab() {
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+            <label htmlFor={`${fid}-7`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
               {t('settings.general.defaultMonitorModeLabel', 'Default monitor mode')}
             </label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {t('settings.general.defaultMonitorModeHint', 'Applied to newly added authors. Existing authors keep their current mode unless edited.')}
             </p>
-            <select
+            <select id={`${fid}-7`}
               value={isAuthorMonitorMode(settings['author.default_monitor_mode'] ?? '') ? settings['author.default_monitor_mode'] : 'all'}
               onChange={async e => {
                 const next = e.target.value as AuthorMonitorMode
@@ -195,10 +196,10 @@ export default function MetadataTab() {
           </div>
           {(settings['author.default_monitor_mode'] ?? 'all') === 'latest' && (
             <div>
-              <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+              <label htmlFor={`${fid}-8`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
                 {t('settings.general.defaultMonitorLatestCountLabel', 'Latest book count')}
               </label>
-              <input
+              <input id={`${fid}-8`}
                 type="number"
                 min={1}
                 value={settings['author.default_monitor_latest_count'] ?? '1'}
@@ -330,6 +331,7 @@ export default function MetadataTab() {
 }
 
 function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: MetadataProfile; onClose: () => void; onSaved: () => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState(profile?.name ?? '')
   // Round-tripped, not edited. MinPopularity is no longer enforced anywhere
@@ -391,8 +393,8 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
   return (
     <form onSubmit={submit} className="p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-900/50 space-y-4">
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formName')}</label>
-        <input value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder={t('settings.metadata.formNamePlaceholder')} />
+        <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formName')}</label>
+        <input id={`${fid}-1`} value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder={t('settings.metadata.formNamePlaceholder')} />
       </div>
       <div>
         <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-2">{t('settings.metadata.formLanguages')}</label>
@@ -419,8 +421,8 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
         </p>
       </div>
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formUnknownLanguage')}</label>
-        <select
+        <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formUnknownLanguage')}</label>
+        <select id={`${fid}-2`}
           value={unknownLanguageBehavior}
           onChange={e => setUnknownLanguageBehavior(e.target.value as 'pass' | 'fail')}
           className={inputCls}
@@ -434,12 +436,12 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formMinPages')}</label>
-          <input type="number" min={0} value={minPages} onChange={e => setMinPages(Number(e.target.value))} className={inputCls} />
+          <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formMinPages')}</label>
+          <input id={`${fid}-3`} type="number" min={0} value={minPages} onChange={e => setMinPages(Number(e.target.value))} className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formMinEditionCount')}</label>
-          <input type="number" min={0} value={minEditionCount} onChange={e => setMinEditionCount(Number(e.target.value))} className={inputCls} />
+          <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formMinEditionCount')}</label>
+          <input id={`${fid}-4`} type="number" min={0} value={minEditionCount} onChange={e => setMinEditionCount(Number(e.target.value))} className={inputCls} />
         </div>
       </div>
       {minEditionCount > 0 && (

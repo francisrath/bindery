@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, LogEntry, LogQuery } from '../../api/client'
@@ -33,6 +33,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 export default function LogsTab() {
+  const fid = useId()
   const { t, i18n } = useTranslation()
   const narrow = useMediaQuery(BELOW_SM)
   const { confirm, confirmDialog } = useConfirmDialog()
@@ -177,8 +178,9 @@ export default function LogsTab() {
 
         {/* Runtime log level */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="text-slate-500 dark:text-zinc-500 font-medium">Runtime level</span>
+          <label htmlFor={`${fid}-level`} className="text-slate-500 dark:text-zinc-500 font-medium">Runtime level</label>
           <select
+            id={`${fid}-level`}
             value={logLevel}
             onChange={async e => {
               const l = e.target.value
@@ -383,11 +385,12 @@ export default function LogsTab() {
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="min-w-0">
-              <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.logRetentionLabel')}</label>
+              <label htmlFor={`${fid}-retention`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.logRetentionLabel')}</label>
               <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.logRetentionHint')}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <input
+                id={`${fid}-retention`}
                 type="number"
                 min={1}
                 max={365}

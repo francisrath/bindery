@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, ABSConfig, ABSImportProgress, ABSImportRun, ABSLibrary, ABSMetadataConflict, ABSReviewItem, ABSRollbackAction, ABSRollbackResult, ABSTestResult, Author, Book } from '../../api/client'
@@ -39,6 +39,7 @@ export default function ABSTab() {
 }
 
 function AudiobookshelfSection() {
+  const fid = useId()
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const [config, setConfig] = useState<ABSConfig | null>(null)
@@ -608,8 +609,8 @@ function AudiobookshelfSection() {
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Source label</label>
-            <input
+            <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Source label</label>
+            <input id={`${fid}-1`}
               value={draft.label}
               onChange={e => setDraft(prev => ({ ...prev, label: e.target.value }))}
               placeholder="Audiobookshelf"
@@ -617,8 +618,8 @@ function AudiobookshelfSection() {
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Base URL</label>
-            <input
+            <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Base URL</label>
+            <input id={`${fid}-2`}
               {...urlInputAttrs}
               value={draft.baseUrl}
               onChange={e => setDraft(prev => ({ ...prev, baseUrl: e.target.value }))}
@@ -629,8 +630,8 @@ function AudiobookshelfSection() {
         </div>
 
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">API key</label>
-          <input
+          <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">API key</label>
+          <input id={`${fid}-3`}
             {...secretInputAttrs}
             value={draft.apiKey}
             onChange={e => setDraft(prev => ({ ...prev, apiKey: e.target.value }))}

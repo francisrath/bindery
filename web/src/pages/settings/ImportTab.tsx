@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, BINDERY_BASE, Book, HardcoverList, ImportList, ImportListSyncProgress, ManagedUser, ManualImportLookup } from '../../api/client'
 import { inputCls } from './formStyles'
@@ -133,6 +133,7 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
 }
 
 function ManualImportSection() {
+  const fid = useId()
   const { t } = useTranslation()
   const [path, setPath] = useState('')
   const [looking, setLooking] = useState(false)
@@ -235,8 +236,8 @@ function ManualImportSection() {
           {result.match !== 'none' && (
             <div className="flex items-center gap-3">
               <div>
-                <label className="block text-xs text-slate-500 dark:text-zinc-500 mb-1">{t('settings.import.manualImportFormatLabel')}</label>
-                <select className={inputCls} value={format} onChange={e => setFormat(e.target.value)}>
+                <label htmlFor={`${fid}-1`} className="block text-xs text-slate-500 dark:text-zinc-500 mb-1">{t('settings.import.manualImportFormatLabel')}</label>
+                <select id={`${fid}-1`} className={inputCls} value={format} onChange={e => setFormat(e.target.value)}>
                   <option value="">{t('settings.import.manualImportFormatAuto')}</option>
                   <option value="ebook">{t('settings.import.manualImportFormatEbook')}</option>
                   <option value="audiobook">{t('settings.import.manualImportFormatAudiobook')}</option>

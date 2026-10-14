@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, NotificationConfig } from '../../api/client'
 import { inputCls } from './formStyles'
@@ -161,6 +161,7 @@ export default function NotificationsTab() {
 }
 
 function EditNotificationForm({ notification, onClose, onSaved }: { notification: NotificationConfig; onClose: () => void; onSaved: (n: NotificationConfig) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState(notification.name)
   const [url, setUrl] = useState(notification.url)
@@ -220,13 +221,13 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
       </div>
       <input {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder="Webhook URL" className={inputCls} />
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">ntfy topic (optional)</label>
-        <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="my-topic" className={inputCls} />
+        <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">ntfy topic (optional)</label>
+        <input id={`${fid}-1`} value={topic} onChange={e => setTopic(e.target.value)} placeholder="my-topic" className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">For ntfy: set the topic here and point the URL at the ntfy server root (e.g. https://ntfy.sh). Bindery then posts a JSON body ntfy renders natively, instead of printing raw JSON.</p>
       </div>
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Custom headers (JSON, optional)</label>
-        <textarea
+        <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Custom headers (JSON, optional)</label>
+        <textarea id={`${fid}-2`}
           value={headers}
           onChange={e => setHeaders(e.target.value)}
           placeholder={'{"Authorization": "Bearer YOUR_NTFY_TOKEN"}'}
@@ -262,6 +263,7 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
 }
 
 function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdded: (n: NotificationConfig) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState('')
   const [url, setUrl] = useState('')
@@ -320,13 +322,13 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
       </div>
       <input {...urlInputAttrs} value={url} onChange={e => setUrl(e.target.value)} placeholder="Webhook URL" className={inputCls} />
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">ntfy topic (optional)</label>
-        <input value={topic} onChange={e => setTopic(e.target.value)} placeholder="my-topic" className={inputCls} />
+        <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">ntfy topic (optional)</label>
+        <input id={`${fid}-1`} value={topic} onChange={e => setTopic(e.target.value)} placeholder="my-topic" className={inputCls} />
         <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">For ntfy: set the topic here and point the URL at the ntfy server root (e.g. https://ntfy.sh). Bindery then posts a JSON body ntfy renders natively, instead of printing raw JSON.</p>
       </div>
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Custom headers (JSON, optional)</label>
-        <textarea
+        <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Custom headers (JSON, optional)</label>
+        <textarea id={`${fid}-2`}
           value={headers}
           onChange={e => setHeaders(e.target.value)}
           placeholder={'{"Authorization": "Bearer YOUR_NTFY_TOKEN"}'}

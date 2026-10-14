@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import Alert from '../../components/Alert'
 import {
@@ -81,6 +81,7 @@ function CalibreSection({
   saveSetting: (key: string, onSaved?: (res: SettingSaveResult | undefined) => void) => Promise<string | null>
   saving: string | null
 }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string; detail?: string; warning?: string } | null>(null)
@@ -342,13 +343,13 @@ function CalibreSection({
 
         {/* Shared library path — used by both write integration and library import */}
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Library path</label>
+          <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Library path</label>
           <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
             Directory containing <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">metadata.db</code>.
             Used by both the write integration and library import.
           </p>
           <div className="flex flex-wrap gap-2">
-            <input
+            <input id={`${fid}-1`}
               value={settings['calibre.library_path'] ?? ''}
               onChange={e => setSettings(s => ({ ...s, 'calibre.library_path': e.target.value }))}
               placeholder="/data/calibre-library"
@@ -407,10 +408,10 @@ function CalibreSection({
 
         {mode === 'calibredb' && (
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Binary path (optional)</label>
+            <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Binary path (optional)</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Leave blank to resolve <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">calibredb</code> on PATH. Set explicitly when running in a container that bundles Calibre at a pinned location.</p>
             <div className="flex flex-wrap gap-2">
-              <input
+              <input id={`${fid}-2`}
                 value={settings['calibre.binary_path'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.binary_path': e.target.value }))}
                 placeholder="/usr/bin/calibredb"
@@ -457,12 +458,12 @@ function CalibreSection({
 
         {mode === 'plugin' && !pulling && (
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Plugin URL</label>
+            <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Plugin URL</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               Base URL of the Bindery Bridge plugin&rsquo;s HTTP server running inside Calibre.
             </p>
             <div className="flex flex-wrap gap-2">
-              <input
+              <input id={`${fid}-3`}
                 {...urlInputAttrs}
                 value={settings['calibre.plugin_url'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.plugin_url': e.target.value }))}
@@ -483,14 +484,14 @@ function CalibreSection({
 
         {mode === 'plugin' && (
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">API key</label>
+            <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">API key</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {pulling
                 ? t('settings.calibre.transport.apiKeyPullHelp')
                 : <>Bearer token configured in the plugin&rsquo;s Calibre Preferences dialog.</>}
             </p>
             <div className="flex flex-wrap gap-2">
-              <input
+              <input id={`${fid}-4`}
                 {...secretInputAttrs}
                 type="password"
                 value={settings['calibre.plugin_api_key'] ?? ''}
@@ -512,7 +513,7 @@ function CalibreSection({
 
         {mode === 'plugin' && !pulling && (
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Push path remap</label>
+            <label htmlFor={`${fid}-5`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Push path remap</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               Optional. If the Calibre container mounts your library at a different path than Bindery,
               map Bindery&rsquo;s prefix to Calibre&rsquo;s as <code className="font-mono">from:to</code> pairs
@@ -522,7 +523,7 @@ function CalibreSection({
               Leave empty when both containers see the library at the same path.
             </p>
             <div className="flex flex-wrap gap-2">
-              <input
+              <input id={`${fid}-5`}
                 value={settings['calibre.push_path_remap'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'calibre.push_path_remap': e.target.value }))}
                 placeholder="/books:/mnt/user/media/books"
@@ -716,10 +717,10 @@ function CalibreSection({
           Leave blank to disable.
         </p>
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Ingest folder path</label>
+          <label htmlFor={`${fid}-6`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Ingest folder path</label>
           <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Mount the same path into both containers. CWA's docs use <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">/cwa-book-ingest</code>.</p>
           <div className="flex flex-wrap gap-2">
-            <input
+            <input id={`${fid}-6`}
               value={settings['cwa.ingest_path'] ?? ''}
               onChange={e => setSettings(s => ({ ...s, 'cwa.ingest_path': e.target.value }))}
               placeholder="/cwa-book-ingest"
