@@ -48,7 +48,7 @@ export default function RequestConfirm({ kind, foreignId, title, subtitle, image
         <div className="flex items-start gap-4 rounded-md border border-slate-300 dark:border-zinc-700 bg-slate-200/50 dark:bg-zinc-800/50 p-4">
           <CoverImage src={imageUrl} alt="" className="w-20 aspect-[2/3] object-cover rounded-md flex-shrink-0" />
           <div className="min-w-0 flex-1">
-            <h4 ref={headingRef} tabIndex={-1} className="rounded-sm font-semibold leading-snug break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">{title}</h4>
+            <h4 ref={headingRef} tabIndex={-1} className="rounded-sm font-semibold leading-snug break-words focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500">{title}</h4>
             {subtitle && <p className="mt-1 text-sm text-fg-muted">{subtitle}</p>}
             <p className="mt-3 text-xs text-fg-muted">
               {kind === 'author' ? t('requests.confirm.authorHint') : t('requests.confirm.bookHint')}

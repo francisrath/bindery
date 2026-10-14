@@ -137,7 +137,7 @@ function AddBookForm({ book, searchedISBN, onBack, onClose, onAdded }: Props) {
             }
           />
           <div className="min-w-0 flex-1">
-            <h4 ref={headingRef} tabIndex={-1} className="rounded-sm font-semibold leading-snug break-words focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">{book.title}</h4>
+            <h4 ref={headingRef} tabIndex={-1} className="rounded-sm font-semibold leading-snug break-words focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500">{book.title}</h4>
             {book.author?.authorName && <p className="mt-1 text-sm text-fg-muted">{book.author.authorName}</p>}
             <dl className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-xs">
               {book.releaseDate && <>

@@ -177,7 +177,7 @@ function AddAuthorForm({ author, defaults, primaryProvider, onBack, onClose, onA
     <>
       <div className="p-4 flex-1 overflow-y-auto">
         <div className="rounded-md border border-slate-300 dark:border-zinc-700 bg-slate-200/50 dark:bg-zinc-800/50 p-3">
-          <div ref={headingRef} tabIndex={-1} className="font-medium rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">{author.authorName}</div>
+          <div ref={headingRef} tabIndex={-1} className="font-medium rounded-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-emerald-500">{author.authorName}</div>
           {author.disambiguation && <div className="mt-0.5 text-sm text-fg-muted">{author.disambiguation}</div>}
         </div>
 
