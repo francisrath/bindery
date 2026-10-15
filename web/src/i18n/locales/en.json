@@ -554,7 +554,8 @@
     "credit": {
       "photo": "Photo: {{credit}}, {{license}}, via {{source}}",
       "photoNoCredit": "Photo: {{license}}, via {{source}}",
-      "bio": "Bio from {{source}}, {{license}}"
+      "bio": "Bio from {{source}}, {{license}}",
+      "bioNoLicense": "Bio from {{source}}"
     }
   },
   "catalogueReconciliation": {
