@@ -23,6 +23,9 @@ type mobiFile struct {
 	encoding uint32 // 65001 (UTF-8) or 1252
 	exth     []exthRecord
 	noFlag   bool // EXTH present but the header flag not set
+	// fullNameAfter puts this many zero bytes between the EXTH block and the
+	// full name, to place the name past the record 0 cap.
+	fullNameAfter int
 }
 
 func buildMobi(m mobiFile) []byte {
@@ -48,6 +51,7 @@ func buildMobi(m mobiFile) []byte {
 		binary.BigEndian.PutUint32(rec0[128:132], 0x40)
 	}
 	rec0 = append(rec0, exth...)
+	rec0 = append(rec0, make([]byte, m.fullNameAfter)...)
 	if len(m.fullName) > 0 {
 		binary.BigEndian.PutUint32(rec0[84:88], uint32(len(rec0)))
 		binary.BigEndian.PutUint32(rec0[88:92], uint32(len(m.fullName)))
@@ -232,5 +236,84 @@ func TestKindleFilesReachBulkLookupAndUnmatchedReason(t *testing.T) {
 		if !strings.Contains(reason, want) {
 			t.Errorf("unmatched reason %q does not contain %q", reason, want)
 		}
+	}
+}
+
+// Offsets and lengths are uint32s from the file. On a 32-bit build a value of
+// 0x80000000 or more converted straight to int is negative, slipped past the
+// bounds checks and panicked on the slice; run with GOARCH=386 to see it.
+func TestReadKindleMetadataHugeLengthsDoNotWrap(t *testing.T) {
+	good := buildMobi(mobiFile{dbName: "Fjellvinden", fullName: []byte("Fjellvinden"), encoding: 65001,
+		exth: []exthRecord{{exthAuthor, []byte("Kari Nordmann")}}})
+	const rec0 = 96
+	for name, at := range map[string]int{
+		"MOBI header length": rec0 + 20,
+		"full name offset":   rec0 + 84,
+		"full name length":   rec0 + 88,
+		"EXTH record count":  rec0 + 248 + 8,
+		"EXTH record length": rec0 + 248 + 12 + 4,
+	} {
+		for _, v := range []uint32{0x80000000, 0xFFFFFFF8} {
+			b := append([]byte(nil), good...)
+			binary.BigEndian.PutUint32(b[at:], v)
+			if _, err := parseMobiRecord0(b[rec0:]); err != nil {
+				t.Errorf("%s = %#x: %v", name, v, err)
+			}
+		}
+	}
+}
+
+// A record whose length is under its own 8 byte header is corrupt: the walk
+// stops there rather than slicing backwards or spinning in place.
+func TestReadKindleMetadataShortEXTHRecordStopsTheWalk(t *testing.T) {
+	for _, length := range []uint32{0, 4, 7} {
+		b := buildMobi(mobiFile{encoding: 65001, exth: []exthRecord{{exthAuthor, []byte("Kari Nordmann")}, {exthTitle, []byte("Fjellvinden")}}})
+		at := 96 + 248 + 12
+		binary.BigEndian.PutUint32(b[at+4:], length)
+		binary.BigEndian.PutUint32(b[96+248+8:], 0xFFFFFFFF) // a huge count must not matter
+		meta, err := parseMobiRecord0(b[96:])
+		if err != nil || meta.Author != "" || meta.Title != "" {
+			t.Errorf("length %d: %+v, %v; want the walk to stop", length, meta, err)
+		}
+	}
+}
+
+// Only the first MiB of record 0 is read: a full name beyond it is not.
+func TestReadKindleMetadataCapsRecord0(t *testing.T) {
+	path := writeMobi(t, "a.mobi", mobiFile{dbName: "Nordlysnatt", fullName: []byte("Havgapet"), encoding: 65001, fullNameAfter: maxKindleRecord0})
+	meta, err := ReadKindleMetadata(path)
+	if err != nil || meta.Title != "Nordlysnatt" {
+		t.Errorf("title %q, %v; want the database name, the full name being past the cap", meta.Title, err)
+	}
+}
+
+// A full name that runs past the record is ignored, not sliced.
+func TestReadKindleMetadataFullNamePastTheRecord(t *testing.T) {
+	b := buildMobi(mobiFile{dbName: "Nordlysnatt", fullName: []byte("Havgapet"), encoding: 65001})
+	binary.BigEndian.PutUint32(b[96+88:], 1000)
+	meta, err := parseMobiRecord0(b[96:])
+	if err != nil || meta.Title != "" {
+		t.Errorf("title %q, %v; want none", meta.Title, err)
+	}
+}
+
+// An ISBN-13 wins over an ISBN-10 whichever comes first.
+func TestReadKindleMetadataPrefersISBN13(t *testing.T) {
+	path := writeMobi(t, "a.mobi", mobiFile{encoding: 65001, exth: []exthRecord{
+		{exthISBN, []byte("82-05-12345-X")}, {exthISBN, []byte("978-82-05-12345-6")}, {exthISBN, []byte("978-82-05-99999-9")},
+	}})
+	meta, err := ReadKindleMetadata(path)
+	if err != nil || meta.ISBN != "9788205123456" {
+		t.Errorf("isbn %q, %v; want the first ISBN-13", meta.ISBN, err)
+	}
+}
+
+// Encoding 65001 is UTF-8: ø as its two UTF-8 bytes must not come back as
+// the two Windows-1252 characters those bytes are there.
+func TestReadKindleMetadataUTF8(t *testing.T) {
+	path := writeMobi(t, "a.mobi", mobiFile{encoding: 65001, exth: []exthRecord{{exthTitle, []byte("Sølvbekken")}, {exthAuthor, []byte("Kari Bjørnstad\xff")}}})
+	meta, err := ReadKindleMetadata(path)
+	if err != nil || meta.Title != "Sølvbekken" || meta.Author != "Kari Bjørnstad" {
+		t.Errorf("got %q by %q, %v", meta.Title, meta.Author, err)
 	}
 }

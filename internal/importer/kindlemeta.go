@@ -124,34 +124,41 @@ func ReadKindleMetadata(path string) (EpubMetadata, error) {
 }
 
 // parseMobiRecord0 reads the MOBI header and EXTH block of record 0.
+//
+// Every offset and length is a uint32 from the file, and is checked against
+// len(rec) as a uint64 before it becomes an int: on a 32-bit build (armv6,
+// armv7) a value of 0x80000000 or more converted straight to int is negative
+// and would pass a "<= len" check, then panic on the slice.
 func parseMobiRecord0(rec []byte) (EpubMetadata, error) {
 	var meta EpubMetadata
 	if len(rec) < 32 || !bytes.Equal(rec[16:20], []byte("MOBI")) {
 		return meta, errors.New("kindle: record 0 has no MOBI header")
 	}
-	mobiLen := int(binary.BigEndian.Uint32(rec[20:24]))
+	recLen := uint64(len(rec))
+	u32 := func(at uint64) uint64 { return uint64(binary.BigEndian.Uint32(rec[at : at+4])) }
 	text := decoderFor(binary.BigEndian.Uint32(rec[28:32]))
 
 	if len(rec) >= 92 {
-		off := int(binary.BigEndian.Uint32(rec[84:88]))
-		n := int(binary.BigEndian.Uint32(rec[88:92]))
-		if off > 0 && n > 0 && off+n <= len(rec) {
+		off, n := u32(84), u32(88)
+		if off > 0 && n > 0 && off+n <= recLen {
 			meta.Title = text(rec[off : off+n])
 		}
 	}
 
-	exthAt := 16 + mobiLen
-	hasEXTH := len(rec) >= 132 && binary.BigEndian.Uint32(rec[128:132])&0x40 != 0
-	if !hasEXTH || exthAt+12 > len(rec) || !bytes.Equal(rec[exthAt:exthAt+4], []byte("EXTH")) {
+	exthAt := 16 + u32(20)
+	hasEXTH := len(rec) >= 132 && u32(128)&0x40 != 0
+	if !hasEXTH || exthAt+12 > recLen || !bytes.Equal(rec[exthAt:exthAt+4], []byte("EXTH")) {
 		return meta, nil
 	}
-	count := int(binary.BigEndian.Uint32(rec[exthAt+8 : exthAt+12]))
+	count := u32(exthAt + 8)
 	pos := exthAt + 12
 	var isbn10 string
-	for i := 0; i < count && pos+8 <= len(rec); i++ {
+	for i := uint64(0); i < count && pos+8 <= recLen; i++ {
 		typ := binary.BigEndian.Uint32(rec[pos : pos+4])
-		length := int(binary.BigEndian.Uint32(rec[pos+4 : pos+8]))
-		if length < 8 || pos+length > len(rec) {
+		length := u32(pos + 4)
+		// Each record's length counts its own 8 byte header, so anything
+		// shorter is corrupt, and would never move pos forward.
+		if length < 8 || pos+length > recLen {
 			break
 		}
 		val := text(rec[pos+8 : pos+length])
