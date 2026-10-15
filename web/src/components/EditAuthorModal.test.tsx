@@ -125,6 +125,25 @@ describe('EditAuthorModal', () => {
     })
   })
 
+  // #3287: a bio written here is sent only when it changed, trimmed; an
+  // emptied field sends an empty string so the server clears it.
+  it('sends the bio only when it changed', async () => {
+    render(<EditAuthorModal author={{ ...baseAuthor, description: 'Old bio.' }} onClose={onClose} onSaved={onSaved} />)
+    const bio = await screen.findByLabelText('Bio')
+    expect(bio).toHaveValue('Old bio.')
+    fireEvent.change(bio, { target: { value: '  Kari Nordmann writes about the fjells.  ' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await waitFor(() => expect(api.updateAuthor).toHaveBeenCalledTimes(1))
+    expect(api.updateAuthor).toHaveBeenCalledWith(42, { description: 'Kari Nordmann writes about the fjells.' })
+  })
+
+  it('sends an empty bio to clear it', async () => {
+    render(<EditAuthorModal author={{ ...baseAuthor, description: 'Old bio.' }} onClose={onClose} onSaved={onSaved} />)
+    fireEvent.change(await screen.findByLabelText('Bio'), { target: { value: '   ' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await waitFor(() => expect(api.updateAuthor).toHaveBeenCalledWith(42, { description: '' }))
+  })
+
   it('sends monitorNewItems when changed and defaults to all (#1348)', async () => {
     render(<EditAuthorModal author={baseAuthor} onClose={onClose} onSaved={onSaved} />)
 

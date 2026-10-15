@@ -21,6 +21,7 @@ vi.mock('../api/client', async importOriginal => {
       searchAuthorLinkCandidates: vi.fn(),
       relinkAuthorUpstream: vi.fn(),
       updateAuthor: vi.fn(),
+      uploadAuthorPhoto: vi.fn(),
       deleteAuthor: vi.fn(),
       deleteAuthorAlias: vi.fn(),
       searchAuthorWanted: vi.fn(),
@@ -347,6 +348,29 @@ describe('AuthorDetailPage', () => {
     const bio = screen.getByTestId('author-bio-credit')
     expect(bio.textContent).toBe('Bio from Wikipedia, CC BY-SA 4.0')
     expect(bio).toHaveAttribute('href', 'https://no.wikipedia.example/wiki/Kari_Nordmann')
+  })
+
+  // #3287: the photo upload mirrors the book cover upload (#3017).
+  it('uploads a photo picked from the author page and shows no credit for it', async () => {
+    const file = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'photo.png', { type: 'image/png' })
+    vi.mocked(api.uploadAuthorPhoto).mockResolvedValue({ ...author, imageUrl: '/api/v1/images?url=bindery-cover%3Aabc', imageSource: { provider: 'user', url: '' } })
+    renderAuthorDetailPage([], 'grid', { imageUrl: '' })
+    const input = await screen.findByLabelText('Upload photo')
+    expect(input.closest('label')).toHaveClass('touch-target')
+    fireEvent.change(input, { target: { files: [file] } })
+    await waitFor(() => expect(api.uploadAuthorPhoto).toHaveBeenCalledWith(42, file))
+    expect(await screen.findByLabelText('Change photo')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: author.authorName })).toHaveAttribute('src', '/api/v1/images?url=bindery-cover%3Aabc')
+    // A photo the user chose is theirs: there is nobody to credit.
+    expect(screen.queryByTestId('author-photo-credit')).toBeNull()
+  })
+
+  it('reports a failed photo upload', async () => {
+    vi.mocked(api.uploadAuthorPhoto).mockRejectedValue(new Error('send a JPEG, PNG, WebP or GIF image'))
+    renderAuthorDetailPage([], 'grid', { imageUrl: '' })
+    const input = await screen.findByLabelText('Upload photo')
+    fireEvent.change(input, { target: { files: [new File(['x'], 'notes.txt', { type: 'text/plain' })] } })
+    expect(await screen.findByText('send a JPEG, PNG, WebP or GIF image')).toBeInTheDocument()
   })
 
   it('shows no enrichment credit for a photo and bio from the author\'s own provider', async () => {

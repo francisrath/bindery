@@ -528,6 +528,12 @@
       "photo": "Foto: {{credit}}, {{license}}, via {{source}}",
       "photoNoCredit": "Foto: {{license}}, via {{source}}",
       "bio": "Biografi fra {{source}}, {{license}}"
+    },
+    "photo": {
+      "upload": "Last opp bilde",
+      "change": "Bytt bilde",
+      "uploading": "Laster opp…",
+      "uploadFailed": "Kunne ikke laste opp bildet"
     }
   },
   "catalogueReconciliation": {
@@ -2048,5 +2054,9 @@
     "back": "Tilbake",
     "force": "Koble om likevel",
     "submitting": "Kobler om…"
+  },
+  "editAuthorModal": {
+    "bio": "Biografi",
+    "bioHint": "En biografi du skriver her, blir stående slik du skrev den: ingen oppdatering erstatter den. Tøm feltet for å la metadatakilden fylle den inn igjen."
   }
 }

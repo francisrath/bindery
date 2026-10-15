@@ -22,6 +22,7 @@ import (
 	"github.com/vavallee/bindery/internal/auth"
 	"github.com/vavallee/bindery/internal/bookhydrate"
 	"github.com/vavallee/bindery/internal/concurrency"
+	"github.com/vavallee/bindery/internal/covers"
 	"github.com/vavallee/bindery/internal/db"
 	"github.com/vavallee/bindery/internal/importer"
 	"github.com/vavallee/bindery/internal/indexer"
@@ -62,6 +63,9 @@ func isPartBookTitle(title string) bool {
 }
 
 type AuthorHandler struct {
+	// coverStore holds photos uploaded through POST /author/{id}/photo,
+	// the same store book covers are uploaded to (#3017).
+	coverStore                  *covers.Store
 	authors                     *db.AuthorRepo
 	aliases                     *db.AuthorAliasRepo
 	books                       *db.BookRepo
@@ -1025,10 +1029,28 @@ func (h *AuthorHandler) Update(w http.ResponseWriter, r *http.Request) {
 		// not touch the existing selection" — an explicit empty array clears
 		// it. Validated against the author's own series before persistence.
 		MonitoredSeriesIDs *[]int64 `json:"monitoredSeriesIds"`
+		// Description sets the author's bio by hand. It is kept as the
+		// user's own, so no refresh replaces it; an empty string clears it
+		// and lets the provider or an enricher fill it again (#3287).
+		Description *string `json:"description"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 		return
+	}
+	if req.Description != nil {
+		desc := strings.TrimSpace(*req.Description)
+		if len(desc) > maxAuthorDescriptionBytes {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "description is longer than 20000 bytes"})
+			return
+		}
+		if desc != author.Description {
+			author.Description = desc
+			author.DescriptionSource = nil
+			if desc != "" {
+				author.DescriptionSource = &models.ProfileSource{Provider: models.ProfileSourceUser}
+			}
+		}
 	}
 	if req.Monitored != nil {
 		author.Monitored = *req.Monitored

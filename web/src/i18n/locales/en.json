@@ -555,6 +555,12 @@
       "photo": "Photo: {{credit}}, {{license}}, via {{source}}",
       "photoNoCredit": "Photo: {{license}}, via {{source}}",
       "bio": "Bio from {{source}}, {{license}}"
+    },
+    "photo": {
+      "upload": "Upload photo",
+      "change": "Change photo",
+      "uploading": "Uploading…",
+      "uploadFailed": "Could not upload the photo"
     }
   },
   "catalogueReconciliation": {
@@ -2321,5 +2327,9 @@
     "back": "Back",
     "force": "Re-bind anyway",
     "submitting": "Re-binding…"
+  },
+  "editAuthorModal": {
+    "bio": "Bio",
+    "bioHint": "A bio you write here stays as you wrote it: no refresh replaces it. Clear it to let the metadata provider fill it again."
   }
 }
