@@ -1,0 +1,2 @@
+### Added
+- **Kindle files' own metadata is read at import** (#3016). MOBI, AZW and AZW3 files now have their embedded title, author, ISBN and language read, the way EPUBs always have. The import language check, matching a download that arrived without a book, bulk import lookups and the ebook content check now cover Kindle formats too, so a Kindle file in a language the metadata profile does not allow is blocked instead of imported unchecked.

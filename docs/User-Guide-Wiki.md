@@ -497,7 +497,8 @@ webhooks. The three ways of reaching Calibre or CWA are easy to mix up; the
 **The file's language is checked at import.** The language filter at grab
 time can only read the release name, so a release that does not say its
 language gets through it. When the download arrives, Bindery reads the
-language the EPUB declares (its `dc:language`) and compares it with the
+language the ebook declares (an EPUB's `dc:language`, or the language a MOBI,
+AZW or AZW3 file records in its header) and compares it with the
 languages the book may be in: the allowed languages on the author's metadata
 profile, or, when that profile allows any language, the preferred search
 language if it is set to English. That is the same rule the release name was
@@ -601,7 +602,8 @@ File Naming (`import.ebook.content_check`, admin only):
 Block is opt in because a wrongly refused download costs more than a missed
 mismatch. The check only runs for downloads Bindery grabbed for a book. A library
 scan, manual import, **Match to book** and a download matched to its book from
-the file's own metadata are never checked, and only EPUB is read. Bindery does not
+the file's own metadata are never checked, and only EPUB and Kindle files (MOBI,
+AZW, AZW3) are read. Bindery does not
 read the book's text and does not write anything into the file.
 
 **The files' audio tags are checked at import (audiobooks).** An audiobook
