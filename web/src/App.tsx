@@ -177,7 +177,7 @@ function Shell() {
     }`
 
   const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `block px-4 py-3 text-sm font-medium transition-colors border-b border-slate-200/50 dark:border-zinc-800/50 ${
+    `block px-4 py-3 text-sm font-medium transition-colors focus-visible:-outline-offset-2 border-b border-slate-200/50 dark:border-zinc-800/50 ${
       isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
     }`
 

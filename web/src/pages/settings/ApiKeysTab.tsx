@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, BINDERY_BASE, HardcoverTestResult, SystemStatus } from '../../api/client'
 import ClipboardManualFallback from '../../components/ClipboardManualFallback'
@@ -7,8 +7,10 @@ import SaveButton from './SaveButton'
 import Toggle from './Toggle'
 import { useSaveResult } from './useSaveResult'
 import { secretInputAttrs } from '../../util/inputAttrs'
+import { slateFill } from '../../components/buttons'
 
 export default function ApiKeysTab() {
+  const fid = useId()
   const { t } = useTranslation()
   const opdsClipboard = useClipboardCopy()
   const [settings, setSettings] = useState<Record<string, string>>({})
@@ -141,9 +143,9 @@ export default function ApiKeysTab() {
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.apiKeys')}</h3>
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.googleBooksKey')}</label>
+            <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.googleBooksKey')}</label>
             <div className="flex flex-wrap gap-2">
-              <input
+              <input id={`${fid}-1`}
                 {...secretInputAttrs}
                 value={settings['googlebooks.apiKey'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'googlebooks.apiKey': e.target.value }))}
@@ -273,7 +275,7 @@ export default function ApiKeysTab() {
               </code>
               <button
                 onClick={() => opdsClipboard.copy(window.location.origin + BINDERY_BASE + '/opds')}
-                className="px-3 py-1.5 bg-slate-600 hover:bg-slate-500 rounded text-xs font-medium flex-shrink-0"
+                className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium flex-shrink-0`}
               >
                 {opdsClipboard.status === 'copied' ? t('common.copied', 'Copied') : t('settings.general.copy')}
               </button>

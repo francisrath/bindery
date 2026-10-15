@@ -299,7 +299,7 @@ export default function BooksPage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={t('books.searchPlaceholder')}
-          className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm placeholder-slate-400 dark:placeholder-zinc-600"
+          className="flex-1 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm"
         />
         <div className="flex gap-1 pointer-coarse:gap-y-5 flex-wrap">
           {(['', 'wanted', 'imported', 'skipped'] as const).map(s => (
@@ -523,9 +523,10 @@ export default function BooksPage() {
                     onChange={() => toggleSelect(book.id)}
                     className={`rounded-full border-slate-400 dark:border-zinc-600 ${selectedIds.has(book.id) ? '' : 'bg-white/80 dark:bg-zinc-900/80'}`}
                     title={`Select ${book.title}`}
+                    aria-label={`Select ${book.title}`}
                   />
                 </label>
-                <Link to={`/book/${book.id}`} state={bookNavState(i)} className="block w-full h-full">
+                <Link to={`/book/${book.id}`} state={bookNavState(i)} className="block w-full h-full rounded-t-lg focus-visible:-outline-offset-2">
                   <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt={book.title} className="w-full h-full object-cover"
                     fallback={
                       <div className="w-full h-full flex flex-col items-center justify-center gap-2 p-3 text-center">

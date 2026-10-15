@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, BINDERY_BASE, OidcProvider, OidcProviderConfig } from '../api/client'
 import Alert from '../components/Alert'
@@ -149,6 +149,7 @@ function AddProviderForm({
   onCancel: () => void
   saving: boolean
 }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [id, setId] = useState('')
   const [name, setName] = useState('')
@@ -207,12 +208,12 @@ function AddProviderForm({
       <p className="text-xs font-medium text-slate-700 dark:text-zinc-300">{t('settings.oidc.addHeading')}</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldId')}</label>
-          <input value={id} onChange={e => setId(e.target.value)} required placeholder="google" className={inputCls} />
+          <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldId')}</label>
+          <input id={`${fid}-1`} value={id} onChange={e => setId(e.target.value)} required placeholder="google" className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldName')}</label>
-          <input value={name} onChange={e => setName(e.target.value)} required placeholder="Google" className={inputCls} />
+          <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldName')}</label>
+          <input id={`${fid}-2`} value={name} onChange={e => setName(e.target.value)} required placeholder="Google" className={inputCls} />
         </div>
       </div>
       {/* Live preview of the redirect URI Bindery will register with the IdP.
@@ -255,17 +256,17 @@ function AddProviderForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldClientId')}</label>
-          <input value={clientId} onChange={e => setClientId(e.target.value)} required className={inputCls} />
+          <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldClientId')}</label>
+          <input id={`${fid}-3`} value={clientId} onChange={e => setClientId(e.target.value)} required className={inputCls} />
         </div>
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldClientSecret')}</label>
-          <input {...secretInputAttrs} value={clientSecret} onChange={e => setClientSecret(e.target.value)} required type="password" className={inputCls} />
+          <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldClientSecret')}</label>
+          <input id={`${fid}-4`} {...secretInputAttrs} value={clientSecret} onChange={e => setClientSecret(e.target.value)} required type="password" className={inputCls} />
         </div>
       </div>
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldScopes')}</label>
-        <input value={scopes} onChange={e => setScopes(e.target.value)} className={inputCls} />
+        <label htmlFor={`${fid}-5`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.oidc.fieldScopes')}</label>
+        <input id={`${fid}-5`} value={scopes} onChange={e => setScopes(e.target.value)} className={inputCls} />
       </div>
       <div className="flex gap-2 justify-end">
         <button type="button" onClick={onCancel} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">
@@ -301,6 +302,7 @@ type DiscoveryResult =
   | { state: 'error'; message: string }
 
 function IssuerField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [result, setResult] = useState<DiscoveryResult>({ state: 'idle' })
   // Reset result whenever the user edits the issuer — a stale "ok" badge
@@ -329,11 +331,11 @@ function IssuerField({ value, onChange }: { value: string; onChange: (v: string)
   }
   return (
     <div>
-      <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
         {t('settings.oidc.fieldIssuer')}
       </label>
       <div className="flex gap-2">
-        <input
+        <input id={`${fid}-1`}
           {...urlInputAttrs}
           value={value}
           onChange={e => handleChange(e.target.value)}

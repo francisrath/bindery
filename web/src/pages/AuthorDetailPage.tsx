@@ -966,6 +966,7 @@ export default function AuthorDetailPage() {
       {list.map(book => (
         <div
           key={book.id}
+          data-focus-card
           className={`relative border rounded-lg bg-slate-100 dark:bg-zinc-900 overflow-hidden group transition-colors ${selected.has(book.id) ? 'border-emerald-500' : 'border-slate-200 dark:border-zinc-800 hover:border-emerald-500'}`}
         >
           {/* The label is the tap area: 32px round the box, 44px on a touch
@@ -985,7 +986,7 @@ export default function AuthorDetailPage() {
           <Link
             to={`/book/${book.id}`}
             state={bookNavState(book)}
-            className="block"
+            className="block focus-visible:outline-hidden"
             onClick={e => { selectingClick(e, book) }}
           >
             <div className="aspect-[2/3] bg-slate-200 dark:bg-zinc-800 relative">
@@ -1281,7 +1282,7 @@ export default function AuthorDetailPage() {
                     <button
                       type="button"
                       onClick={() => handleDeleteAlias(a)}
-                      className="ml-0.5 leading-none text-slate-500 hover:text-red-600 focus:text-red-600 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-red-500 dark:text-zinc-500 dark:hover:text-red-400 dark:focus:text-red-400 opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/alias:opacity-100 [@media(hover:hover)]:focus:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
+                      className="ml-0.5 leading-none text-slate-500 hover:text-red-600 focus:text-red-600 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-red-500 dark:text-zinc-500 dark:hover:text-red-400 dark:focus:text-red-400 opacity-100 transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/alias:opacity-100 [@media(hover:hover)]:focus:opacity-100 [@media(hover:hover)]:focus-visible:opacity-100"
                       aria-label={t('authorDetail.aliases.removeLabel', { name: a.name })}
                       title={t('authorDetail.aliases.removeLabel', { name: a.name })}
                     >

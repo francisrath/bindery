@@ -14,7 +14,7 @@
 
 const base =
   'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors ' +
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ' +
+  'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-1 ' +
   'focus-visible:ring-offset-slate-100 dark:focus-visible:ring-offset-zinc-900 ' +
   'disabled:opacity-50 disabled:cursor-not-allowed'
 
@@ -41,6 +41,13 @@ export const btnSize = {
   md: 'px-3 py-1.5 text-sm',
   lg: 'px-3 py-2 text-xs', // larger touch target (queue row actions)
 } as const
+
+// Solid dark grey fill for the neutral action buttons in the Settings tabs
+// (Test connection, Scan Library, Refresh runs…). It sets its own text colour:
+// those buttons used to take the page's, which in the light theme is dark
+// slate on dark slate, 1.7:1 (#3241). Colour only, like the variants above;
+// the call site keeps its own padding and shape.
+export const slateFill = 'bg-slate-700 hover:bg-slate-600 text-white'
 
 // Inline destructive link, for dense list rows where a bordered button would be
 // too heavy. Properly paired for light + dark — use this instead of a bare

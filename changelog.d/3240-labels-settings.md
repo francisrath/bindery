@@ -1,0 +1,2 @@
+### Fixed
+- **Settings fields are named by their labels** (part of #3240). Across General, Metadata, Logs, Audiobookshelf, Calibre, Grimmory, Notifications, Quality, Import, API Keys and the sign-in providers, labels sat next to their fields without being linked, so a screen reader read many fields without a name, and clicking a label did nothing. They are now linked. The on/off settings in Advanced were already labelled in the markup, but the label pointed at a switch that did not carry its id; it does now.

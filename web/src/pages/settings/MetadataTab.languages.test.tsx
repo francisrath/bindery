@@ -69,6 +69,15 @@ describe('Metadata profile language selection', () => {
     expect(pressedLanguages()).toEqual(['French', 'Norwegian'])
   })
 
+  // #3240: the profile form's labels name their fields.
+  it('names the profile fields by their labels', async () => {
+    vi.mocked(api.listMetadataProfiles).mockResolvedValue([profile('eng')])
+    render(<MetadataTab />)
+    fireEvent.click(await screen.findByRole('button', { name: 'common.edit' }))
+    expect(screen.getByLabelText('settings.metadata.formMinPages').tagName).toBe('INPUT')
+    expect(screen.getByLabelText('settings.metadata.formUnknownLanguage').tagName).toBe('SELECT')
+  })
+
   it('still defaults a new profile to English', async () => {
     vi.mocked(api.listMetadataProfiles).mockResolvedValue([])
     render(<MetadataTab />)

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, ABSConfig, ABSImportProgress, ABSImportRun, ABSLibrary, ABSMetadataConflict, ABSReviewItem, ABSRollbackAction, ABSRollbackResult, ABSTestResult, Author, Book } from '../../api/client'
@@ -6,6 +6,7 @@ import ABSConflictPanel from '../../components/ABSAuthorConflictsPanel'
 import { inputCls } from './formStyles'
 import PathRemapField from './PathRemapField'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
+import { slateFill } from '../../components/buttons'
 
 const absReviewResultLimit = 10
 
@@ -39,6 +40,7 @@ export default function ABSTab() {
 }
 
 function AudiobookshelfSection() {
+  const fid = useId()
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const [config, setConfig] = useState<ABSConfig | null>(null)
@@ -608,8 +610,8 @@ function AudiobookshelfSection() {
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Source label</label>
-            <input
+            <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Source label</label>
+            <input id={`${fid}-1`}
               value={draft.label}
               onChange={e => setDraft(prev => ({ ...prev, label: e.target.value }))}
               placeholder="Audiobookshelf"
@@ -617,8 +619,8 @@ function AudiobookshelfSection() {
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Base URL</label>
-            <input
+            <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Base URL</label>
+            <input id={`${fid}-2`}
               {...urlInputAttrs}
               value={draft.baseUrl}
               onChange={e => setDraft(prev => ({ ...prev, baseUrl: e.target.value }))}
@@ -629,8 +631,8 @@ function AudiobookshelfSection() {
         </div>
 
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">API key</label>
-          <input
+          <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">API key</label>
+          <input id={`${fid}-3`}
             {...secretInputAttrs}
             value={draft.apiKey}
             onChange={e => setDraft(prev => ({ ...prev, apiKey: e.target.value }))}
@@ -676,14 +678,14 @@ function AudiobookshelfSection() {
           <button
             onClick={testConnection}
             disabled={testing}
-            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium disabled:opacity-50"
+            className={`px-3 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50`}
           >
             {testing ? 'Testing…' : 'Test connection'}
           </button>
           <button
             onClick={() => loadLibraries(probePayload())}
             disabled={listing}
-            className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium disabled:opacity-50"
+            className={`px-3 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50`}
           >
             {listing ? 'Loading…' : 'List libraries'}
           </button>
@@ -711,7 +713,7 @@ function AudiobookshelfSection() {
                   onClick={() => startImport(true)}
                   disabled={!canStartImport}
                   title={hasUnsavedABSConfig ? 'Save Audiobookshelf settings before starting an import' : undefined}
-                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium disabled:opacity-50"
+                  className={`px-3 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50`}
                 >
                   Preview changes
                 </button>
@@ -846,7 +848,7 @@ function AudiobookshelfSection() {
               </div>
               <button
                 onClick={() => refreshRuns().catch(() => {})}
-                className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium"
+                className={`px-3 py-2 ${slateFill} rounded text-sm font-medium`}
               >
                 Refresh runs
               </button>
@@ -874,14 +876,14 @@ function AudiobookshelfSection() {
                       <button
                         onClick={() => previewRollback(run.id)}
                         disabled={rolledBack || rollbackPreviewingRunId === run.id || rollbackApplyingRunId === run.id}
-                        className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                        className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                       >
                         {rollbackPreviewingRunId === run.id ? 'Previewing…' : 'Preview rollback'}
                       </button>
                       <button
                         onClick={() => applyRollback(run.id)}
                         disabled={rolledBack || rollbackApplyingRunId === run.id || rollbackPreviewingRunId === run.id}
-                        className={`px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 ${rolledBack ? 'bg-slate-500 cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500'}`}
+                        className={`px-3 py-1.5 rounded text-xs font-medium disabled:opacity-50 ${rolledBack ? 'bg-slate-500 text-white cursor-not-allowed' : 'bg-amber-600 hover:bg-amber-500'}`}
                       >
                         {rolledBack ? 'Rolled back' : rollbackApplyingRunId === run.id ? 'Rolling back…' : 'Apply rollback'}
                       </button>
@@ -999,7 +1001,7 @@ function AudiobookshelfSection() {
             </button>
             <button
               onClick={() => refreshReviewItems().catch(() => {})}
-              className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-sm font-medium flex-shrink-0"
+              className={`px-3 py-2 ${slateFill} rounded text-sm font-medium flex-shrink-0`}
             >
               Refresh
             </button>
@@ -1073,7 +1075,7 @@ function AudiobookshelfSection() {
                         <button
                           onClick={() => searchReviewAuthors(item)}
                           disabled={authorSearchId === item.id}
-                          className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                          className={`px-3 py-2 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                         >
                           {authorSearchId === item.id ? 'Searching...' : 'Author'}
                         </button>
@@ -1106,7 +1108,7 @@ function AudiobookshelfSection() {
                         <button
                           onClick={() => searchReviewBooks(item)}
                           disabled={bookSearchId === item.id}
-                          className="px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                          className={`px-3 py-2 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                         >
                           {bookSearchId === item.id ? 'Searching...' : 'Book'}
                         </button>
@@ -1140,7 +1142,7 @@ function AudiobookshelfSection() {
                     <button
                       onClick={() => dismissReviewItem(item.id)}
                       disabled={reviewActionId === item.id}
-                      className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded text-xs font-medium disabled:opacity-50"
+                      className={`px-3 py-1.5 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                     >
                       Dismiss
                     </button>

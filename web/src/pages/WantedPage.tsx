@@ -289,7 +289,7 @@ export default function WantedPage() {
         value={search}
         onChange={e => setSearch(e.target.value)}
         placeholder={t('wanted.searchPlaceholder')}
-        className="w-full mb-3 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-1.5 text-sm placeholder-slate-400 dark:placeholder-zinc-600"
+        className="w-full mb-3 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-1.5 text-sm"
       />
 
       {loading ? (
@@ -366,11 +366,14 @@ export default function WantedPage() {
                     >
                       {book.title}
                     </Link>
-                    <div className="truncate text-xs text-slate-500 dark:text-zinc-500">
+                    {/* The padding, undone by the negative margin, leaves the
+                        author link's focus ring room inside the truncate box,
+                        which would otherwise clip it (#3237). */}
+                    <div className="truncate p-1 -m-1 text-xs text-slate-500 dark:text-zinc-500">
                       {authorName ? (
                         <Link
                           to={`/author/${book.authorId}`}
-                          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                          className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors rounded-sm"
                         >
                           {authorName}
                         </Link>

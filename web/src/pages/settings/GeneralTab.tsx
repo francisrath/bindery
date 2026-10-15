@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { FormEvent, useEffect, useRef, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, AuthConfig, AuthStatus, BINDERY_BASE, StorageDirStatus, StorageHealth } from '../../api/client'
@@ -13,6 +13,7 @@ import RenameFilesModal from '../../components/RenameFilesModal'
 import NamingTemplateField from './NamingTemplateField'
 import SaveButton from './SaveButton'
 import { useSaveResult } from './useSaveResult'
+import { slateFill } from '../../components/buttons'
 
 // Tab identifiers used by onNavigate for soft (no-reload) cross-tab links.
 // Kept loose (string) so GeneralTab doesn't need to import SettingsPage's Tab
@@ -35,6 +36,7 @@ const DISCOVERY_INTERVAL_PRESETS = ['off', '24h', '168h', '720h']
 const AUTH_CONFIG_WAIT_MS = 2500
 
 export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
+  const fid = useId()
   const { t } = useTranslation()
   const { isAdmin } = useAuth()
   const [settings, setSettings] = useState<Record<string, string>>({})
@@ -286,10 +288,10 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           </div>
           <div className="flex items-center justify-between gap-3 border-t border-slate-200 dark:border-zinc-800 pt-3 mt-3">
             <div className="min-w-0">
-              <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.language')}</label>
+              <label htmlFor={`${fid}-lang`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.language')}</label>
               <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1">{t('settings.general.languageHint')}</p>
             </div>
-            <LanguageSwitcher />
+            <LanguageSwitcher id={`${fid}-lang`} />
           </div>
         </div>
       </section>
@@ -448,12 +450,12 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             <div className="border-t border-slate-200 dark:border-zinc-800 pt-3 space-y-3">
               {importMode === 'external' && (
               <div>
-                <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.dropFolder', 'Drop folder')}</label>
+                <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.dropFolder', 'Drop folder')}</label>
                 <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
                   {t('settings.general.dropFolderHint', 'Optional. In External mode, Bindery renames each finished download into this folder for a watch-folder tool (Calibre-Web-Automated, Storyteller) to ingest, instead of leaving it in the download dir. The source is never moved, so torrents keep seeding. Bindery still reconciles the managed copy on the next library scan. Leave empty to hand off in place.')}
                 </p>
                 <div className="flex gap-2">
-                  <input
+                  <input id={`${fid}-3`}
                     value={settings['import.drop_folder'] ?? ''}
                     onChange={e => { setSettings(s => ({ ...s, 'import.drop_folder': e.target.value })); setDropErr(null) }}
                     placeholder="/cwa-book-ingest"
@@ -494,8 +496,8 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               )}
               <div className="flex gap-6 flex-wrap">
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.dropLayout', 'Layout')}</label>
-                  <select
+                  <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.dropLayout', 'Layout')}</label>
+                  <select id={`${fid}-1`}
                     value={settings['import.drop_layout'] ?? 'flat'}
                     onChange={async e => {
                       const v = e.target.value
@@ -509,8 +511,8 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.dropLinkMode', 'Placement')}</label>
-                  <select
+                  <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.dropLinkMode', 'Placement')}</label>
+                  <select id={`${fid}-2`}
                     value={settings['import.drop_link_mode'] ?? 'copy'}
                     onChange={async e => {
                       const v = e.target.value
@@ -570,14 +572,14 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             saveResult={audiobookTemplateResult}
           />
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+            <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
               {t('settings.general.audiobookFileTemplate', 'Audiobook file naming (per track)')}
             </label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {t('settings.general.audiobookFileTemplateHint', 'Leave empty to keep the download’s original file layout. Set a template to rename every audiobook track in playback order; it must include {Part}. A single-file audiobook is renamed too, as part 1, unless {Part} sits in a group with its own text, such as {Title}{ - Pt. Part:3}.{ext}, which is left out when there is only one file.')}
             </p>
             <div className="flex flex-wrap gap-2">
-              <input
+              <input id={`${fid}-4`}
                 type="text"
                 value={settings['naming.audiobook_file_template'] ?? ''}
                 onChange={e => setSettings(s => ({ ...s, 'naming.audiobook_file_template': e.target.value }))}
@@ -600,10 +602,10 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.downloads')}</h3>
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-3">
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.preferredLanguage')}</label>
+            <label htmlFor={`${fid}-5`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.preferredLanguage')}</label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{t('settings.general.preferredLanguageHint')}</p>
             <div className="flex flex-wrap gap-2">
-              <select
+              <select id={`${fid}-5`}
                 value={settings['search.preferredLanguage'] ?? 'en'}
                 onChange={e => setSettings(s => ({ ...s, 'search.preferredLanguage': e.target.value }))}
                 className="grow basis-48 min-w-0 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm"
@@ -628,22 +630,22 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-3">
           <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.storageHint')}</p>
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+            <label htmlFor={`${fid}-6`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
               {t('settings.general.downloadDir')} <code className="font-mono bg-slate-200 dark:bg-zinc-800 px-1 rounded">BINDERY_DOWNLOAD_DIR</code>
               <StorageHealthBadge status={dirStatus(storage, 'download')} loading={!storage} />
             </label>
-            <input
+            <input id={`${fid}-6`}
               readOnly
               value={storage?.downloadDir ?? ''}
               className={`${inputCls} font-mono opacity-80 cursor-default`}
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+            <label htmlFor={`${fid}-7`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
               {t('settings.general.audiobookDownloadDir')} <code className="font-mono bg-slate-200 dark:bg-zinc-800 px-1 rounded">BINDERY_AUDIOBOOK_DOWNLOAD_DIR</code>
               {storage?.audiobookDownloadDir && <StorageHealthBadge status={dirStatus(storage, 'audiobook-download')} loading={false} />}
             </label>
-            <input
+            <input id={`${fid}-7`}
               readOnly
               value={storage?.audiobookDownloadDir || (storage?.downloadDir ?? '')}
               placeholder={storage?.downloadDir ?? ''}
@@ -654,22 +656,22 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             )}
           </div>
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+            <label htmlFor={`${fid}-8`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
               {t('settings.general.libraryDir')} <code className="font-mono bg-slate-200 dark:bg-zinc-800 px-1 rounded">BINDERY_LIBRARY_DIR</code>
               <StorageHealthBadge status={dirStatus(storage, 'library')} loading={!storage} />
             </label>
-            <input
+            <input id={`${fid}-8`}
               readOnly
               value={storage?.libraryDir ?? ''}
               className={`${inputCls} font-mono opacity-80 cursor-default`}
             />
           </div>
           <div>
-            <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+            <label htmlFor={`${fid}-9`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
               {t('settings.general.audiobookDir')} <code className="font-mono bg-slate-200 dark:bg-zinc-800 px-1 rounded">BINDERY_AUDIOBOOK_DIR</code>
               {storage?.audiobookDir && <StorageHealthBadge status={dirStatus(storage, 'audiobook')} loading={false} />}
             </label>
-            <input
+            <input id={`${fid}-9`}
               readOnly
               value={storage?.audiobookDir || (storage?.libraryDir ?? '')}
               placeholder={storage?.libraryDir ?? ''}
@@ -711,7 +713,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             <button
               onClick={handleScan}
               disabled={scanningLibrary}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-4 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50 flex-shrink-0`}
             >
               {scanningLibrary ? t('settings.general.scanning') : t('settings.general.scanLibraryButton')}
             </button>
@@ -783,7 +785,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
             <button
               type="button"
               onClick={() => setShowReorganize(true)}
-              className="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
+              className={`px-4 py-2 ${slateFill} rounded text-sm font-medium disabled:opacity-50 flex-shrink-0`}
             >
               {t('settings.general.reorganizeLibraryButton')}
             </button>
@@ -803,13 +805,13 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.search')}</h3>
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+            <label htmlFor={`${fid}-10`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
               {t('settings.general.searchIntervalLabel')}
             </label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {t('settings.general.searchIntervalHint')}
             </p>
-            <select
+            <select id={`${fid}-10`}
               value={settings['search.interval'] ?? '12h'}
               onChange={async e => {
                 const next = e.target.value
@@ -839,13 +841,13 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.hardcoverSync', 'Hardcover list sync')}</h3>
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
           <div>
-            <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+            <label htmlFor={`${fid}-11`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
               {t('settings.general.hardcoverSyncIntervalLabel', 'Hardcover list sync interval')}
             </label>
             <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
               {t('settings.general.hardcoverSyncIntervalHint', 'How often Bindery re-syncs your enabled Hardcover import lists. Lower it if you curate a Hardcover list as your main way of adding books. Use Sync now on the Import tab for an immediate run.')}
             </p>
-            <select
+            <select id={`${fid}-11`}
               data-testid="hardcover-sync-interval"
               value={hardcoverSyncInterval}
               onChange={async e => {
@@ -977,6 +979,7 @@ function StorageHealthBadge({ status, loading }: { status: StorageDirStatus | un
 }
 
 function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
+  const fid = useId()
   const { t } = useTranslation()
   const { confirm, confirmDialog } = useConfirmDialog()
   const { status, refresh, isAdmin } = useAuth()
@@ -1060,8 +1063,8 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-5">
         {isAdmin && (<>
         <div>
-          <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Authentication Mode</label>
-          <select
+          <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">Authentication Mode</label>
+          <select id={`${fid}-1`}
             value={cfg.mode}
             onChange={e => setMode(e.target.value as AuthStatus['mode'])}
             disabled={savingMode}
@@ -1142,6 +1145,7 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
 }
 
 function ChangePasswordForm({ username }: { username: string }) {
+  const fid = useId()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [confirmPw, setConfirmPw] = useState('')
@@ -1169,8 +1173,8 @@ function ChangePasswordForm({ username }: { username: string }) {
 
   return (
     <form onSubmit={submit} className="space-y-2">
-      <label className="block text-xs text-slate-600 dark:text-zinc-400">Change password for <strong>{username}</strong></label>
-      <input type="password" autoComplete="current-password" placeholder="Current password" value={current} onChange={e => setCurrent(e.target.value)} className={inputCls} />
+      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400">Change password for <strong>{username}</strong></label>
+      <input id={`${fid}-1`} type="password" autoComplete="current-password" placeholder="Current password" value={current} onChange={e => setCurrent(e.target.value)} className={inputCls} />
       <input type="password" autoComplete="new-password" placeholder="New password" value={next} onChange={e => setNext(e.target.value)} className={inputCls} />
       <input type="password" autoComplete="new-password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={inputCls} />
       {error && <div className="text-xs text-red-600 dark:text-red-400">{error}</div>}

@@ -88,6 +88,16 @@ describe('EditAuthorModal', () => {
     expect(root.value).toBe('100')
   })
 
+  // #3240: each visible label is linked to its field, so it names the field
+  // for screen readers and clicking it focuses the field.
+  it('names every field by its visible label', async () => {
+    render(<EditAuthorModal author={baseAuthor} onClose={onClose} onSaved={onSaved} />)
+    await getSelects()
+    for (const name of ['Quality profile', 'Metadata profile', 'Root folder', 'Monitor mode']) {
+      expect(screen.getByLabelText(name).tagName).toBe('SELECT')
+    }
+  })
+
   it('only sends the fields that actually changed', async () => {
     render(<EditAuthorModal author={baseAuthor} onClose={onClose} onSaved={onSaved} />)
 

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, useId } from 'react'
 import { api, GrimmoryConfig, GrimmorySyncStatus, GrimmoryTestResult } from '../../api/client'
 import { inputCls } from './formStyles'
 import { literalInputAttrs, secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
 
 export default function GrimmoryTab() {
+  const fid = useId()
   const [config, setConfig] = useState<GrimmoryConfig | null>(null)
   const [draft, setDraft] = useState({ baseUrl: '', apiKey: '', username: '', password: '', enabled: false })
   const [loading, setLoading] = useState(true)
@@ -130,8 +131,8 @@ export default function GrimmoryTab() {
 
       <div className="space-y-3">
         <div>
-          <label className="block text-xs font-medium mb-1">Server URL</label>
-          <input
+          <label htmlFor={`${fid}-1`} className="block text-xs font-medium mb-1">Server URL</label>
+          <input id={`${fid}-1`}
             {...urlInputAttrs}
             type="text"
             value={draft.baseUrl}
@@ -141,8 +142,8 @@ export default function GrimmoryTab() {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1">Username</label>
-          <input
+          <label htmlFor={`${fid}-2`} className="block text-xs font-medium mb-1">Username</label>
+          <input id={`${fid}-2`}
             {...literalInputAttrs}
             type="text"
             value={draft.username}
@@ -152,13 +153,13 @@ export default function GrimmoryTab() {
           />
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1">
+          <label htmlFor={`${fid}-3`} className="block text-xs font-medium mb-1">
             Password
             <span className="ml-1 text-slate-500 dark:text-zinc-500 font-normal">
               {config?.passwordConfigured && !draft.password ? '(configured — leave blank to keep)' : ''}
             </span>
           </label>
-          <input
+          <input id={`${fid}-3`}
             {...secretInputAttrs}
             type="password"
             value={draft.password}
@@ -172,13 +173,13 @@ export default function GrimmoryTab() {
           </p>
         </div>
         <div>
-          <label className="block text-xs font-medium mb-1">
+          <label htmlFor={`${fid}-4`} className="block text-xs font-medium mb-1">
             API token
             <span className="ml-1 text-slate-500 dark:text-zinc-500 font-normal">
               {config?.apiKeyConfigured && !draft.apiKey ? '(configured — leave blank to keep)' : '(optional)'}
             </span>
           </label>
-          <input
+          <input id={`${fid}-4`}
             {...secretInputAttrs}
             type="password"
             value={draft.apiKey}

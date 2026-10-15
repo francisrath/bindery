@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
+  const fid = useId()
   const { t } = useTranslation()
 
   const [qualityProfiles, setQualityProfiles] = useState<QualityProfile[]>([])
@@ -197,8 +198,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               </div>
               {qualityProfiles.length > 0 && (
                 <div className="mb-3">
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.qualityProfile', 'Quality profile')}</label>
-                  <select
+                  <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.qualityProfile', 'Quality profile')}</label>
+                  <select id={`${fid}-1`}
                     value={qualityProfileId ?? ''}
                     onChange={e => setQualityProfileId(e.target.value ? Number(e.target.value) : null)}
                     className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -211,8 +212,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {metadataProfiles.length > 0 && (
                 <div className="mb-3">
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.metadataProfile', 'Metadata profile')}</label>
-                  <select
+                  <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.metadataProfile', 'Metadata profile')}</label>
+                  <select id={`${fid}-2`}
                     value={metadataProfileId ?? ''}
                     onChange={e => setMetadataProfileId(e.target.value ? Number(e.target.value) : null)}
                     className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -225,8 +226,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {rootFolders.length > 0 && (
                 <div className="mb-3">
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.rootFolder', 'Root folder')}</label>
-                  <select
+                  <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.rootFolder', 'Root folder')}</label>
+                  <select id={`${fid}-3`}
                     value={rootFolderId ?? ''}
                     onChange={e => setRootFolderId(e.target.value ? Number(e.target.value) : null)}
                     className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -239,8 +240,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {rootFolders.length > 0 && (
                 <div className="mb-3">
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.audiobookRootFolder', 'Audiobook root folder')}</label>
-                  <select
+                  <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.audiobookRootFolder', 'Audiobook root folder')}</label>
+                  <select id={`${fid}-4`}
                     value={audiobookRootFolderId ?? ''}
                     onChange={e => setAudiobookRootFolderId(e.target.value ? Number(e.target.value) : null)}
                     className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -254,8 +255,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                 </div>
               )}
               <div className="mb-3">
-                <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorMode', 'Monitor mode')}</label>
-                <select
+                <label htmlFor={`${fid}-5`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorMode', 'Monitor mode')}</label>
+                <select id={`${fid}-5`}
                   value={monitorMode}
                   onChange={e => setMonitorMode(e.target.value as AuthorMonitorMode)}
                   className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -268,8 +269,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                 </select>
               </div>
               <div className="mb-3">
-                <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorNewItems', 'Monitor newly discovered books')}</label>
-                <select
+                <label htmlFor={`${fid}-6`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorNewItems', 'Monitor newly discovered books')}</label>
+                <select id={`${fid}-6`}
                   value={monitorNewItems}
                   onChange={e => setMonitorNewItems(e.target.value as MonitorNewItems)}
                   className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
@@ -324,8 +325,8 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {monitorMode === 'latest' && (
                 <div className="mb-3">
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorLatestCount', 'Latest book count')}</label>
-                  <input
+                  <label htmlFor={`${fid}-7`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorLatestCount', 'Latest book count')}</label>
+                  <input id={`${fid}-7`}
                     type="number"
                     min={1}
                     value={monitorLatestCount}

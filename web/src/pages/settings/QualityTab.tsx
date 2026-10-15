@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, QualityProfile } from '../../api/client'
@@ -199,6 +199,7 @@ function QualityProfileForm({
   onClose: () => void
   onSaved: () => void
 }) {
+  const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState(profile?.name ?? '')
   const [lists, setLists] = useState(() => partitionItems(normalisedItems(profile?.items), EBOOK_FORMATS, AUDIOBOOK_FORMATS))
@@ -256,8 +257,8 @@ function QualityProfileForm({
       className="p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-900/50 space-y-4"
     >
       <div>
-        <label className={labelCls}>{t('settings.quality.formName')}</label>
-        <input
+        <label htmlFor={`${fid}-1`} className={labelCls}>{t('settings.quality.formName')}</label>
+        <input id={`${fid}-1`}
           value={name}
           onChange={e => setName(e.target.value)}
           required

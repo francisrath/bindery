@@ -255,6 +255,7 @@ export default function AdvancedTab() {
         const checked = (value || d.default).toLowerCase() === 'true'
         return (
           <Toggle
+            id={controlId(d.key)}
             checked={checked}
             title={d.key}
             disabled={busy}
