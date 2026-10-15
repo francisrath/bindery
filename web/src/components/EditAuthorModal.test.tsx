@@ -137,6 +137,17 @@ describe('EditAuthorModal', () => {
     expect(api.updateAuthor).toHaveBeenCalledWith(42, { description: 'Kari Nordmann writes about the fjells.' })
   })
 
+  it('sends a bio written for an author that had none', async () => {
+    const withoutBio = { ...baseAuthor } as Partial<typeof baseAuthor>
+    delete withoutBio.description
+    render(<EditAuthorModal author={withoutBio as typeof baseAuthor} onClose={onClose} onSaved={onSaved} />)
+    const bio = await screen.findByLabelText('Bio')
+    expect(bio).toHaveValue('')
+    fireEvent.change(bio, { target: { value: 'Kari Nordmann writes about the fjells.' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    await waitFor(() => expect(api.updateAuthor).toHaveBeenCalledWith(42, { description: 'Kari Nordmann writes about the fjells.' }))
+  })
+
   it('sends an empty bio to clear it', async () => {
     render(<EditAuthorModal author={{ ...baseAuthor, description: 'Old bio.' }} onClose={onClose} onSaved={onSaved} />)
     fireEvent.change(await screen.findByLabelText('Bio'), { target: { value: '   ' } })

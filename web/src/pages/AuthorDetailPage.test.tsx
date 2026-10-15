@@ -373,6 +373,21 @@ describe('AuthorDetailPage', () => {
     expect(await screen.findByText('send a JPEG, PNG, WebP or GIF image')).toBeInTheDocument()
   })
 
+  it('falls back to a plain message when the upload fails without an Error', async () => {
+    vi.mocked(api.uploadAuthorPhoto).mockRejectedValue('network down')
+    renderAuthorDetailPage([], 'grid', { imageUrl: '' })
+    const input = await screen.findByLabelText('Upload photo')
+    fireEvent.change(input, { target: { files: [new File(['x'], 'photo.png', { type: 'image/png' })] } })
+    expect(await screen.findByText('Could not upload the photo')).toBeInTheDocument()
+  })
+
+  it('sends nothing when the file picker is cancelled', async () => {
+    renderAuthorDetailPage([], 'grid', { imageUrl: '' })
+    const input = await screen.findByLabelText('Upload photo')
+    fireEvent.change(input, { target: { files: [] } })
+    expect(api.uploadAuthorPhoto).not.toHaveBeenCalled()
+  })
+
   // A Commons file that names no photographer is still credited, with its
   // licence; a source the page has no label for is shown by its own name.
   it('credits a photo with no named photographer, and an unknown source by name', async () => {
