@@ -33,7 +33,10 @@ type indexerSearcher interface {
 }
 
 type IndexerHandler struct {
-	indexers  *db.IndexerRepo
+	indexers *db.IndexerRepo
+	// clients validates a download client pin (#3080) on save. Optional: when
+	// nil, any pin is refused rather than stored unchecked.
+	clients   *db.DownloadClientRepo
 	books     *db.BookRepo
 	authors   *db.AuthorRepo
 	aliases   *db.AuthorAliasRepo
@@ -71,6 +74,13 @@ func (h *IndexerHandler) WithSearchDebugLog(l *indexer.DebugLog) *IndexerHandler
 	if l != nil {
 		h.lastDebug = l
 	}
+	return h
+}
+
+// WithDownloadClients attaches the download client repo, which a per-indexer
+// download client pin (#3080) is validated against on save.
+func (h *IndexerHandler) WithDownloadClients(clients *db.DownloadClientRepo) *IndexerHandler {
+	h.clients = clients
 	return h
 }
 
@@ -187,6 +197,70 @@ func validateDailyQueryLimit(idx models.Indexer) error {
 		return errors.New("dailyQueryLimit must be zero or greater")
 	}
 	return nil
+}
+
+// validateDownloadClientPin checks an indexer's download client pin (#3080) on
+// save. The client must exist and serve the indexer's protocol. It must also be
+// enabled, but only when the pin is new or changed: disabling a client is
+// allowed, and an unrelated edit of an indexer pinned to a disabled client has
+// to keep saving. A disabled pinned client fails its grabs instead.
+func (h *IndexerHandler) validateDownloadClientPin(ctx context.Context, idx models.Indexer, stored *models.Indexer) error {
+	if idx.DownloadClientID == nil {
+		return nil
+	}
+	var c *models.DownloadClient
+	if h.clients != nil {
+		var err error
+		if c, err = h.clients.GetByID(ctx, *idx.DownloadClientID); err != nil {
+			return err
+		}
+	}
+	if c == nil {
+		return errPinInvalid(fmt.Sprintf("downloadClientId %d: that download client does not exist", *idx.DownloadClientID))
+	}
+	// A wrong protocol is refused only when this request sets the pin or the
+	// indexer type. Otherwise an unrelated update, such as disabling the
+	// indexer, would be blocked by a client changed behind the pin's back, and
+	// the grab fails loudly at grab time anyway.
+	pinChanged := stored == nil || stored.DownloadClientID == nil || *stored.DownloadClientID != *idx.DownloadClientID
+	typeChanged := stored == nil || effectiveIndexerType(stored.Type) != effectiveIndexerType(idx.Type)
+	if got := db.ClientProtocol(c.Type); got != idx.Protocol() && (pinChanged || typeChanged) {
+		return errPinInvalid(fmt.Sprintf("download client %q is a %s client but this indexer is %s, so it cannot be pinned to it; pick a %s client",
+			c.Name, got, idx.Protocol(), idx.Protocol()))
+	}
+	if pinChanged && !c.Enabled {
+		return errPinInvalid(fmt.Sprintf("download client %q is disabled; enable it first or pick another", c.Name))
+	}
+	return nil
+}
+
+// effectiveIndexerType reads an empty type as the default, usenet, which is what
+// Indexer.Protocol and the searcher already do, so an update body that sends an
+// empty type is not a change of type for an indexer that is already usenet.
+func effectiveIndexerType(t string) string {
+	if t == "" {
+		return "newznab"
+	}
+	return t
+}
+
+// pinInvalidError is a 400 about the download client pin, as opposed to a
+// storage failure.
+type pinInvalidError string
+
+func (e pinInvalidError) Error() string { return string(e) }
+
+func errPinInvalid(msg string) error { return pinInvalidError(msg) }
+
+// writePinError answers a failed validateDownloadClientPin: a 400 for a bad
+// pin, a generic 500 for a storage fault.
+func writePinError(w http.ResponseWriter, r *http.Request, err error) {
+	var bad pinInvalidError
+	if errors.As(err, &bad) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": bad.Error()})
+		return
+	}
+	writeServerError(w, r, err)
 }
 
 // maxSeedTimeMinutes bounds the per-indexer seed time limits (#2206) at ten
@@ -311,6 +385,10 @@ func (h *IndexerHandler) Create(w http.ResponseWriter, r *http.Request) {
 	if idx.Type == "" {
 		idx.Type = "newznab"
 	}
+	if err := h.validateDownloadClientPin(r.Context(), idx, nil); err != nil {
+		writePinError(w, r, err)
+		return
+	}
 	if len(idx.Categories) == 0 {
 		// Books (7000 parent, 7020 ebook) + Audio/Audiobook (3030).
 		// The searcher filters per-media-type at query time.
@@ -383,6 +461,11 @@ func (h *IndexerHandler) Update(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request body"})
 		return
 	}
+	// An explicit empty type means "keep the stored type": saved as empty it
+	// would be read as usenet and flip a torznab indexer's protocol.
+	if idx.Type == "" {
+		idx.Type = existing.Type
+	}
 	// The API key is write-only, so it needs the raw body: the struct decode
 	// above cannot tell an omitted key from an explicitly blank one, and the
 	// web app sends the redacted (blank) value straight back on every save.
@@ -409,6 +492,10 @@ func (h *IndexerHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := validateSeedTimeLimits(idx); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	if err := h.validateDownloadClientPin(r.Context(), idx, existing); err != nil {
+		writePinError(w, r, err)
 		return
 	}
 	idx.ID = id

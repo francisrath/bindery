@@ -225,6 +225,38 @@ const (
 	SettingImportAudiobookDropFolder = "import.audiobook.drop_folder"
 )
 
+// Post-download content checks (#3015, #3246). After a download is tied to a
+// wanted book, the importer compares what the files say about themselves (an
+// EPUB's title and author, an audiobook's album and track tags) with that book.
+// Each media type has its own setting: "off" skips the check, "warn" (the
+// default, and what an unset or unrecognised value reads as) imports and records
+// what was found on the bookImported event and webhook as contentCheck, and
+// "block" refuses the download like the language and format checks do. The
+// importer reads both keys as string literals to avoid an import cycle; keep the
+// literals in sync.
+const (
+	SettingImportEbookContentCheck     = "import.ebook.content_check"
+	SettingImportAudiobookContentCheck = "import.audiobook.content_check"
+)
+
+// contentCheckValues are the values the content check settings accept, in the
+// order the UI offers them.
+var contentCheckValues = []string{"off", "warn", "block"}
+
+// validateContentCheckValue checks one content check mode. Empty is accepted and
+// reads as the default, warn.
+func validateContentCheckValue(key, value string) error {
+	if value == "" {
+		return nil
+	}
+	for _, v := range contentCheckValues {
+		if value == v {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s %q is not one of: %s", key, value, strings.Join(contentCheckValues, ", "))
+}
+
 // importModeValues are the values import.mode and import.audiobook.mode both
 // accept, in the order the UI offers them.
 var importModeValues = []string{"auto", "move", "copy", "hardlink", "external"}
@@ -904,6 +936,8 @@ func validateSettingValue(key, value string) error {
 		if err != nil || n <= 0 {
 			return fmt.Errorf("import.drop_pair_gating_timeout_hours %q must be a positive integer number of hours", value)
 		}
+	case SettingImportEbookContentCheck, SettingImportAudiobookContentCheck:
+		return validateContentCheckValue(key, value)
 	case SettingImportMode, SettingImportAudiobookMode:
 		// Empty = auto for import.mode, "same as import.mode" for the
 		// audiobook override (#1632). Both accept exactly the same values.

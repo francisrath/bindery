@@ -12,10 +12,103 @@ Title-only releases, connecting words, file-format labels and narrator credits
 remain supported. Unrecognised trailing text can be conservatively rejected;
 inspect the release's title and author rather than relying only on shared words.
 
-These checks use the release name. They do not verify the contents of a download
-or repair an existing incorrect import. If a previously imported file is another
+These checks use the release name. They do not open the download. A separate
+check does, once the download has finished: Bindery compares an EPUB's own title
+and author with the book it was grabbed for, and for an audiobook compares the
+audio tags of its files with the book. It is set per format under Settings,
+General, File Naming (`import.ebook.content_check` and
+`import.audiobook.content_check`), defaults to
+`warn`, which imports the file and records what it found on the History row and
+in webhooks as `contentCheck`, and only refuses a download in `block` mode. See
+[the User Guide](User-Guide-Wiki.md) for what counts as a mismatch. Nothing
+repairs an existing incorrect import. If a previously imported file is another
 book, use **Fix match** to assign it to the correct book before requesting a
 replacement for the original.
+
+### An import was blocked because the file looks like a different book
+
+The message names what was found and what the book is. For an ebook, for example
+`the file says it is "Mary and Mr Eliot: A Sort of Love Story" by Mary Trevelyan,
+but the book is "Mary, Mary: Alex Cross, Book 11" by James Patterson`. For an
+audiobook, `the files contain Corralled (9), Coming Home to Myself (8), but the
+book is "Chase" (2 of 19 tracks match)`, with the number of files in brackets.
+The release is already on the Blocklist and the book is still Wanted, so the
+next search picks another release.
+
+- **The file really is the book** (a mislabelled or foreign language edition, a
+  file whose metadata or tags are wrong): use **Match to book** on the Queue row.
+  That keeps the file and skips the check.
+- **The author is a pen name** (ebooks): add it as an alias on the author, and
+  **Retry import** will accept the file.
+- **An audiobook is the right book but its tags disagree with each other** (some
+  files carry a retitled or regional album name): use **Match to book**. A
+  folder whose every file carries the same other title is not blocked, since
+  that is what a translated edition looks like.
+- **You would rather be warned than blocked**: set the check to `warn`. The
+  import goes ahead and the History row shows what was found.
+
+
+### What the content check does not catch, and where it can be wrong
+
+Use `block` with care. The check compares what the file says about itself, so it
+inherits whatever that data gets wrong. Known limits:
+
+- **Spelling variants of a name or title that Bindery does not fold**: a
+  transliteration (`Fyodor Dostoyevsky` against `Fjodor Dostojewski`, `Schuld und
+  Suehne` against `Schuld und Sühne`), a different English edition title
+  (`Philosopher's Stone` against `Sorcerer's Stone`), `1984` against `Nineteen
+  Eighty-Four`, or a real name against its pen name when no alias is recorded
+  (`Eric Arthur Blair` for `George Orwell`). Aliases fix author spelling variants,
+  and a variant title with a matching author is never flagged because both must
+  disagree. Where it matters, leave the check on `warn`.
+- **A download that is wholly one other book**: an audiobook folder whose every
+  file carries one other title passes, because that is what a translated or
+  retitled edition looks like. In `warn` and `block` the `contentCheck` object
+  then carries `retitled` with the title and file count, and History shows a quiet
+  line, but nothing is blocked.
+- **`Dune` against `Dune Messiah`**: a short wanted title is supported by any
+  title that contains it as whole words, by design, so this passes.
+- **Multi-part single books** such as The Lord of the Rings or The Chronicles of
+  Narnia, which are one catalogue book whose files may carry the parts' titles.
+- **Transliterated and non-Latin editions** never flag; a wrong book in another
+  script is not caught either.
+- **Sampling**: more than 500 audio files are sampled evenly, and two adjacent
+  foreign files can fall between samples.
+- **Formats that are not read**: `.wma`, `.aac` and `.wav` audiobook files carry no
+  tags the check reads, so they fail open, as do unreadable files.
+- **A wrong book with a placeholder creator** (Unknown, calibre, a publisher) imports
+  even in `block` mode, because a creator that names nobody can never disagree and
+  both title and author must disagree to flag.
+- **A small foreign share is treated as strays**: files that do not support the
+  book must be at least 5 percent of the tracks read, so 30 foreign files in 700
+  do not flag the folder.
+- **A wrong book in another script never flags**, in either check.
+- **Numeric titles and short number words**: a wanted title like `Slaughterhouse 5`
+  is read as equal to `Slaughterhouse Five`, so titles that differ only by a number
+  word and a digit are the same to the check.
+- **Hung network shares can exceed the budget**: a read already in flight is not
+  interrupted, so the 30 second audiobook budget is checked between files.
+- **Publisher style creators that are not on the short list** (`Penguin Books`,
+  `Baen Books`, `DAW Books`, `Scholastic Press`, `Penguin Group USA`, `Pearson
+  Education`, `Pan Macmillan`, `Random House Audio`, `Harlequin`) are read as
+  authors. Only the explicit publisher list and the endings Inc, Ltd, LLC, GmbH,
+  Publishing, Publishers and Group count as no creator, so a wrong title with such
+  a creator can flag.
+- **Release group stamps in an audiobook album** such as `Downloaded from
+  rutracker.org` or `[example.com] Dune` can count as another title, because only
+  `www.`, a scheme, a word with two or more dots or a lone domain is read as a web
+  address.
+- **A release with more than 20 EPUBs** is not judged at all (the note says
+  `truncated`), since a verdict on a prefix could condemn the right book.
+- **Short story and compilation titles** that are not worded as one (a single word
+  title that is really an anthology) are compared like any book. The compilation
+  skip covers omnibus, anthology, short stories, collected and complete works,
+  trilogy and similar, `Complete` plus two or three words, `X Y Collection`, and
+  `The Best of <the book's author>`.
+- **Retry import after a book was matched from the file name**: a download grabbed
+  without a book is matched to one from its file or release name, and that match is
+  saved on the download. Bindery does not record that it was a guess, so Retry
+  import on such a download checks the saved book as if it had been grabbed for it.
 
 ## Bindery will not start after upgrading: "foreign_key_check found N violation(s)"
 
@@ -155,6 +248,54 @@ Earlier releases let a failed row block the release permanently, and the skip wa
 A Queue row in `failed` never produced a file: the grab did not reach the download client, or the client gave up on it. There is nothing to import, so **Retry import** does not apply and is not offered. Use **Retry download** on the row instead. It sends the same release to your download client again, which is the right move when the cause was transient (the client was down, the indexer answered 429 or 500). It deliberately does not search for a different release; when the release itself is gone, search the book and grab another one, or blocklist this one first. A release NZBGet or SABnzbd failed as broken is already on the Blocklist (see above), so a search moves past it on its own; **Retry download** still sends it if you ask.
 
 To retry in bulk, tick the rows and use **Retry selected**, or use **Retry all failed** above the list, which covers both stages: an import failure has its import re-armed, a failed download has its release re-sent. Both ask for confirmation when a re-send is in the batch, because that hands work back to your download client.
+
+### A grab fails with "indexer ... is pinned to download client ..."
+
+The indexer has a **Download client** set in Settings → Indexers, and that client
+cannot take the grab. The message says which of three things is wrong: the client
+is **disabled** (enable it in Settings → Download Clients), it **no longer
+exists** (choose another client on the indexer), or it is the **wrong protocol**
+(a torrent client on a usenet indexer, usually because the client's type was
+changed after the pin). If the client is enabled but the message says the
+release could not be sent, the client is not answering: check that it is running
+and reachable from Bindery.
+
+The message names the indexer, and the client too when you are an admin; other
+users see the indexer only.
+
+Bindery will not send the release to a different client. That is deliberate: the
+pin exists so a private tracker's torrents never reach your public client. To
+send the indexer's grabs through the normal routing again, set its **Download
+client** back to *Default*. A grab refused before anything was sent creates no
+Queue row: from the search page the error appears on the page, and a scheduled
+search records it in History (once a day per book and indexer, and as a
+notification naming the indexer). Just search or grab again once the cause is
+fixed. Only a grab that reached an enabled client and failed there leaves a
+failed Queue row with **Retry download**.
+
+Limits worth knowing:
+
+* A scheduled search skips only the failing indexer's releases. Releases from
+  other indexers for the same book are still grabbed, and nothing from the
+  pinned indexer goes to another client.
+* Which indexer a grab belongs to is decided from the `indexerId` sent and the
+  release URL's host: a pinned `indexerId` always wins; an unpinned one is taken
+  at face value if its host matches the URL (and refused if it contradicts the
+  URL's host while a pinned indexer owns that host); an unknown or missing id is
+  treated as no id, and then the indexers on the URL's host decide (none:
+  unpinned, one: that indexer, several with one pinned: refused). Grabs from the
+  Bindery UI and the scheduler always send the indexer.
+* An id-less API grab can only be tied to a pinned indexer by host. The match
+  ignores case, a trailing dot and the port, so `prowlarr` against
+  `prowlarr:9696` works. It does not match aliases of one machine (`localhost`,
+  `127.0.0.1` and a DNS name), `www.` or other subdomains, scheme-less indexer
+  URLs or punycode spellings; such a grab is routed as if unpinned. Send
+  `indexerId` to be sure the pin applies.
+* On a shared Prowlarr or Jackett host, one pinned indexer makes id-less API
+  grabs fail for every other indexer on that host, because such a grab cannot be
+  told apart. Send `indexerId` (the UI and the scheduler already do).
+* A pending (held) release from a pinned indexer whose client is down stays in
+  Pending and is tried again on the next sweep. It is not discarded.
 
 ### The Queue looks empty, or shorter than it should be
 

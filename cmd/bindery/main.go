@@ -365,6 +365,10 @@ func main() {
 	// profile: a downloaded EPUB in a language the profile does not allow is
 	// rejected and blocklisted instead of relabelling the book (#2998).
 	importScanner.WithLanguageEnforcement(metadataProfileRepo, blocklistRepo)
+	// And the file's own title and author against the book it was grabbed for,
+	// with the author's aliases standing in for the author, so a pen name such
+	// as "Franklin W. Dixon" is not read as a different writer (#3015).
+	importScanner.WithAuthorAliases(authorAliasRepo)
 	importScanner.WithClientHealth(downloadHealth)
 	importScanner.WithJobs(bgJobs) // drain manual scans on shutdown (#1458)
 
@@ -662,6 +666,7 @@ func main() {
 		WithAliases(authorAliasRepo).
 		WithQualityProfiles(qualityProfileRepo).
 		WithEditions(editionRepo).
+		WithDownloadClients(dlClientRepo).
 		WithSearchResults(searchResults).
 		WithSearchDebugLog(searchDebugLog)
 	if clients, err := dlClientRepo.List(ctxBoot); err == nil {

@@ -386,6 +386,9 @@ set, an omnibus, a "complete series". They still appear in interactive search
 so you can see them, and if you grab one by hand the import is blocked with an
 explanation rather than run. To take a pack, point **Import → From a folder** at the
 finished download and place each book's files against the right book record.
+A release that is not named as a pack can still hold several books. The name
+check cannot see that, but the content check on the finished download can (see
+below).
 
 A release is only judged a pack on wording that single books do not use about
 themselves. `Part 1-2` is left alone, because that is how one long audiobook
@@ -420,6 +423,36 @@ book set to both formats is still held for its sibling and released with it. Aud
 (usenet) to your NZB client — which is why the client's protocol must match
 the indexer, and why the category (default `books`) must already exist in the
 client. Bindery fetches the .torrent/NZB itself and hands it over.
+
+**Pinning an indexer to a download client.** Settings → Indexers has a
+**Download client** dropdown on every indexer. Leave it on *Default* and
+nothing changes: Bindery picks the client by protocol, priority and media type
+as before. Pick a client and every grab from that indexer goes to that client,
+whether it came from the scheduled search, the search page, the Pending tab, or
+Retry download on the Queue. This is how you keep a private tracker's torrents
+on a separate qBittorrent (its own VPN, port or seeding policy) from your public
+one. The list shows only enabled clients of the indexer's protocol, and saving a
+pin to a client of the other protocol is refused.
+
+* **A pin wins over everything else.** It overrides the client's priority and
+  its media type or category routing: an audiobook from a pinned indexer goes to
+  the pinned client even if another client has an audiobook category.
+* **There is no fallback.** If the pinned client is disabled, missing or of the
+  wrong protocol, or does not answer, the grab fails with a message naming the
+  indexer (and the client too, if you are an admin), and nothing is sent to any
+  other client. A scheduled search skips that indexer's releases, still grabs
+  from your other indexers, and records the failure in History once a day per
+  book and indexer. The indexer's row in Settings shows an amber warning while
+  its pinned client is disabled, missing or the wrong protocol. Enable the
+  client or pick another one and the next grab goes through. A grab with no
+  indexer id (an API caller) is tied to its indexer by the release URL's host;
+  see the troubleshooting page for the limits.
+* **A pinned client cannot be deleted.** Deleting a download client that an
+  indexer is pinned to is refused (HTTP 409) with the indexer names. Choose
+  another client for those indexers, or set them back to *Default*, first.
+  Disabling the client is allowed.
+* **A Prowlarr sync keeps the pin.** It is local configuration like priority and
+  the seed limits.
 
 **Seeding limits.** A torrent indexer can carry its own seeding rules in
 Settings → Indexers, so a private tracker's minimum is met without changing the
@@ -508,7 +541,138 @@ profile does not allow it. Only downloads are checked: a library scan,
 adopting files already in your library, and books imported before this check
 existed are left alone. With the import mode set to **External**, Bindery
 hands the download to your other tool without opening its files, so nothing
-is checked there either. Audiobooks are not checked yet.
+is checked there either. Audiobooks are not checked for language.
+
+**The file's own title and author are checked at import (ebooks).** The release
+name can say one book while the EPUB inside is another, and without a check that
+file imports under the wrong book and the book is never searched for again. When
+a download tied to a wanted book finishes, Bindery reads the EPUB's `dc:title`
+and `dc:creator` and compares them with the book. Only a definite mismatch
+counts: the title does not match **and** the author does not match.
+
+A title matches when, after case, accents, punctuation, a leading article and
+`&` against `and` are set aside, it equals the book's title or one of its
+variants: the title with a trailing series suffix such as `, Book 11` or
+`: Alex Cross, Book 11` removed, the main title before a `: subtitle`, and the
+subtitle itself when it is at least two meaningful words and does not end in a
+generic word such as novel or adventure (so `The Final Empire` matches `Mistborn:
+The Final Empire`). It also matches when the book's title sits inside the file's
+title as whole words (`Mary, Mary` inside `Mary, Mary: Alex Cross, Book 11`), and,
+for ebooks, when a file title of two or more words sits inside the book's title.
+A few spellings are treated as equal: `Dr`, `Mr`, `Mrs` and `St` against Doctor,
+Mister, Missus and Saint, hyphens and apostrophes left out (`Hitch-Hiker's` and
+`Hitchhiker's`), and spelled numbers against digits (`Slaughterhouse Five` and
+`Slaughterhouse 5`, `Twenty Thousand Leagues` and `20,000 Leagues`). Bindery does
+not try to equate `Philosopher's Stone` with `Sorcerer's Stone` or `1984` with
+`Nineteen Eighty-Four`.
+
+An author matches when the file's `dc:creator` names the book's author or one of
+its known aliases. A pen name or house name works through the alias list, so
+"Franklin W. Dixon" counts as Leslie McFarlane once that alias is on the author.
+A creator that names nobody is read as no creator at all, so it can never
+disagree: `Unknown`, `Anonymous`, `Various`, `calibre`, `Project Gutenberg`, a
+publisher such as `Penguin Group` or `Scholastic Inc.`, or anything containing an
+`@`. A file with no title or no author never counts as a mismatch, and neither
+does a comparison across scripts: if one side has no Latin letters and the other
+does (a Russian, Japanese, Hebrew, Arabic or Chinese edition of a book the
+catalogue holds in Latin letters), that title or author cannot disagree. Two
+non-Latin texts are still compared with each other. A file whose title differs but
+whose author agrees (another book in the series) is imported, and a wanted box
+set or omnibus is not compared. If a release holds several EPUBs, it is flagged
+only when every one that could be read is a definite mismatch. A release with more
+than 20 EPUBs is not judged (a verdict on a prefix could condemn the right book),
+and the `contentCheck` note says `truncated`. The object lists at most 10
+mismatches and says how many more there were.
+
+What happens next is set by **Check ebook contents** under Settings, General,
+File Naming (`import.ebook.content_check`, admin only):
+
+- **Warn** (the default): the file imports as before, and the History row and the
+  `bookImported` webhook carry a `contentCheck` object with the file's title and
+  author and the book they were compared with. The History row shows it under
+  the title.
+- **Block**: the release is refused the way a wrong language is. Nothing is
+  placed, the Queue row is blocked with a message naming what the file says and
+  what was wanted, the release is added to the Blocklist and the book stays
+  Wanted. **Match to book** on the Queue row, or **Import, From a folder**, keeps
+  the file anyway and skips the check; **Retry import** runs it again.
+- **Off**: the check does not run and no file is opened for it.
+
+Block is opt in because a wrongly refused download costs more than a missed
+mismatch. The check only runs for downloads Bindery grabbed for a book. A library
+scan, manual import, **Match to book** and a download matched to its book from
+the file's own metadata are never checked, and only EPUB is read. Bindery does not
+read the book's text and does not write anything into the file.
+
+**The files' audio tags are checked at import (audiobooks).** An audiobook
+download is imported whole under the book it was grabbed for, so a release named
+for the right book that also holds the tracks of other books (the next volume,
+or another title by the same author) used to import all of them. When the
+download finishes, Bindery reads the tags of its audio files, once, and works
+out which book each file says it belongs to: its album tag, or, only when a file
+has no album, its track title, and then only when at least two files share it,
+so unique chapter names are never taken for other books. Titles such as
+`Chapter 12`, `Track 03`, a bare number, `Prologue`, `Credits`, and promo
+material (`Excerpt from ...`, preview, sample, bonus, interview, `Also by`,
+teaser, trailer) say nothing about the book and are ignored, and so is a file
+with no usable title. An album that is a placeholder (`Unknown Album`, `Unknown`,
+`Untitled`), a publisher credit (`Audible`, `Audible Studios`, `Audiobook`,
+`Blackstone Audio` and a few others), a web address or domain name, the file's own
+artist, album artist or composer tag (a narrator filed as the album), or written
+in a script with no Latin letters when the book's title has Latin letters, is
+also no usable title.
+
+A file supports the book when its title matches the book's title the way an
+ebook's does (see above: series suffix, subtitle, a subtitle of two or more words
+that is not a generic label, `(Volume 1)` style qualifier, leading article, `&`
+against `and`, case, accents, `Dr` against `Doctor`, spelled numbers against
+digits) or contains it as whole words, so a short title like `Dune` is supported
+by `Dune Messiah`. For `Mistborn: The Final Empire` both `Mistborn: The Final
+Empire` and `The Final Empire` support the book. A file that carries another
+volume of the same series (`NYPD Red 4` for `NYPD Red 3`) does not.
+
+The download is flagged when either of these holds:
+
+- at least two files do not support the book, those files are at least 5 percent
+  of the tracks read, and either at least one file does support it or at least
+  two different other titles appear;
+- at least two files carry another volume of the book's own series, and they are
+  at least 5 percent of the tracks read.
+
+The 5 percent floor means two bonus files or two series intro files in a folder of
+sixty do not flag it. A download where every file carries one other title is not
+flagged, because that is what a translated or retitled edition looks like; the
+`contentCheck` object then carries `retitled` with the title and the number of
+files, in `warn` and in `block` mode alike, and History shows a single quiet line.
+Nothing is blocked and no message changes. A wanted box set, omnibus, anthology,
+trilogy, duology, quartet, series or saga title, `Short Stories`, `Collected ...`,
+`Complete Works` or `Complete Chronicles` style titles, `The Complete` plus two or
+three words (`The Complete Sherlock Holmes`), `X Y Collection` (`Harry Potter
+Collection`), `Treasury of Fairy Tales`, `The Best of <the author's name>` (`The Best
+of Poe` by Edgar Allan Poe), a counted set such as `Four Novels` and a numeric range
+such as `Harry Potter 1-7` is not compared. Ordinary titles that merely contain the
+words complete, collection or best of (`The Complete Maus`, `The Best of Me`, `A
+Collection of Curses`) are compared. At most 500 files are read, spread across the folder, and the whole
+check has a 30 second budget: if reading runs out of time the check fails open,
+the audiobook imports, and the `contentCheck` object says `truncated: true`.
+
+The setting is **Check audiobook contents** next to the ebook one
+(`import.audiobook.content_check`, admin only) and works the same way:
+
+- **Warn** (the default): the audiobook imports as before, and the History row
+  and the `bookImported` webhook carry a `contentCheck` object with the number
+  of tracks read, how many support the book, and the other books found with how
+  many files each (up to ten).
+- **Block**: the download is blocked with a message such as `the files contain
+  Corralled (9), Coming Home to Myself (8), but the book is "Chase" (2 of 19
+  tracks match)`, the release is blocklisted, nothing is attached and the book
+  stays Wanted. **Match to book** or manual import keeps the folder anyway and
+  skips the check, and **Retry import** runs it again.
+- **Off**: no tag is read.
+
+Like the ebook check it applies only to downloads grabbed for a book, never to
+a library scan, manual import or **Match to book**, and it does not change the
+files or their tags.
 
 If the library app downstream reads sidecar metadata, turn on **Write a
 metadata.opf sidecar** in Settings → General (off by default). Bindery then

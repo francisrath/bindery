@@ -224,6 +224,12 @@ var settingDescriptors = []SettingDescriptor{
 		State:       SettingStateActive,
 	},
 	{
+		Key: SettingImportAudiobookContentCheck, Type: SettingTypeEnum, Default: "warn",
+		Values:      contentCheckValues,
+		Description: "Read the audio tags of a downloaded audiobook and compare them with the book it was grabbed for. warn imports it and records the other books found on the History event and webhook, block refuses the download and blocklists the release, off skips the check and reads no tags. Match to book and manual import always skip it.",
+		State:       SettingStateActive,
+	},
+	{
 		Key: SettingImportAudiobookDropFolder, Type: SettingTypeString, Default: "",
 		Description: "Drop folder for audiobooks when their import mode is external. Must exist inside the container. Empty uses import.drop_folder.",
 		State:       SettingStateActive,
@@ -231,6 +237,12 @@ var settingDescriptors = []SettingDescriptor{
 	{
 		Key: SettingImportAudiobookFlattenMultiDisc, Type: SettingTypeBool, Default: "false",
 		Description: "Flatten a multi disc audiobook download into one Part sequence on import. Only ever runs in copy or hardlink mode.",
+		State:       SettingStateActive,
+	},
+	{
+		Key: SettingImportEbookContentCheck, Type: SettingTypeEnum, Default: "warn",
+		Values:      contentCheckValues,
+		Description: "Compare a downloaded EPUB's own title and author with the book it was grabbed for. warn imports it and records the mismatch on the History event and webhook, block refuses the download and blocklists the release, off skips the check. Match to book and manual import always skip it.",
 		State:       SettingStateActive,
 	},
 	{

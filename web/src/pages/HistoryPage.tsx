@@ -45,7 +45,65 @@ function parseEventData(data: string): { message?: string; path?: string; size?:
 // Detail line shown under the source title. Most events carry a `message` or a
 // `path`; a language correction carries `from`/`to` ISO codes, which only mean
 // anything shown together.
-function eventDetail(type: string, parsed: ReturnType<typeof parseEventData>): string {
+type Translate = (key: string, opts?: Record<string, unknown>) => string
+
+function eventDetail(type: string, parsed: ReturnType<typeof parseEventData>, t: Translate): string {
+  const usual = baseEventDetail(type, parsed)
+  const check = type === 'bookImported' ? contentCheckDetail(parsed.contentCheck, t) : ''
+  return check && usual ? `${check} \u00b7 ${usual}` : check || usual
+}
+
+function nonEmptyString(v: unknown): string {
+  return typeof v === 'string' ? v.trim() : ''
+}
+
+// A bookImported row written while the content check was on warn (#3015,
+// #3246) carries `contentCheck`: what the files said about themselves when it
+// was not the grabbed book. Shown so a warn that nobody opens the raw event for
+// is still read. An ebook lists the file's own title and author; an audiobook
+// lists the other works its tracks named, with how many tracks each. The data
+// comes from files, so every entry is checked before it is read, and the words
+// around the values come from the translation.
+function contentCheckDetail(raw: unknown, t: Translate): string {
+  if (!raw || typeof raw !== 'object') return ''
+  const cc = raw as { kind?: unknown; mismatches?: unknown; retitled?: unknown; truncated?: unknown }
+  if (!Array.isArray(cc.mismatches) || cc.mismatches.length === 0) return quietContentCheckNote(cc, t)
+  const found = (cc.mismatches as unknown[])
+    .map((m): string => {
+      if (!m || typeof m !== 'object' || Array.isArray(m)) return ''
+      const entry = m as { title?: unknown; author?: unknown; count?: unknown }
+      const title = nonEmptyString(entry.title)
+      if (cc.kind === 'ebook') {
+        const author = nonEmptyString(entry.author)
+        if (title && author) return t('history.contentCheckEbookEntry', { title, author })
+        if (title) return t('history.contentCheckEbookTitleOnly', { title })
+        if (author) return t('history.contentCheckEbookAuthorOnly', { author })
+        return ''
+      }
+      if (!title) return ''
+      return typeof entry.count === 'number' ? t('history.contentCheckAudiobookEntry', { title, count: entry.count }) : title
+    })
+    .filter(Boolean)
+    .join(', ')
+  if (!found) return ''
+  const label = cc.kind === 'ebook' ? t('history.contentCheckEbook') : t('history.contentCheckAudiobook')
+  return `${label}: ${found}`
+}
+
+// The notes a content check leaves when it found nothing wrong: every file named
+// the same other title (a retitled or translated edition passes), or the check
+// ran out of time and was skipped. One quiet line, no headline.
+function quietContentCheckNote(cc: { retitled?: unknown; truncated?: unknown }, t: Translate): string {
+  if (cc.retitled && typeof cc.retitled === 'object' && !Array.isArray(cc.retitled)) {
+    const rt = cc.retitled as { title?: unknown; files?: unknown }
+    const title = nonEmptyString(rt.title)
+    if (title && typeof rt.files === 'number') return t('history.contentCheckRetitled', { title, count: rt.files })
+  }
+  if (cc.truncated === true) return t('history.contentCheckTruncated')
+  return ''
+}
+
+function baseEventDetail(type: string, parsed: ReturnType<typeof parseEventData>): string {
   if (type === 'bookLanguageCorrected') {
     const from = typeof parsed.from === 'string' ? parsed.from : ''
     const to = typeof parsed.to === 'string' ? parsed.to : ''
@@ -214,7 +272,7 @@ export default function HistoryPage() {
                 <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
                   {events.map(event => {
                     const parsed = parseEventData(event.data)
-                    const detail = eventDetail(event.eventType, parsed)
+                    const detail = eventDetail(event.eventType, parsed, t)
                     const isError = event.eventType === 'downloadFailed' || event.eventType === 'importFailed'
                     const size = typeof parsed.size === 'number' ? parsed.size : 0
                     const mt = detectMediaType(event.sourceTitle)
@@ -280,7 +338,7 @@ export default function HistoryPage() {
           <div className="sm:hidden space-y-2">
             {events.map(event => {
               const parsed = parseEventData(event.data)
-              const detail = eventDetail(event.eventType, parsed)
+              const detail = eventDetail(event.eventType, parsed, t)
               const isError = event.eventType === 'downloadFailed' || event.eventType === 'importFailed'
               const size = typeof parsed.size === 'number' ? parsed.size : 0
               const mt = detectMediaType(event.sourceTitle)

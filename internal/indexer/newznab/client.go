@@ -193,6 +193,39 @@ func SignDownloadURLFor(rawURL, indexerURL, apiKey string) string {
 	return signDownloadURL(rawURL, baseHost, apiKey)
 }
 
+// DownloadHostMatchesIndexer reports whether a download URL is on the host the
+// indexer is configured at, using the same normalisation SignDownloadURLFor
+// uses. Unlike signing it needs no stored key and ignores whether the URL is
+// already signed, so it answers "could this release have come from that
+// indexer" for the cases signing cannot (#3080).
+//
+// The comparison is on the host name only: case is ignored, one trailing dot is
+// dropped, and the port is ignored in every combination (explicit against none,
+// the scheme's default against none, two different explicit ports). Ignoring a
+// differing port is deliberate and errs the safe way for a pin: Prowlarr builds
+// download links from its own application URL, which need not carry the port
+// the indexer was recorded with, and a spurious match only refuses a grab the
+// user can retry with an indexer id, whereas a spurious miss would put a
+// private tracker's release on the public client. Signing keeps its own, exact
+// comparison (signDownloadURL); this function does not change it. A host that
+// differs by a "www." or any other subdomain is a different host, and punycode
+// is not folded to Unicode, so those remain misses.
+func DownloadHostMatchesIndexer(rawURL, indexerURL string) bool {
+	base := pinHostName(normalizeEndpointURL(indexerURL))
+	rel := pinHostName(rawURL)
+	return base != "" && base == rel
+}
+
+// pinHostName returns the lower case host name of raw without its port or a
+// single trailing dot, or "" when raw has none.
+func pinHostName(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSuffix(strings.ToLower(u.Hostname()), ".")
+}
+
 // HasAPIKey reports whether a download URL already carries an apikey.
 //
 // It exists so callers can tell "this URL is already signed" apart from "this

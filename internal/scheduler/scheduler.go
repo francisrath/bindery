@@ -6,6 +6,7 @@ package scheduler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"strconv"
@@ -114,7 +115,8 @@ type eventNotifier interface {
 // here to avoid having the scheduler import notifier just for two string
 // constants (and to keep the eventNotifier interface untied to the real type).
 const (
-	notifierEventGrabbed = "grabbed"
+	notifierEventGrabbed        = "grabbed"
+	notifierEventDownloadFailed = "downloadFailed"
 )
 
 // defaultSearchInterval is the fallback wanted-book search cadence used when
@@ -999,6 +1001,92 @@ func (s *Scheduler) resolveAllowedLanguages(ctx context.Context, author *models.
 	return models.ParseAllowedLanguages(p.AllowedLanguages)
 }
 
+// pinnedClient returns the download client the release's indexer is pinned to
+// (#3080), or (nil, nil) when the indexer has no pin. A pin that cannot be
+// honoured is a *db.PinnedClientError, never a different client.
+func (s *Scheduler) pinnedClient(ctx context.Context, res *newznab.SearchResult) (*models.DownloadClient, error) {
+	if s.indexers == nil || res.IndexerID == 0 {
+		return nil, nil
+	}
+	idx, err := s.indexers.GetByID(ctx, res.IndexerID)
+	if err != nil {
+		return nil, err
+	}
+	if idx == nil || idx.DownloadClientID == nil {
+		return nil, nil
+	}
+	return s.clients.ResolvePinnedClient(ctx, idx, res.Protocol)
+}
+
+// checkPin decides whether an approved release may go ahead. It returns the
+// pinned client for a pinned indexer, a nil client for an unpinned one, and
+// skip=true when the indexer is pinned to a client that cannot take it. The
+// first failure for an indexer is logged and recorded; later releases from the
+// same indexer in this sweep are skipped quietly.
+func (s *Scheduler) checkPin(ctx context.Context, book models.Book, res *newznab.SearchResult, skipped map[int64]bool) (*models.DownloadClient, bool, error) {
+	if skipped[res.IndexerID] {
+		return nil, true, nil
+	}
+	c, err := s.pinnedClient(ctx, res)
+	if err == nil {
+		return c, false, nil
+	}
+	var perr *db.PinnedClientError
+	if !errors.As(err, &perr) {
+		return nil, false, err
+	}
+	slog.Warn("SearchAndGrabBook: the indexer's pinned download client cannot take the grab, skipping that indexer",
+		"book", book.Title, "release", res.Title, "error", perr.Error())
+	skipped[res.IndexerID] = true
+	s.recordPinnedFailure(ctx, book.ID, res, perr)
+	return nil, true, nil
+}
+
+// pinnedFailureCode marks a History event written for a pinned client failure.
+const pinnedFailureCode = "indexer_client_unavailable"
+
+// pinnedFailureQuietPeriod is how long an identical failure for the same book
+// and indexer stays recorded only once. The wanted sweep can run hourly, and a
+// down client would otherwise write one row per book per sweep.
+const pinnedFailureQuietPeriod = 24 * time.Hour
+
+// recordPinnedFailure writes the refused grab to History and the notifier, so
+// it is not only a log line. History is readable by every user and a webhook
+// leaves the house, so both name the indexer and not the client; the log line
+// carries both. An identical failure for the same book and indexer in the last
+// day is not recorded again.
+func (s *Scheduler) recordPinnedFailure(ctx context.Context, bookID int64, res *newznab.SearchResult, perr *db.PinnedClientError) {
+	if s.history == nil {
+		return
+	}
+	message := perr.Message(false)
+	if events, err := s.history.ListByBook(ctx, bookID); err == nil {
+		cutoff := time.Now().UTC().Add(-pinnedFailureQuietPeriod)
+		for _, e := range events {
+			if e.EventType != models.HistoryEventDownloadFailed || e.CreatedAt.Before(cutoff) {
+				continue
+			}
+			var prior struct {
+				Code      string `json:"code"`
+				IndexerID int64  `json:"indexerId"`
+				Message   string `json:"message"`
+			}
+			if json.Unmarshal([]byte(e.Data), &prior) == nil && prior.Code == pinnedFailureCode &&
+				prior.IndexerID == res.IndexerID && prior.Message == message {
+				return
+			}
+		}
+	}
+	data, _ := json.Marshal(map[string]any{"guid": res.GUID, "message": message, "code": pinnedFailureCode, "indexerId": res.IndexerID})
+	_ = s.history.Create(ctx, &models.HistoryEvent{
+		BookID:      &bookID,
+		EventType:   models.HistoryEventDownloadFailed,
+		SourceTitle: res.Title,
+		Data:        string(data),
+	})
+	s.notify(ctx, notifierEventDownloadFailed, map[string]interface{}{"title": res.Title, "message": message})
+}
+
 // resolveSeedLimits looks up the per-indexer seed ratio (#883) and seed time
 // (#2206) overrides for the indexer a release was grabbed from. Each is nil
 // (no override) when the indexer repo is unset, the id is zero, the lookup
@@ -1211,9 +1299,27 @@ func (s *Scheduler) searchAndGrabFormat(ctx context.Context, book models.Book, m
 	}
 
 	var best *newznab.SearchResult
+	// bestClient is the client the best release's indexer is pinned to
+	// (#3080), nil for an unpinned indexer. skippedPinned holds the indexers
+	// whose pinned client could not take a release this sweep: their other
+	// releases would fail the same way, so they are passed over without a second
+	// record, and the next approved release from a different indexer is tried.
+	// A pinned indexer's release is never sent to another client.
+	var bestClient *models.DownloadClient
+	skippedPinned := map[int64]bool{}
 	for i, d := range dm.Evaluate(releases, book) {
 		if d.Approved {
+			c, skip, err := s.checkPin(ctx, book, &results[i], skippedPinned)
+			if err != nil {
+				slog.Error("SearchAndGrabBook: failed to resolve the indexer's pinned download client", "indexer", results[i].IndexerName, "error", err)
+				outcome = "download client lookup failed"
+				return
+			}
+			if skip {
+				continue
+			}
 			best = &results[i]
+			bestClient = c
 			break
 		}
 		if dbg != nil {
@@ -1250,11 +1356,22 @@ func (s *Scheduler) searchAndGrabFormat(ctx context.Context, book models.Book, m
 	}
 	if best == nil {
 		// Re-evaluate any existing pending releases for this book/format with the current age.
-		best = s.checkPendingReleases(ctx, book, mediaType, dm)
+		var pendErr error
+		best, bestClient, pendErr = s.pendingApproved(ctx, book, mediaType, dm, func(res *newznab.SearchResult) (*models.DownloadClient, bool, error) {
+			return s.checkPin(ctx, book, res, skippedPinned)
+		})
+		if pendErr != nil {
+			slog.Error("SearchAndGrabBook: failed to resolve the indexer's pinned download client for a pending release", "error", pendErr)
+			outcome = "download client lookup failed"
+			return
+		}
 		if best == nil {
-			if rawResults == 0 {
+			switch {
+			case len(skippedPinned) > 0:
+				outcome = "pinned download client unavailable"
+			case rawResults == 0:
 				outcome = "no results"
-			} else {
+			default:
 				outcome = "nothing approved"
 			}
 			return
@@ -1262,13 +1379,19 @@ func (s *Scheduler) searchAndGrabFormat(ctx context.Context, book models.Book, m
 	}
 	approved = 1
 
-	candidates, err := s.clients.GetEnabledByProtocol(ctx, best.Protocol)
-	if err != nil {
-		slog.Error("SearchAndGrabBook: failed to list download clients", "protocol", best.Protocol, "error", err)
-		outcome = "download client lookup failed"
-		return
+	// An indexer pinned to a download client (#3080) sends every grab to that
+	// client or, above, was skipped. There is deliberately no fallback to the
+	// default pick for its releases.
+	client := bestClient
+	if client == nil {
+		candidates, err := s.clients.GetEnabledByProtocol(ctx, best.Protocol)
+		if err != nil {
+			slog.Error("SearchAndGrabBook: failed to list download clients", "protocol", best.Protocol, "error", err)
+			outcome = "download client lookup failed"
+			return
+		}
+		client = db.PickClientForMediaType(candidates, mediaType)
 	}
-	client := db.PickClientForMediaType(candidates, mediaType)
 	// No cross-protocol fallback: a usenet release must not be pushed to a
 	// torrent client (qBittorrent would accept the .nzb URL, fail to parse it
 	// as a torrent, and report "hash could not be determined"), and vice versa.
@@ -1361,7 +1484,7 @@ func (s *Scheduler) searchAndGrabFormat(ctx context.Context, book models.Book, m
 		GlobalRemap:          s.downloadPathRemap,
 	}.WithSeedLimits(s.resolveSeedLimits(ctx, best.IndexerID)))
 	if err != nil {
-		slog.Error("SearchAndGrabBook: failed to send to downloader", "client", client.Type, "title", best.Title, "error", err)
+		slog.Error("SearchAndGrabBook: failed to send to downloader", "client", client.Type, "client_name", client.Name, "indexer", best.IndexerName, "title", best.Title, "error", err)
 		if setErr := s.downloads.SetError(ctx, dl.ID, err.Error()); setErr != nil {
 			slog.Warn("failed to persist download error", "download_id", dl.ID, "error", setErr)
 		}
@@ -1470,12 +1593,24 @@ func (s *Scheduler) storePending(ctx context.Context, bookID int64, mediaType st
 // book's ebook and audiobook pending entries are evaluated independently.
 // If any now passes the decision engine it is returned for immediate grab.
 func (s *Scheduler) checkPendingReleases(ctx context.Context, book models.Book, mediaType string, dm *decision.DecisionMaker) *newznab.SearchResult {
+	res, _, _ := s.pendingApproved(ctx, book, mediaType, dm, nil)
+	return res
+}
+
+// pendingApproved is checkPendingReleases with a gate. accept, when set, is
+// asked about each approved release before it is taken: it returns the client to
+// use, whether to skip the release, or an error that stops the sweep. A skipped
+// release stays pending, untouched, for the next sweep (a pinned client that is
+// down must not cost the user a held release), and the next approved row is
+// tried. Only a release that is taken is deleted from pending.
+func (s *Scheduler) pendingApproved(ctx context.Context, book models.Book, mediaType string, dm *decision.DecisionMaker,
+	accept func(*newznab.SearchResult) (*models.DownloadClient, bool, error)) (*newznab.SearchResult, *models.DownloadClient, error) {
 	if s.pending == nil {
-		return nil
+		return nil, nil, nil
 	}
 	pendingList, err := s.pending.ListByBookAndMediaType(ctx, book.ID, mediaType)
 	if err != nil || len(pendingList) == 0 {
-		return nil
+		return nil, nil, nil
 	}
 
 	// Re-hydrate stored releases and re-evaluate with current age.
@@ -1488,16 +1623,27 @@ func (s *Scheduler) checkPendingReleases(ctx context.Context, book models.Book, 
 		rel := decision.ReleaseFromSearchResult(res)
 		decisions := dm.Evaluate([]decision.Release{rel}, book)
 		if len(decisions) > 0 && decisions[0].Approved {
+			var client *models.DownloadClient
+			if accept != nil {
+				c, skip, err := accept(&res)
+				if err != nil {
+					return nil, nil, err
+				}
+				if skip {
+					continue
+				}
+				client = c
+			}
 			if err := s.pending.DeleteByID(ctx, pendingList[i].ID); err != nil {
 				// If the entry survives it is re-approved and re-grabbed on the
 				// next cycle — duplicate grabs with no visible cause.
 				slog.Warn("failed to delete pending release after approval",
 					"pending_id", pendingList[i].ID, "book_id", book.ID, "guid", res.GUID, "error", err)
 			}
-			return &res
+			return &res, client, nil
 		}
 	}
-	return nil
+	return nil, nil, nil
 }
 
 func (s *Scheduler) searchWanted() {

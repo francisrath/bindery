@@ -538,6 +538,72 @@ value is rejected with 400. `GET /indexer` and `GET /indexer/{id}` also return
 `dailyQueriesUsed` on capped indexers, which is a display figure summed from the
 stored hourly buckets and lags the live tally by up to one flush interval.
 
+#### Per-indexer download client pin
+
+`downloadClientId` on an indexer pins every grab from it to one download client
+(#3080). `null` and omitted on create mean no pin, which keeps the usual routing.
+Omitted on `PUT` keeps the stored pin, and `null` clears it. The client must exist
+and its protocol must match the indexer's (`torznab` is torrent, `newznab` is
+usenet), otherwise `POST` and `PUT` answer `400` with the reason. A client that is
+disabled is refused for a new or changed pin, but an unrelated edit of an
+indexer already pinned to a client that was disabled later still saves.
+
+A pinned grab ignores the client's priority and media type routing. If the pinned
+client is disabled, missing or of the wrong protocol, the grab fails and no other
+client is tried: `POST /queue/grab`, `POST /queue/{id}/retry` and
+`POST /pending/{id}/grab` answer `400` with `code: "indexer_client_unavailable"`.
+The message names the indexer, and the client only for an admin caller. The bulk
+retry returns the same text per item in its results map instead of a status. A
+client that is enabled but does not answer is the usual `502`, with the message
+extended to say the indexer is pinned and no other client was tried. The field is
+only returned by the admin only indexer endpoints.
+
+
+Which indexer a grab belongs to is decided once, from the `indexerId` you send
+and the release URL's host, before the URL is signed. Signing never overrides
+the decision. The rules, in order:
+
+1. An `indexerId` that exists and is pinned always wins. Its pin applies,
+   whatever the URL's host is and whoever could sign the URL.
+2. An `indexerId` that exists and is not pinned is taken at face value when its
+   host matches the release URL's host, even if a pinned indexer shares that
+   host. When its host does not match the URL's host and some indexer that does
+   match is pinned, the grab is refused. Otherwise it stands.
+3. An `indexerId` that matches no indexer (or `null`, as on a retry of a row whose
+   indexer was deleted) is treated as no id at all.
+4. With no usable id, the indexers whose host matches the URL decide. None: the
+   grab is routed as if unpinned. Exactly one: that is the release's indexer, and
+   its pin, if any, applies (this finds a recreated indexer, and keyless
+   indexers). Several: if any is pinned the grab is refused, because it cannot be
+   told which one it came from; if none is pinned nothing changes.
+
+A refusal is the `400` with `code: "indexer_client_unavailable"` and nothing is
+sent. The message says the release could not be tied to one indexer (or that the
+named indexer does not match the release's host), and lists the pinned indexers
+for an admin only. The row's `indexerId` is the decided indexer. The retry
+and the pending grab go through the same decision.
+
+The host comparison ignores case, one trailing dot and the port, in any
+combination: `prowlarr` and `prowlarr:9696` are the same host. Ignoring a
+differing port is deliberate, because a spurious refusal is safer than letting a
+private release reach the public client. These do not match, so an id-less grab
+through them is routed as if unpinned unless you send `indexerId`: aliases of one
+machine (`localhost`, `127.0.0.1` and a DNS name), `www.` and other subdomains,
+scheme-less indexer URLs, and punycode against Unicode spellings. On a shared
+Prowlarr or Jackett host, one pinned indexer makes id-less API grabs fail for
+every other indexer on that host; the web app and the scheduler always send the
+indexer and are unaffected.
+
+On save, a client with the wrong protocol is refused only when the request sets
+the pin or changes the indexer `type`. Enabling, disabling or reprioritising an
+indexer whose pinned client was changed to the other protocol later still saves;
+its grabs fail at grab time.
+
+`DELETE /downloadclient/{id}` answers `409` while any indexer is pinned to the
+client, with `error` and an `indexers` array of their names. Disabling the client
+with `PUT` is not refused. A Prowlarr sync, and any other update from outside,
+keeps the pin.
+
 #### Per-indexer seed limits
 
 Three optional overrides are applied to a torrent grabbed from the indexer:
@@ -994,7 +1060,57 @@ without a custom template:
 | `format` | `ebook` \| `audiobook` on `bookImported` and `upgrade`. **Omitted for Apprise targets only** (a URL with a `/notify` path segment) — Apprise reserves `format` for the body markup and rejects anything but `text`/`html`/`markdown` with HTTP 400. Every other consumer still receives it |
 | `mediaFormat` | the same value as `format`, always present. Use this one if your relay is Apprise, or if you want a key that is never stripped |
 | event extras | `author`, `size`, `path`, `status`, `clientId` when relevant |
+| `contentCheck` | on `bookImported` when `import.ebook.content_check` or `import.audiobook.content_check` is `warn` (the default) and the files look like another book, and on `downloadFailed` when `block` refused the download. Absent when the check found nothing worth recording and when it is `off`. Two notes ride without a flag and without any block: `retitled` (a download whose every file names one other title) and `truncated` (the check was skipped because it ran out of time, or a release held more EPUBs than the cap). See below |
 | `requestCreated` extras | `kind` (`book` \| `author`), `username`, `mediaType`, `requestId`. `title`, `author` and `username` have control and invisible characters removed, are length capped, and have `@`, `<`, `>`, `[` and `]` replaced with fullwidth lookalikes, and the `://` of any URL broken the same way, so a title or username cannot mention a channel, use a Slack escape such as `<!channel>`, form a markdown link or autolink a URL. The same request from the same person notifies at most once an hour, and one requester at most 10 times an hour. The event is off on every webhook until its **Request** toggle is turned on |
+
+**`contentCheck`** (#3015, #3246) says what the post-download content check found. The
+same object rides on the `bookImported` history row's `data` and webhook in
+`warn` mode, and on the `importFailed` history row's `data` and the
+`downloadFailed` webhook in `block` mode. For an ebook:
+
+```json
+{
+  "kind": "ebook",
+  "bookTitle": "Mary, Mary: Alex Cross, Book 11",
+  "bookAuthor": "James Patterson",
+  "mismatches": [
+    { "file": "book.epub", "title": "Mary and Mr Eliot: A Sort of Love Story", "author": "Mary Trevelyan" }
+  ]
+}
+```
+
+`mismatches` lists the EPUBs that disagreed on both title and author, at most 10 of them, with `moreTitles` saying how many more there were and `filesRead` how many EPUBs were opened (at most 20 per release). For an
+audiobook (#3246) the object reports what the audio tags said:
+
+```json
+{
+  "kind": "audiobook",
+  "bookTitle": "Chase",
+  "bookAuthor": "James Patterson",
+  "tracksRead": 19,
+  "matches": 2,
+  "mismatches": [
+    { "title": "Corralled", "count": 9 },
+    { "title": "Coming Home to Myself", "count": 8 }
+  ]
+}
+```
+
+`tracksRead` is how many files had readable tags, `matches` how many of them
+name the book, and `mismatches` the other works found with the number of files
+each, most files first and capped at 10 titles (`moreTitles` says how many were
+left out). `sampled: true` appears when the download held more than 500 audio
+files and a sample spread across the folder was read. `retitled`
+(`{title, files}`) appears on a pass where no file supports the book and every
+file names one other title, with an empty `mismatches` list. `truncated: true`
+means the 30 second budget ran out and the check failed open; `tracksRead` is how
+far it got. The text is
+cleaned like other text that comes from outside Bindery: control characters are
+removed, length is capped, and `@`, `<`, `>`, `[`, `]` and the `://` of a URL are
+replaced with fullwidth lookalikes, so a hostile file cannot mention a channel or
+form a link in a chat relay. The settings that control it, `import.ebook.content_check`
+and `import.audiobook.content_check`, take `off`, `warn` (the default) or `block`,
+are admin only, and are listed by `GET /api/v1/settings/descriptors`.
 
 Which events a webhook receives is set per notification by `onGrab`,
 `onImport`, `onUpgrade`, `onFailure`, `onHealth`, `onBookAnnounced` and

@@ -1451,7 +1451,7 @@ describe('SettingsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'settings.indexers.addButton' }))
     fireEvent.change(screen.getByPlaceholderText('settings.indexers.form.namePlaceholderExample'), { target: { value: 'SceneNZBs' } })
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'torznab' } })
+    fireEvent.change(screen.getByDisplayValue('settings.indexers.form.typeNewznab'), { target: { value: 'torznab' } })
     fireEvent.change(screen.getByPlaceholderText('settings.indexers.form.urlPlaceholderExample'), { target: { value: 'http://prowlarr:9696/1/api' } })
     fireEvent.change(screen.getByPlaceholderText('settings.indexers.form.apiKey'), { target: { value: 'scene-key' } })
     fireEvent.change(screen.getByDisplayValue('7020'), { target: { value: '7020, 7120, bad, 3030' } })
@@ -1472,6 +1472,7 @@ describe('SettingsPage', () => {
         inactiveSeedTimeMinutes: null,
         freeleechOnly: false,
         dailyQueryLimit: null,
+        downloadClientId: null,
       })
     })
     expect(await screen.findByText('SceneNZBs')).toBeInTheDocument()
@@ -1485,7 +1486,7 @@ describe('SettingsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'common.edit' }))
     fireEvent.change(screen.getByPlaceholderText('settings.indexers.form.namePlaceholder'), { target: { value: 'DrunkenSlug' } })
-    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'torznab' } })
+    fireEvent.change(screen.getByDisplayValue('settings.indexers.form.typeNewznabUsenet'), { target: { value: 'torznab' } })
     fireEvent.change(screen.getByPlaceholderText('settings.indexers.form.urlPlaceholder'), { target: { value: 'https://slug.example.com/api' } })
     fireEvent.change(screen.getByPlaceholderText('••••••••'), { target: { value: 'slug-key' } })
     fireEvent.change(screen.getByDisplayValue('7020, 3030'), { target: { value: '7020, bad, 3030' } })
@@ -1505,6 +1506,7 @@ describe('SettingsPage', () => {
         inactiveSeedTimeMinutes: null,
         freeleechOnly: false,
         dailyQueryLimit: null,
+        downloadClientId: null,
       })
     })
     expect(await screen.findByText('DrunkenSlug')).toBeInTheDocument()

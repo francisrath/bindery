@@ -403,6 +403,14 @@ func (h *DownloadClientHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.clients.Delete(r.Context(), id); err != nil {
+		// An indexer pinned to this client (#3080): refuse, and name them,
+		// because deleting it would quietly send their grabs to the default
+		// client, which is what the pin exists to prevent.
+		var pinned *db.ClientPinnedError
+		if errors.As(err, &pinned) {
+			writeJSON(w, http.StatusConflict, map[string]any{"error": pinned.Error(), "indexers": pinned.Indexers})
+			return
+		}
 		writeServerError(w, r, err)
 		return
 	}

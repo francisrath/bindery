@@ -1,7 +1,7 @@
-import { useState, useId } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
-import { api, Indexer, IndexerTestResult, ProwlarrInstance } from '../../api/client'
+import { api, DownloadClient, Indexer, IndexerTestResult, ProwlarrInstance } from '../../api/client'
 // client.ts re-exports types only, so the helper comes from its own module.
 import { indexerNeedsAttention, indexerQueryCap } from '../../api/indexers'
 import { inputCls } from './formStyles'
@@ -223,6 +223,66 @@ function DailyQueryLimitField({ value, onChange }: { value: number | null | unde
   )
 }
 
+const TORRENT_CLIENT_TYPES = ['qbittorrent', 'transmission', 'deluge', 'rtorrent']
+
+// clientProtocol mirrors the backend's db.ClientProtocol.
+function clientProtocol(clientType: string): 'torrent' | 'usenet' {
+  return TORRENT_CLIENT_TYPES.includes(clientType) ? 'torrent' : 'usenet'
+}
+
+function indexerProtocol(indexerType: string): 'torrent' | 'usenet' {
+  return indexerType === 'torznab' ? 'torrent' : 'usenet'
+}
+
+// DownloadClientField pins an indexer to one download client (#3080). It lists
+// only enabled clients of the indexer's protocol. A client the indexer is
+// already pinned to stays listed even when it is disabled or of the other
+// protocol, marked as such, so the form does not show a blank that hides the
+// real saved value.
+function DownloadClientField({ value, onChange, indexerType, clients }: {
+  value: number | null | undefined
+  onChange: (v: number | null) => void
+  indexerType: string
+  clients: DownloadClient[]
+}) {
+  const { t } = useTranslation()
+  const protocol = indexerProtocol(indexerType)
+  const options = clients.filter(c => c.id === value || (c.enabled && clientProtocol(c.type) === protocol))
+  const optionLabel = (c: DownloadClient) => {
+    if (!c.enabled) return t('settings.indexers.form.downloadClientDisabledOption', { name: c.name })
+    if (clientProtocol(c.type) !== protocol) return t('settings.indexers.form.downloadClientWrongProtocolOption', { name: c.name })
+    return c.name
+  }
+  return (
+    <div>
+      <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.downloadClient')}</label>
+      <select
+        aria-label={t('settings.indexers.form.downloadClient')}
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}
+        className={inputCls}
+      >
+        <option value="">{t('settings.indexers.form.downloadClientDefault')}</option>
+        {options.map(c => (
+          <option key={c.id} value={c.id}>
+            {optionLabel(c)}
+          </option>
+        ))}
+      </select>
+      <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.indexers.form.downloadClientHint')}</p>
+    </div>
+  )
+}
+
+// clearPinOnProtocolChange drops a pin that the indexer's new type cannot use,
+// so switching a form from torrent to usenet does not carry a torrent client
+// along into a save the server would refuse.
+function clearPinOnProtocolChange(current: number | null, newType: string, clients: DownloadClient[]): number | null {
+  if (current == null) return null
+  const c = clients.find(x => x.id === current)
+  return c && clientProtocol(c.type) === indexerProtocol(newType) ? current : null
+}
+
 // FreeleechOnlyField gates automatic grabbing to freeleech releases. It sits
 // next to the seed-ratio override because both are tracker-economics knobs.
 function FreeleechOnlyField({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
@@ -274,6 +334,18 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
   const [indexerTestResults, setIndexerTestResults] = useState<Record<number, IndexerTestResult & { testing?: boolean }>>({})
   const [confirmDeleteIndexer, setConfirmDeleteIndexer] = useState<number | null>(null)
   const [prowlarrTestResult, setProwlarrTestResult] = useState<Record<number, { ok: boolean; msg: string }>>({})
+  // null until the list has loaded, and left null if loading fails, so a pin
+  // is never reported missing or disabled on the strength of a list that is not
+  // there.
+  const [clients, setClients] = useState<DownloadClient[] | null>(null)
+  useEffect(() => {
+    let live = true
+    Promise.resolve()
+      .then(() => api.listDownloadClients())
+      .then(list => { if (live) setClients(list ?? []) })
+      .catch(() => { /* leave clients null: no warning without a list */ })
+    return () => { live = false }
+  }, [])
 
   return (
     <div>
@@ -342,6 +414,31 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                   )}
                 </div>
               </div>
+              {/* A pin to a client that cannot take grabs (#3080). Grabs from
+                  this indexer fail loudly instead of going to another client,
+                  so the row says so before anyone has to find out the hard
+                  way. */}
+              {(() => {
+                if (idx.downloadClientId == null || clients === null) return null
+                const pinned = clients.find(c => c.id === idx.downloadClientId)
+                const wrongProtocol = pinned != null && clientProtocol(pinned.type) !== indexerProtocol(idx.type)
+                if (pinned?.enabled && !wrongProtocol) return null
+                return (
+                  <div
+                    role="status"
+                    className="mt-2 px-3 py-2 rounded text-xs flex items-center gap-2 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                  >
+                    <span className="inline-block w-2 h-2 rounded-full flex-shrink-0 bg-amber-500" />
+                    <span>
+                      {!pinned
+                        ? t('settings.indexers.pinnedClientMissing')
+                        : !pinned.enabled
+                          ? t('settings.indexers.pinnedClientDisabled', { name: pinned.name })
+                          : t('settings.indexers.pinnedClientWrongProtocol', { name: pinned.name })}
+                    </span>
+                  </div>
+                )
+              })()}
               {/* How much of the daily query cap is spent (#2312). Only
                   rendered for indexers that have one, and amber once the cap
                   is reached, because from that point Bindery is skipping the
@@ -433,6 +530,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
               {editingIndexer === idx.id && (
                 <EditIndexerForm
                   indexer={idx}
+                  clients={clients ?? []}
                   onClose={() => setEditingIndexer(null)}
                   onSaved={(updated) => { setIndexers(indexers.map(i => i.id === updated.id ? updated : i)); setEditingIndexer(null) }}
                 />
@@ -443,6 +541,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
       )}
       {showAddIndexer && (
         <AddIndexerForm
+          clients={clients ?? []}
           onClose={() => setShowAddIndexer(false)}
           onAdded={(idx) => { setIndexers([...indexers, idx]); setShowAddIndexer(false) }}
         />
@@ -561,7 +660,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
   )
 }
 
-function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onClose: () => void; onSaved: (idx: Indexer) => void }) {
+function EditIndexerForm({ indexer, clients, onClose, onSaved }: { indexer: Indexer; clients: DownloadClient[]; onClose: () => void; onSaved: (idx: Indexer) => void }) {
   const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState(indexer.name)
@@ -578,12 +677,13 @@ function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onCl
   const [inactiveSeedTimeMinutes, setInactiveSeedTimeMinutes] = useState<number | null>(indexer.inactiveSeedTimeMinutes ?? null)
   const [freeleechOnly, setFreeleechOnly] = useState(indexer.freeleechOnly ?? false)
   const [dailyQueryLimit, setDailyQueryLimit] = useState<number | null>(indexer.dailyQueryLimit ?? null)
+  const [downloadClientId, setDownloadClientId] = useState<number | null>(indexer.downloadClientId ?? null)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<IndexerTestResult | null>(null)
   const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
 
   const submit = async () => {
-    const payload: Partial<Indexer> = { ...indexer, name, type, url, categories: parseCats(categories), includeParentCategories, priority: parsePriority(priority), seedRatio, seedTimeMinutes, inactiveSeedTimeMinutes, freeleechOnly, dailyQueryLimit }
+    const payload: Partial<Indexer> = { ...indexer, name, type, url, categories: parseCats(categories), includeParentCategories, priority: parsePriority(priority), seedRatio, seedTimeMinutes, inactiveSeedTimeMinutes, freeleechOnly, dailyQueryLimit, downloadClientId }
     delete payload.apiKey
     if (apiKey) payload.apiKey = apiKey
     const updated = await api.updateIndexer(indexer.id, payload)
@@ -619,7 +719,7 @@ function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onCl
         </div>
         <div className="w-48">
           <label htmlFor={`${fid}-2`} className={labelCls}>{t('settings.indexers.form.type')}</label>
-          <select id={`${fid}-2`} value={type} onChange={e => setType(e.target.value)} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
+          <select id={`${fid}-2`} value={type} onChange={e => { setType(e.target.value); setDownloadClientId(clearPinOnProtocolChange(downloadClientId, e.target.value, clients)) }} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
             <option value="newznab">{t('settings.indexers.form.typeNewznabUsenet')}</option>
             <option value="torznab">{t('settings.indexers.form.typeTorznabTorrent')}</option>
           </select>
@@ -650,6 +750,7 @@ function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onCl
       <SeedTimeFields seedTime={seedTimeMinutes} onSeedTime={setSeedTimeMinutes} inactive={inactiveSeedTimeMinutes} onInactive={setInactiveSeedTimeMinutes} source={indexer.seedTimeSource} />
       <FreeleechOnlyField value={freeleechOnly} onChange={setFreeleechOnly} />
       <DailyQueryLimitField value={dailyQueryLimit} onChange={setDailyQueryLimit} />
+      <DownloadClientField value={downloadClientId} onChange={setDownloadClientId} indexerType={type} clients={clients} />
       {testResult && <IndexerTestResultBanner r={testResult} />}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
@@ -660,7 +761,7 @@ function EditIndexerForm({ indexer, onClose, onSaved }: { indexer: Indexer; onCl
   )
 }
 
-function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (idx: Indexer) => void }) {
+function AddIndexerForm({ clients, onClose, onAdded }: { clients: DownloadClient[]; onClose: () => void; onAdded: (idx: Indexer) => void }) {
   const fid = useId()
   const { t } = useTranslation()
   const [name, setName] = useState('')
@@ -675,12 +776,13 @@ function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (i
   const [inactiveSeedTimeMinutes, setInactiveSeedTimeMinutes] = useState<number | null>(null)
   const [freeleechOnly, setFreeleechOnly] = useState(false)
   const [dailyQueryLimit, setDailyQueryLimit] = useState<number | null>(null)
+  const [downloadClientId, setDownloadClientId] = useState<number | null>(null)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<IndexerTestResult | null>(null)
   const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
 
   const submit = async () => {
-    const idx = await api.addIndexer({ name, url, apiKey, type, categories: parseCats(categories), includeParentCategories, priority: parsePriority(priority), enabled: true, seedRatio, seedTimeMinutes, inactiveSeedTimeMinutes, freeleechOnly, dailyQueryLimit })
+    const idx = await api.addIndexer({ name, url, apiKey, type, categories: parseCats(categories), includeParentCategories, priority: parsePriority(priority), enabled: true, seedRatio, seedTimeMinutes, inactiveSeedTimeMinutes, freeleechOnly, dailyQueryLimit, downloadClientId })
     onAdded(idx)
   }
 
@@ -706,7 +808,7 @@ function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (i
         </div>
         <div className="w-40">
           <label htmlFor={`${fid}-2`} className={labelCls}>{t('settings.indexers.form.type')}</label>
-          <select id={`${fid}-2`} value={type} onChange={e => setType(e.target.value as 'newznab' | 'torznab')} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
+          <select id={`${fid}-2`} value={type} onChange={e => { setType(e.target.value as 'newznab' | 'torznab'); setDownloadClientId(clearPinOnProtocolChange(downloadClientId, e.target.value, clients)) }} className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm">
             <option value="newznab">{t('settings.indexers.form.typeNewznab')}</option>
             <option value="torznab">{t('settings.indexers.form.typeTorznab')}</option>
           </select>
@@ -736,6 +838,7 @@ function AddIndexerForm({ onClose, onAdded }: { onClose: () => void; onAdded: (i
       <SeedTimeFields seedTime={seedTimeMinutes} onSeedTime={setSeedTimeMinutes} inactive={inactiveSeedTimeMinutes} onInactive={setInactiveSeedTimeMinutes} />
       <FreeleechOnlyField value={freeleechOnly} onChange={setFreeleechOnly} />
       <DailyQueryLimitField value={dailyQueryLimit} onChange={setDailyQueryLimit} />
+      <DownloadClientField value={downloadClientId} onChange={setDownloadClientId} indexerType={type} clients={clients} />
       {testResult && <IndexerTestResultBanner r={testResult} />}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
