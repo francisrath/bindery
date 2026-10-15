@@ -1154,7 +1154,9 @@ export default function AuthorDetailPage() {
                 rel="noopener noreferrer"
                 className="hover:underline"
               >
-                {t('authorDetail.credit.bio', { license: author.descriptionSource.license ?? '', source: profileSourceLabel(author.descriptionSource.provider), defaultValue: 'Bio from {{source}}, {{license}}' })}
+                {author.descriptionSource.license
+                  ? t('authorDetail.credit.bio', { license: author.descriptionSource.license, source: profileSourceLabel(author.descriptionSource.provider), defaultValue: 'Bio from {{source}}, {{license}}' })
+                  : t('authorDetail.credit.bioNoLicense', { source: profileSourceLabel(author.descriptionSource.provider), defaultValue: 'Bio from {{source}}' })}
               </a>
             )}
           </div>

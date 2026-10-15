@@ -527,7 +527,8 @@
     "credit": {
       "photo": "Foto: {{credit}}, {{license}}, via {{source}}",
       "photoNoCredit": "Foto: {{license}}, via {{source}}",
-      "bio": "Biografi fra {{source}}, {{license}}"
+      "bio": "Biografi fra {{source}}, {{license}}",
+      "bioNoLicense": "Biografi fra {{source}}"
     },
     "photo": {
       "upload": "Last opp bilde",

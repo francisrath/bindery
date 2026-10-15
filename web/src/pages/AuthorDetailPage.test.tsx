@@ -373,6 +373,21 @@ describe('AuthorDetailPage', () => {
     expect(await screen.findByText('send a JPEG, PNG, WebP or GIF image')).toBeInTheDocument()
   })
 
+  // A Commons file that names no photographer is still credited, with its
+  // licence; a source the page has no label for is shown by its own name.
+  it('credits a photo with no named photographer, and an unknown source by name', async () => {
+    renderAuthorDetailPage([], 'grid', {
+      imageUrl: 'https://upload.example/k.jpg',
+      imageSource: { provider: 'wikimedia-commons', url: 'https://commons.example/wiki/File:K.jpg', license: 'CC BY 2.5' },
+      description: 'Kari Nordmann is a writer.',
+      descriptionSource: { provider: 'example-encyclopedia', url: 'https://encyclopedia.example/k' },
+    })
+    expect((await screen.findByTestId('author-photo-credit')).textContent).toBe('Photo: CC BY 2.5, via Wikimedia Commons')
+    // No licence stated: the credit still names the source, without a
+    // dangling separator.
+    expect(screen.getByTestId('author-bio-credit').textContent).toBe('Bio from example-encyclopedia')
+  })
+
   it('shows no enrichment credit for a photo and bio from the author\'s own provider', async () => {
     renderAuthorDetailPage([], 'grid', { imageUrl: 'https://covers.example/a.jpg', description: 'From the provider.' })
     await screen.findByRole('heading', { level: 2 })
