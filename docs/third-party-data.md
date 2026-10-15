@@ -231,7 +231,9 @@ contact; the guidelines' "operator" is whoever runs the install), honours
 `Retry-After` is given), and asks one author at a time on the staggered
 author refresh (#3275), so a library is spread over the day. Answers, a miss
 included, are kept for 30 days, so an author with no photo is not asked about
-every day.
+every day. An answer built while Commons or Wikipedia was failing is kept for
+6 hours instead, so one bad response doesn't cost a month without a photo or
+bio. The cache is in memory, so a restart clears it.
 
 ## Audible
 

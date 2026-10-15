@@ -32,6 +32,11 @@ const (
 	// summaries change rarely, and a miss asked again every day is exactly
 	// the traffic this enricher must not cause.
 	cacheTTL = 30 * 24 * time.Hour
+	// partialTTL is how long an answer is kept when Commons or Wikipedia
+	// failed while building it: long enough not to retry every author view,
+	// short enough that one bad response doesn't cost a month without a
+	// photo or bio.
+	partialTTL = 6 * time.Hour
 	// defaultHold is how long the client stays quiet after Wikimedia answers
 	// 429 or 503 without a usable Retry-After.
 	defaultHold = 15 * time.Minute
@@ -64,6 +69,7 @@ type Client struct {
 type cacheEntry struct {
 	profile *metadata.AuthorProfile
 	at      time.Time
+	ttl     time.Duration
 }
 
 // New returns a client for the public Wikimedia endpoints.
@@ -99,11 +105,15 @@ func (c *Client) EnrichAuthor(ctx context.Context, author *models.Author) (*meta
 	if c.held() {
 		return nil, ErrHeld
 	}
-	profile, err := c.lookup(ctx, property, value, wikiOrder(author.ForeignID))
+	profile, partial, err := c.lookup(ctx, property, value, wikiOrder(author.ForeignID))
 	if err != nil {
 		return nil, err
 	}
-	c.store(key, profile)
+	ttl := cacheTTL
+	if partial {
+		ttl = partialTTL
+	}
+	c.store(key, profile, ttl)
 	return profile, nil
 }
 
@@ -180,16 +190,16 @@ func (c *Client) cached(key string) (*metadata.AuthorProfile, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	e, ok := c.cache[key]
-	if !ok || c.now().Sub(e.at) > cacheTTL {
+	if !ok || c.now().Sub(e.at) > e.ttl {
 		return nil, false
 	}
 	return cloneProfile(e.profile), true
 }
 
-func (c *Client) store(key string, profile *metadata.AuthorProfile) {
+func (c *Client) store(key string, profile *metadata.AuthorProfile, ttl time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.cache[key] = cacheEntry{profile: cloneProfile(profile), at: c.now()}
+	c.cache[key] = cacheEntry{profile: cloneProfile(profile), at: c.now(), ttl: ttl}
 }
 
 func cloneProfile(p *metadata.AuthorProfile) *metadata.AuthorProfile {
@@ -227,22 +237,25 @@ func (c *Client) hold(retryAfter string) {
 }
 
 // lookup resolves the item and reads the photo and summary. A missing photo
-// or summary is not an error; the item lookup failing is.
-func (c *Client) lookup(ctx context.Context, property, value string, wikis []string) (*metadata.AuthorProfile, error) {
+// or summary is not an error; the item lookup failing is. partial reports
+// that Commons or Wikipedia failed along the way, so the answer may lack a
+// photo or bio it would otherwise have, or carry a bio in a later language.
+func (c *Client) lookup(ctx context.Context, property, value string, wikis []string) (profile *metadata.AuthorProfile, partial bool, err error) {
 	qid, err := c.findItem(ctx, property, value)
 	if err != nil || qid == "" {
-		return nil, err
+		return nil, false, err
 	}
 	image, sitelinks, err := c.itemFacts(ctx, qid)
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
-	profile := &metadata.AuthorProfile{}
+	profile = &metadata.AuthorProfile{}
 	if image != "" {
 		if url, src, err := c.commonsImage(ctx, image); err != nil {
 			if errors.Is(err, ErrHeld) {
-				return nil, err
+				return nil, false, err
 			}
+			partial = true
 		} else if url != "" {
 			profile.ImageURL, profile.ImageSource = url, src
 		}
@@ -254,9 +267,13 @@ func (c *Client) lookup(ctx context.Context, property, value string, wikis []str
 		}
 		text, page, err := c.wikipediaSummary(ctx, lang, title)
 		if errors.Is(err, ErrHeld) {
-			return nil, err
+			return nil, false, err
 		}
-		if err == nil && text != "" {
+		if err != nil {
+			partial = true
+			continue
+		}
+		if text != "" {
 			profile.Description = text
 			profile.DescriptionSource = &models.ProfileSource{
 				Provider:   "wikipedia",
@@ -268,9 +285,9 @@ func (c *Client) lookup(ctx context.Context, property, value string, wikis []str
 		}
 	}
 	if profile.ImageURL == "" && profile.Description == "" {
-		return nil, nil
+		return nil, partial, nil
 	}
-	return profile, nil
+	return profile, partial, nil
 }
 
 // findItem returns the one item holding property=value. Zero or several items

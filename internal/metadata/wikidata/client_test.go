@@ -192,6 +192,44 @@ func TestEnrichAuthorCachesHitsAndMisses(t *testing.T) {
 	}
 }
 
+// An answer built while Commons or Wikipedia failed is kept for partialTTL,
+// not a month: one bad response must not cost the photo for 30 days.
+func TestEnrichAuthorRetriesAPartialAnswerSooner(t *testing.T) {
+	for name, breakIt := range map[string]func(f *fakeWikimedia){
+		"Commons": func(f *fakeWikimedia) {
+			f.commons = func(w http.ResponseWriter, _ string) { w.WriteHeader(http.StatusBadGateway) }
+		},
+		"Wikipedia": func(f *fakeWikimedia) {
+			f.wikipage = func(w http.ResponseWriter, _, _ string) { w.WriteHeader(http.StatusInternalServerError) }
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			f := newFake(t)
+			breakIt(f)
+			c := f.client()
+			ctx := context.Background()
+			author := &models.Author{ForeignID: "nb:author:1"}
+			if _, err := c.EnrichAuthor(ctx, author); err != nil {
+				t.Fatal(err)
+			}
+			// Within partialTTL the answer is served from the cache.
+			after := f.calls.Load()
+			c.now = func() time.Time { return time.Now().Add(partialTTL - time.Minute) }
+			if _, _ = c.EnrichAuthor(ctx, author); f.calls.Load() != after {
+				t.Error("a partial answer was asked again before partialTTL")
+			}
+			// After it, with Wikimedia healthy again, the full answer comes back.
+			fresh := newFake(t)
+			c.wikidataAPI, c.commonsAPI, c.wikipediaREST = fresh.srv.URL+"/wikidata", fresh.srv.URL+"/commons", fresh.srv.URL+"/wiki/%s"
+			c.now = func() time.Time { return time.Now().Add(partialTTL + time.Minute) }
+			p, err := c.EnrichAuthor(ctx, author)
+			if err != nil || p == nil || p.ImageURL == "" || !strings.Contains(p.Description, "(no)") {
+				t.Errorf("after partialTTL: %+v, %v; want the photo and the Norwegian bio", p, err)
+			}
+		})
+	}
+}
+
 func TestEnrichAuthorIgnoresAmbiguousIDs(t *testing.T) {
 	f := newFake(t)
 	f.search = func(w http.ResponseWriter, _ string) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { safeHref } from '../util/safeHref'
 import { useConfirmDialog } from '../components/useConfirmDialog'
 import { api, ApiError, Author, AuthorAlias, Book, BookBulkAction, MediaType, Series } from '../api/client'
 import { usePolling } from '../components/usePolling'
@@ -1137,7 +1138,7 @@ export default function AuthorDetailPage() {
             {author.imageSource && author.imageSource.provider !== 'user' && (
               <a
                 data-testid="author-photo-credit"
-                href={author.imageSource.url}
+                href={safeHref(author.imageSource.url) || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline"
@@ -1150,7 +1151,7 @@ export default function AuthorDetailPage() {
             {author.descriptionSource && author.descriptionSource.provider !== 'user' && (
               <a
                 data-testid="author-bio-credit"
-                href={author.descriptionSource.url}
+                href={safeHref(author.descriptionSource.url) || undefined}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:underline"

@@ -791,12 +791,9 @@ func (h *AuthorHandler) relinkExistingAuthorToUpstream(ctx context.Context, auth
 	} else if strings.TrimSpace(author.SortName) == "" {
 		author.SortName = sortName(author.Name)
 	}
-	if desc := textutil.CleanDescription(upstream.Description); desc != "" {
-		author.Description = desc
-	}
-	if imageURL := strings.TrimSpace(upstream.ImageURL); imageURL != "" {
-		author.ImageURL = imageURL
-	}
+	// The credit travels with an enriched photo or bio (#3287).
+	models.MergeProfileField(&author.Description, &author.DescriptionSource, textutil.CleanDescription(upstream.Description), upstream.DescriptionSource)
+	models.MergeProfileField(&author.ImageURL, &author.ImageSource, strings.TrimSpace(upstream.ImageURL), upstream.ImageSource)
 	if disambiguation := strings.TrimSpace(upstream.Disambiguation); disambiguation != "" {
 		author.Disambiguation = disambiguation
 	}
@@ -1602,12 +1599,8 @@ func (h *AuthorHandler) relinkCalibreAuthor(ctx context.Context, author *models.
 	// route it. A blanket "openlibrary" mislabelled every dnb: and hc: link,
 	// including the primary's own match on a Hardcover or DNB primary (#2332).
 	author.MetadataProvider = models.AuthorProviderFromForeignID(full.ForeignID)
-	if full.ImageURL != "" {
-		author.ImageURL = full.ImageURL
-	}
-	if desc := textutil.CleanDescription(full.Description); desc != "" {
-		author.Description = desc
-	}
+	models.MergeProfileField(&author.ImageURL, &author.ImageSource, strings.TrimSpace(full.ImageURL), full.ImageSource)
+	models.MergeProfileField(&author.Description, &author.DescriptionSource, textutil.CleanDescription(full.Description), full.DescriptionSource)
 	if full.SortName != "" {
 		author.SortName = full.SortName
 	}
