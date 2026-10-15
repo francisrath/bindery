@@ -57,4 +57,12 @@ func TestAuthorProfileSourcesRoundTrip(t *testing.T) {
 	if err != nil || broken == nil || broken.DescriptionSource != nil {
 		t.Errorf("malformed credit: author %v, credit %+v, err %v; want the author with no credit", broken != nil, broken.DescriptionSource, err)
 	}
+
+	// Valid JSON that names no source is no credit either.
+	if _, err := database.ExecContext(ctx, `UPDATE authors SET description_source = '{"url":"https://example.invalid"}' WHERE id = ?`, a.ID); err != nil {
+		t.Fatal(err)
+	}
+	if nameless, err := repo.GetByID(ctx, a.ID); err != nil || nameless.DescriptionSource != nil {
+		t.Errorf("credit with no provider: %+v, err %v; want no credit", nameless.DescriptionSource, err)
+	}
 }
