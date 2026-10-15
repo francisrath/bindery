@@ -99,10 +99,12 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
         className="bg-slate-100 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded-lg w-full max-w-lg shadow-2xl modal-max-h flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        {/* display: contents keeps the form out of the layout, so the panel
-            styles still apply to its children; the dialog role sits on the
-            div, since a form may not take it. */}
-        <form onSubmit={submit} className="contents">
+        {/* The form is the panel's one child, a flex column filling it, so
+            the body scrolls between the header and footer as before. It
+            needs a real box, not display: contents: the short viewport rule
+            on modal-max-h (#3052) targets the panel's direct children. The
+            dialog role sits on the div, since a form may not take it. */}
+        <form onSubmit={submit} className="flex flex-col flex-1 min-h-0">
           <div className="p-4 border-b border-slate-200 dark:border-zinc-800">
             <h3 id={titleId} className="text-lg font-semibold">Add Book to Series</h3>
             <p id={`${titleId}-series`} className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5 truncate">{series.title}</p>
