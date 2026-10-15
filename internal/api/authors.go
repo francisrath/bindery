@@ -1658,13 +1658,8 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 // changed so the caller can skip a redundant DB write. SortName is only filled
 // when missing, since the local sort order may have been curated.
 func mergeAuthorProfileFields(author, upstream *models.Author) bool {
-	changed := false
-	if desc := textutil.CleanDescription(upstream.Description); desc != "" && desc != author.Description {
-		author.Description = desc
-		changed = true
-	}
-	if imageURL := strings.TrimSpace(upstream.ImageURL); imageURL != "" && imageURL != author.ImageURL {
-		author.ImageURL = imageURL
+	changed := models.MergeProfileField(&author.Description, &author.DescriptionSource, textutil.CleanDescription(upstream.Description), upstream.DescriptionSource)
+	if models.MergeProfileField(&author.ImageURL, &author.ImageSource, strings.TrimSpace(upstream.ImageURL), upstream.ImageSource) {
 		changed = true
 	}
 	if disambiguation := strings.TrimSpace(upstream.Disambiguation); disambiguation != "" && disambiguation != author.Disambiguation {
