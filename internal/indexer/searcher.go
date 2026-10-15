@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/vavallee/bindery/internal/indexer/newznab"
 	"github.com/vavallee/bindery/internal/isbnutil"
@@ -1493,23 +1494,49 @@ var releaseLanguageCodeSet = func() map[string]bool {
 	return set
 }()
 
-// sceneLanguageCodes returns the language codes in the scene suffix of a
-// normalized release title: tokens after the last scene marker that are a
-// language code ("de", "por", "nor"), read through
-// models.NormalizeReleaseLanguageCode so the country codes groups use ("SE",
-// "DK") count too. As bare words most of these are common ("de", "no", "it"),
-// which is why #2274 left them out; they are only read after a scene marker,
-// never in the title. NormalizeRelease turns the "-" and "_" separators into
-// spaces but keeps token order, so the suffix is still the tail of norm.
-func sceneLanguageCodes(norm string) []string {
-	toks := strings.Fields(norm)
+var (
+	// sceneTokenRe splits a raw release name into the same letter and digit
+	// runs NormalizeRelease keeps as tokens.
+	sceneTokenRe = regexp.MustCompile(`[\p{L}\p{N}]+`)
+	// sceneTrailerRe matches what can follow the release group at the end of
+	// a name: a usenet part counter ("(1/12)"), quotes and spaces, or a file
+	// extension. They are stripped first so the last token is the group.
+	sceneTrailerRe = regexp.MustCompile(`(?i)(\s*[(\[]\d+/\d+[)\]]|["'\s]+|\.(nzb|torrent|nfo|par2|rar|zip|epub|mobi|azw3?|pdf|mp3|m4b|m4a|flac))$`)
+	sceneYearRe    = regexp.MustCompile(`^(19|20)\d\d$`)
+)
+
+// sceneLanguageCodes returns the language codes in the scene suffix of a raw
+// release name: tokens after the last scene marker that are a language code
+// ("DE", "POR", "NO"), read through models.NormalizeReleaseLanguageCode so
+// the country codes groups use ("SE", "DK") count too. As bare words most of
+// these are common ("de", "no", "it"), which is why #2274 left them out; they
+// are only read after a scene marker, never in the title.
+//
+// It takes the raw name, not NormalizeRelease's, because the shape matters. A
+// scene suffix is joined by separators ("-WEB-MP3-DE-2023-GRP"). One with
+// spaces in it is usually prose ("(Audiobook) read by Ola De Vries", "MP3 -
+// Hi Quality - 2010"), so there a token only counts when it is uppercase and
+// sits right before a year or the group ("-DE-2005-GRP iNT").
+func sceneLanguageCodes(title string) []string {
+	for {
+		trimmed := sceneTrailerRe.ReplaceAllString(title, "")
+		if trimmed == title {
+			break
+		}
+		title = trimmed
+	}
+	locs := sceneTokenRe.FindAllStringIndex(title, -1)
+	toks := make([]string, len(locs))
+	for i, loc := range locs {
+		toks[i] = title[loc[0]:loc[1]]
+	}
 	// The suffix starts after the last marker. A marker in first position is
 	// a leading tag ("[MP3] Author - Title"), not a suffix, so it doesn't
 	// count. The last token is the release group, and a group can be named
 	// like a language code ("-2026-TR").
 	start := -1
 	for i, tok := range toks {
-		if i > 0 && sceneMarkerTokens[tok] {
+		if i > 0 && sceneMarkerTokens[strings.ToLower(tok)] {
 			start = i + 1
 		}
 	}
@@ -1517,9 +1544,14 @@ func sceneLanguageCodes(norm string) []string {
 	if start < 0 || start >= end {
 		return nil
 	}
+	spaced := strings.ContainsFunc(title[locs[start-1][1]:], unicode.IsSpace)
 	var out []string
-	for _, t := range toks[start:end] {
-		if code := models.NormalizeReleaseLanguageCode(t); releaseLanguageCodeSet[code] && !slices.Contains(out, code) {
+	for i := start; i < end; i++ {
+		tok := toks[i]
+		if spaced && (tok != strings.ToUpper(tok) || (i+1 != end && !sceneYearRe.MatchString(toks[i+1]))) {
+			continue
+		}
+		if code := models.NormalizeReleaseLanguageCode(strings.ToLower(tok)); releaseLanguageCodeSet[code] && !slices.Contains(out, code) {
 			out = append(out, code)
 		}
 	}
@@ -1559,7 +1591,7 @@ func FilterByAllowedLanguages(results []newznab.SearchResult, allowed []string) 
 	for _, r := range results {
 		norm := NormalizeRelease(r.Title)
 		ok := true
-		for _, code := range append(releaseLanguageCodes(norm), sceneLanguageCodes(norm)...) {
+		for _, code := range append(releaseLanguageCodes(norm), sceneLanguageCodes(r.Title)...) {
 			if !set[code] {
 				ok = false
 				break

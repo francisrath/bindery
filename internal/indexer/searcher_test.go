@@ -858,8 +858,13 @@ func TestFilterByAllowedLanguagesSceneSuffixCodes(t *testing.T) {
 		{"Kari.Nordmann-Fjellvinden.M4B.EN.2026-grp", "eng"},
 		{"[MP3] Kari Nordmann-Fjellvinden-4CD-AUDiOBOOK-DE-2005-GRP iNT", "ger"},
 		{"Kari Nordmann-Fjellvinden-WEB-PL-ABOOK-PL-2019-GRP", "pol"},
+		{"Kari_Nordmann-Fjellvinden-WEB-AAC-DE-2023-GRP", "ger"},
+		// A trailing file extension or part counter is stripped, so the
+		// group is still the token skipped.
+		{"Kari_Nordmann-Fjellvinden-AUDIOBOOK-WEB-DE-2023-GRP.nzb", "ger"},
+		{`"Kari_Nordmann-Fjellvinden-AUDIOBOOK-WEB-DE-2023-GRP.nzb" (1/12)`, "ger"},
 	} {
-		codes := sceneLanguageCodes(NormalizeRelease(tc.title))
+		codes := sceneLanguageCodes(tc.title)
 		if !slices.Equal(codes, []string{tc.code}) {
 			t.Errorf("%q: expected scene code [%s], got %v", tc.title, tc.code, codes)
 		}
@@ -888,8 +893,21 @@ func TestSceneSuffixCodesIgnoreTitleWords(t *testing.T) {
 		"Kari Nordmann-Fjellvinden-16BIT-WEB-FLAC-2026-TR",  // TR is the release group
 		"[MP3] Kari Nordmann - De Fjellvinden (Unabridged)", // a leading marker starts no suffix
 		"Kari Nordmann M4B - In the Forest - Audiobook",
+		// A suffix with spaces is prose, not scene metadata: a code only
+		// counts there when it is uppercase and right before a year or the
+		// group.
+		"Kari Nordmann - Fjellvinden (Audiobook) read by Ola De Vries",
+		"Kari Nordmann - Fjellvinden (Audiobook) (Narrated by Dan Hansen) 2019",
+		"Kari Nordmann - Fjellvinden Audiobook Pt 2 of 3",
+		"Kari Nordmann - Fjellvinden - MP3 - Hi Quality - 2010",
+		"Kari Nordmann - Audiobook - It - 2017 - Unabridged",
+		// The group is the last token once an extension or counter is gone.
+		"Kari_Nordmann-Fjellvinden-WEB-FLAC-2026-TR.nzb",
+		"Kari_Nordmann-Fjellvinden-WEB-FLAC-2026-TR.nzb (1/12)",
+		// Title words between two markers are not the suffix.
+		"Kari_Nordmann-AUDIOBOOK-De_Fjellvinden_No_Mer-MP3-2023-GRP",
 	} {
-		if codes := sceneLanguageCodes(NormalizeRelease(title)); len(codes) != 0 {
+		if codes := sceneLanguageCodes(title); len(codes) != 0 {
 			t.Errorf("%q must carry no scene language code, got %v", title, codes)
 		}
 	}
