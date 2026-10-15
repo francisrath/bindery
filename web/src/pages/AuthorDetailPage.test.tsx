@@ -364,6 +364,21 @@ describe('AuthorDetailPage', () => {
     expect(screen.getByTestId('author-bio-credit').textContent).toBe('Bio from example-encyclopedia')
   })
 
+  // A credit URL comes from a third party: anything but http(s) keeps the
+  // credit text and drops the link.
+  it('does not link a credit whose URL is not http(s)', async () => {
+    renderAuthorDetailPage([], 'grid', {
+      imageUrl: 'https://upload.example/k.jpg',
+      imageSource: { provider: 'wikimedia-commons', url: 'javascript:alert(1)', license: 'CC BY 2.5' },
+      description: 'Kari Nordmann is a writer.',
+      descriptionSource: { provider: 'wikipedia', url: 'data:text/html,hi', license: 'CC BY-SA 4.0' },
+    })
+    const photo = await screen.findByTestId('author-photo-credit')
+    expect(photo.textContent).toBe('Photo: CC BY 2.5, via Wikimedia Commons')
+    expect(photo).not.toHaveAttribute('href')
+    expect(screen.getByTestId('author-bio-credit')).not.toHaveAttribute('href')
+  })
+
   it('shows no enrichment credit for a photo and bio from the author\'s own provider', async () => {
     renderAuthorDetailPage([], 'grid', { imageUrl: 'https://covers.example/a.jpg', description: 'From the provider.' })
     await screen.findByRole('heading', { level: 2 })
