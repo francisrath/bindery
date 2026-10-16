@@ -630,6 +630,15 @@ type catalogueSyncOptions struct {
 	// whole library.
 	refreshFromProvider bool
 
+	// enrichProfile asks the author enrichers (#3287) during the profile
+	// refresh, whatever the author's enrichment stamp says. Only the two
+	// single author actions a user takes set it, adding the author and its
+	// Refresh button, so a new author gets its photo and bio straight away.
+	// Bulk refresh, Refresh all, scheduled discovery and the imports leave it
+	// off: they span many authors, and the staggered profile refresh
+	// enriches those one at a time behind the stamp instead.
+	enrichProfile bool
+
 	// ownerForUnownedAuthor owns the books this run creates when the author
 	// has no owner. Add Book's single work fallback sets it to the caller
 	// under tenancy, so a book picked under a shared author belongs to the
@@ -1447,7 +1456,7 @@ func (h *AuthorHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": h.refreshConflictMessage(author.ID)})
 		return
 	}
-	h.fetchAuthorBooksAsync(author, catalogueSyncOptions{mediaType: h.resolveDefaultMediaType(r.Context()), discovery: true, refreshFromProvider: true, syncClaimed: true})
+	h.fetchAuthorBooksAsync(author, catalogueSyncOptions{mediaType: h.resolveDefaultMediaType(r.Context()), discovery: true, refreshFromProvider: true, enrichProfile: true, syncClaimed: true})
 	writeJSON(w, http.StatusAccepted, map[string]string{"message": "refresh started"})
 }
 
@@ -1609,7 +1618,7 @@ func (h *AuthorHandler) relinkCalibreAuthor(ctx context.Context, author *models.
 // and swallowed — the catalogue sync that follows must still run. Identity
 // (ForeignID/Name/MetadataProvider) and user-controlled monitoring fields are
 // never touched here; only the read-only profile fields are merged.
-func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models.Author) {
+func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models.Author, enrich bool) {
 	if h.meta == nil || author == nil {
 		return
 	}
@@ -1622,11 +1631,12 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 	if upstream == nil {
 		return
 	}
-	// A refresh the user asked for always asks the enrichers (#3287),
-	// whatever the stamp says; their own cache still keeps a repeat click
-	// off the network. A full answer is stamped, so the staggered refresh
-	// leaves this author alone for a month.
-	enrichAnswered := h.meta.EnrichAuthor(ctx, upstream)
+	// An add or a Refresh click asks the enrichers (#3287) whatever the
+	// stamp says; their own cache still keeps a repeat click off the
+	// network. A full answer is stamped, so the staggered refresh leaves
+	// this author alone for a month. Every other sync leaves enrichment to
+	// that refresh.
+	enrichAnswered := enrich && h.meta.EnrichAuthor(ctx, upstream)
 	defer func() {
 		if enrichAnswered {
 			if err := h.authors.StampEnrichment(ctx, author.ID, time.Now()); err != nil {
@@ -1887,7 +1897,7 @@ func (h *AuthorHandler) runCatalogueSync(ctx context.Context, author *models.Aut
 	// author usually already existed before this request, and an Add Book is
 	// not a request to rewrite their profile.
 	if !wasCalibre && !singleWork {
-		h.refreshAuthorProfile(metaCtx, author)
+		h.refreshAuthorProfile(metaCtx, author, opts.enrichProfile)
 	}
 
 	// Load the author's secondary provider identities so supplemental

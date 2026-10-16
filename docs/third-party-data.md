@@ -229,9 +229,10 @@ sends its own User-Agent (`bindery/<version>`, with the project URL as the
 contact; the guidelines' "operator" is whoever runs the install), honours
 `Retry-After` on a 429 or 503 and then holds back (15 minutes when no
 `Retry-After` is given), and asks one author at a time on the staggered
-author refresh (#3275), so a library is spread over the day. Adding or
-importing authors asks nothing: enrichment runs only on that refresh and on
-an author's Refresh button. An answer, a miss included, is stamped on the
+author refresh (#3275), so a library is spread over the day. Outside that
+refresh only two single author actions ask, adding an author and its Refresh
+button; bulk refresh, Refresh all, scheduled discovery and imports ask
+nothing. An answer, a miss included, is stamped on the
 author (`last_enrichment_at`) and the refresh asks again only after 30 days,
 so an author with no photo is not asked about every day, and a restart does
 not start the month over. An answer built while Commons or Wikipedia was
