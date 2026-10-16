@@ -8,6 +8,7 @@ import Toggle from './Toggle'
 import { useSaveResult } from './useSaveResult'
 import { usePolling } from '../../components/usePolling'
 import { BELOW_SM, useMediaQuery } from '../../components/useMediaQuery'
+import { primaryFill } from '../../components/buttons'
 
 // <input type="datetime-local"> produces "2026-08-12T14:03" — no zone, which
 // the API's RFC3339 parse rejects, so the range was silently ignored. The
@@ -435,7 +436,7 @@ export default function LogsTab() {
               <button
                 onClick={handleBackup}
                 disabled={creatingBackup}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50"
+                className={`px-4 py-2 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}
               >
                 {creatingBackup ? t('settings.general.backupCreating') : t('settings.general.backupButton')}
               </button>

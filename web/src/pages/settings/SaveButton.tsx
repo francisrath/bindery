@@ -13,6 +13,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { SaveResult } from './useSaveResult'
+import { primaryFill } from '../../components/buttons'
 
 export interface SaveButtonProps {
   result: SaveResult
@@ -43,7 +44,7 @@ export default function SaveButton({
       ? 'bg-emerald-500'
       : result === 'error'
         ? 'bg-red-600'
-        : 'bg-emerald-600 hover:bg-emerald-500'
+        : `${primaryFill}`
 
   // The saved/error states outrank "Saving…" so a fast round trip still shows
   // the confirmation rather than flashing straight back to "Save".

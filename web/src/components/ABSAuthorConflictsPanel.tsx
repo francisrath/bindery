@@ -1,5 +1,5 @@
 import { ABSMetadataConflict } from '../api/client'
-import { slateFill } from './buttons'
+import { slateFill, primaryFill } from './buttons'
 
 type Props = {
   title: string
@@ -48,7 +48,7 @@ function RelinkButton({
     <button
       onClick={() => relinkAction.onRelink(conflict.localId)}
       disabled={relinking}
-      className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium disabled:opacity-50"
+      className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}
     >
       {relinking ? 'Relinking…' : 'Attempt upstream relink'}
     </button>

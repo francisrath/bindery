@@ -3,6 +3,7 @@ import { api, Author, Book, Series } from '../api/client'
 import { foldedIncludes } from '../util/foldForSearch'
 import { useModal } from './useModal'
 import CoverImage from './CoverImage'
+import { primaryFill } from './buttons'
 
 interface Props {
   series: Series
@@ -195,7 +196,7 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
             <button
               type="submit"
               disabled={saving || !bookId}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
+              className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
             >
               {saving ? 'Adding...' : 'Add'}
             </button>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, useId } from 'react'
 import { api, GrimmoryConfig, GrimmorySyncStatus, GrimmoryTestResult } from '../../api/client'
 import { inputCls } from './formStyles'
 import { literalInputAttrs, secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
+import { primaryFill } from '../../components/buttons'
 
 export default function GrimmoryTab() {
   const fid = useId()
@@ -198,7 +199,7 @@ export default function GrimmoryTab() {
         <button
           onClick={save}
           disabled={saving}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-sm font-medium"
+          className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded text-sm font-medium`}
         >
           {saving ? 'Saving…' : 'Save'}
         </button>

@@ -5,6 +5,7 @@ import { api, isNoDownloadClientError, SearchResult } from '../api/client'
 import { formatBytes } from '../util/format'
 import { useConfirmDialog } from '../components/useConfirmDialog'
 import { grabWithForceConfirm } from '../util/forceGrab'
+import { primaryFill } from '../components/buttons'
 
 export default function SearchPage() {
   const { t } = useTranslation()
@@ -94,7 +95,7 @@ export default function SearchPage() {
         <button
           type="submit"
           disabled={searching || !query.trim()}
-          className="shrink-0 whitespace-nowrap px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-sm font-medium"
+          className={`shrink-0 whitespace-nowrap px-4 py-2 ${primaryFill} disabled:opacity-50 rounded text-sm font-medium`}
         >
           {searching ? t('search.searching') : t('search.submit')}
         </button>
@@ -111,7 +112,7 @@ export default function SearchPage() {
           <p className="mb-2">{t('search.noClient.body')}</p>
           <Link
             to="/settings?tab=clients"
-            className="inline-block px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-medium transition-colors"
+            className={`inline-block px-3 py-1.5 ${primaryFill} rounded-md text-sm font-medium transition-colors`}
           >
             {t('search.noClient.action')}
           </Link>
@@ -148,7 +149,7 @@ export default function SearchPage() {
                   <button
                     onClick={() => grab(r)}
                     disabled={grabbing !== null}
-                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-[11px] font-medium flex-shrink-0"
+                    className={`px-3 py-2 ${primaryFill} disabled:opacity-50 rounded text-[11px] font-medium flex-shrink-0`}
                   >
                     {grabbing === r.guid ? t('search.grabbing') : t('search.grab')}
                   </button>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { api, Book, Series } from '../api/client'
 import { useModal } from './useModal'
 import { useIsAdmin } from '../auth/AuthContext'
+import { primaryFill } from './buttons'
 
 interface Props {
   book: Book
@@ -288,7 +289,7 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
               type="button"
               onClick={save}
               disabled={!canSave}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
+              className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
             >
               {saving ? t('common.saving') : t('common.save')}
             </button>

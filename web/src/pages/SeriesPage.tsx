@@ -8,7 +8,7 @@ import AddSeriesBookModal from '../components/AddSeriesBookModal'
 import HardcoverSeriesLinkModal from '../components/HardcoverSeriesLinkModal'
 import SeriesNameModal from '../components/SeriesNameModal'
 import MergeSeriesModal from '../components/MergeSeriesModal'
-import { btn, btnSize } from '../components/buttons'
+import { btn, btnSize, primaryFill } from '../components/buttons'
 import { useIsAdmin } from '../auth/AuthContext'
 import Switch from '../components/Switch'
 import { useConfirmDialog } from '../components/useConfirmDialog'
@@ -369,7 +369,7 @@ export default function SeriesPage() {
           {isAdmin && (
             <button
               onClick={() => setShowAddSeries(true)}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-md text-sm font-medium transition-colors"
+              className={`px-4 py-2 ${primaryFill} rounded-md text-sm font-medium transition-colors`}
             >
               {t('series.addSeries')}
             </button>
@@ -553,7 +553,7 @@ export default function SeriesPage() {
                     <button
                       onClick={() => fillGaps(series)}
                       disabled={filling === series.id}
-                      className="touch-target ml-auto text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded font-medium"
+                      className={`touch-target ml-auto text-xs px-2.5 py-1 ${primaryFill} disabled:opacity-50 rounded font-medium`}
                     >
                       {filling === series.id ? t('series.fill.queuing') : t('series.fill.button')}
                     </button>
@@ -682,7 +682,7 @@ export default function SeriesPage() {
                           <button
                             onClick={() => fillGaps(series, undefined, fillMediaType[series.id] ?? 'ebook')}
                             disabled={filling === series.id}
-                            className="text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded font-medium"
+                            className={`text-xs px-2.5 py-1 ${primaryFill} disabled:opacity-50 rounded font-medium`}
                           >
                             {filling === series.id ? t('series.fill.queuing') : t('series.hardcover.addAll')}
                           </button>
@@ -734,7 +734,7 @@ export default function SeriesPage() {
                               {isAdmin && <button
                                 onClick={() => fillGaps(series, book, fillMediaType[series.id] ?? 'ebook')}
                                 disabled={filling === series.id}
-                                className="ml-auto text-xs px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded font-medium flex-shrink-0"
+                                className={`ml-auto text-xs px-2.5 py-1 ${primaryFill} disabled:opacity-50 rounded font-medium flex-shrink-0`}
                                 title={t('series.hardcover.addTitle')}
                               >
                                 {filling === series.id ? '…' : t('series.hardcover.add')}

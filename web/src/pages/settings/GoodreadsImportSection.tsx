@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, GoodreadsCommitResult, GoodreadsPreview, GoodreadsResolvedRow } from '../../api/client'
+import { primaryFill } from '../../components/buttons'
 
 // The three Goodreads "Exclusive Shelf" values. to-read is the default and
 // the only one ticked on first render.
@@ -148,7 +149,7 @@ export default function GoodreadsImportSection() {
         </p>
       </div>
 
-      <label className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium cursor-pointer">
+      <label className={`inline-flex items-center gap-2 px-3 py-2 ${primaryFill} rounded text-sm font-medium cursor-pointer`}>
         {uploading ? t('settings.import.goodreadsResolving') : t('settings.import.goodreadsUpload')}
         <input
           type="file"
@@ -215,7 +216,7 @@ export default function GoodreadsImportSection() {
               <button
                 onClick={commit}
                 disabled={committing}
-                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium disabled:opacity-50"
+                className={`px-3 py-2 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}
               >
                 {committing
                   ? t('settings.import.goodreadsCommitting')

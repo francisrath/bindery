@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useModal } from './useModal'
+import { primaryFill } from './buttons'
 
 interface Props {
   title: string
@@ -76,7 +77,7 @@ export default function SeriesNameModal({ title, initialName = '', submitLabel, 
             <button
               type="submit"
               disabled={saving || !name.trim()}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
+              className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
             >
               {saving ? t('common.saving') : submitLabel}
             </button>

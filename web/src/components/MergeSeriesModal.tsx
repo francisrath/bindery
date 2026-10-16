@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from './useConfirmDialog'
 import { api, Series, SeriesMergePlan } from '../api/client'
 import { useModal } from './useModal'
+import { primaryFill } from './buttons'
 
 interface Props {
   target: Series
@@ -149,7 +150,7 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
             <button
               onClick={() => apply(plan)}
               disabled={busy}
-              className="text-sm px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
+              className={`text-sm px-3 py-1.5 rounded ${primaryFill} disabled:opacity-50`}
             >
               {t('series.merge.apply')}
             </button>
@@ -157,7 +158,7 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
             <button
               onClick={() => run(true)}
               disabled={busy || selected.length === 0}
-              className="text-sm px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
+              className={`text-sm px-3 py-1.5 rounded ${primaryFill} disabled:opacity-50`}
             >
               {t('series.merge.preview')}
             </button>

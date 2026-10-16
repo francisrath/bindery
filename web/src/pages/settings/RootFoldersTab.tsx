@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { api, RootFolder } from '../../api/client'
 import { inputCls } from './formStyles'
 import { formatBytesZero } from '../../util/format'
+import { primaryFill } from '../../components/buttons'
 
 const DEFAULT_ROOT_FOLDER_KEY = 'library.defaultRootFolderId'
 const DEFAULT_AUDIOBOOK_ROOT_FOLDER_KEY = 'library.defaultAudiobookRootFolderId'
@@ -175,7 +176,7 @@ export default function RootFoldersTab() {
         <button
           type="submit"
           disabled={!newFolderPath.trim()}
-          className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50 flex-shrink-0"
+          className={`px-3 py-2 ${primaryFill} rounded text-sm font-medium disabled:opacity-50 flex-shrink-0`}
         >
           {t('settings.rootfolders.addButton')}
         </button>

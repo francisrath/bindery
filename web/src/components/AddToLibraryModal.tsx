@@ -15,6 +15,7 @@ import { authorProviderKey } from '../util/authorMetadata'
 import { providerDisplayName } from '../util/metadataSource'
 import { useModal } from './useModal'
 import CoverImage from './CoverImage'
+import { primaryFill } from './buttons'
 
 // What the modal reports back once something is in the library. Callers that
 // only refresh a list ignore the payload; the header search navigates to it.
@@ -201,7 +202,7 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
 
   const badgeClass = 'px-2 py-0.5 rounded-full bg-slate-300/70 dark:bg-zinc-700 text-[11px] font-medium text-slate-700 dark:text-zinc-300'
   const openClass = 'px-3 py-1 rounded text-xs font-medium border border-slate-400 dark:border-zinc-600 hover:bg-slate-200 dark:hover:bg-zinc-800'
-  const selectClass = 'px-3 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-medium text-white flex-shrink-0'
+  const selectClass = `px-3 py-1 ${primaryFill} disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-medium flex-shrink-0`
 
   // Keys carry the list index as well as the id: providers occasionally return
   // the same record twice, and a duplicate key makes React drop a row.
@@ -341,7 +342,7 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
                 type="button"
                 onClick={() => void search()}
                 disabled={searching || !query.trim()}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm font-medium text-white"
+                className={`px-4 py-2 ${primaryFill} disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm font-medium`}
               >
                 {searching ? t('addToLibrary.searching') : t('common.search')}
               </button>

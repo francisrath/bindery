@@ -6,6 +6,7 @@ import ClipboardManualFallback from '../components/ClipboardManualFallback'
 import { useClipboardCopy } from '../components/useClipboardCopy'
 import { useConfirmDialog } from '../components/useConfirmDialog'
 import { secretInputAttrs, urlInputAttrs } from '../util/inputAttrs'
+import { primaryFill } from '../components/buttons'
 
 const inputCls = 'w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm'
 
@@ -275,7 +276,7 @@ function AddProviderForm({
         <button
           type="submit"
           disabled={saving || !id || !name || !issuer || !clientId || !clientSecret}
-          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50"
+          className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}
         >
           {saving ? t('common.saving') : t('settings.oidc.addSave')}
         </button>

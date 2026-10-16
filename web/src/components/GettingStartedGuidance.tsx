@@ -1,5 +1,6 @@
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { primaryFill } from './buttons'
 
 interface Props {
   // A short, context-specific line explaining why setup is needed here, e.g.
@@ -40,7 +41,7 @@ export default function GettingStartedGuidance({ reasonKey, needsIndexer, needsC
         {needsIndexer && (
           <Link
             to="/settings?tab=indexers"
-            className="inline-block px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-medium transition-colors"
+            className={`inline-block px-3 py-1.5 ${primaryFill} rounded-md text-sm font-medium transition-colors`}
           >
             {t('gettingStarted.indexers')}
           </Link>
@@ -50,7 +51,7 @@ export default function GettingStartedGuidance({ reasonKey, needsIndexer, needsC
             to="/settings?tab=clients"
             className={needsIndexer
               ? 'inline-block px-3 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-900 dark:text-white rounded-md text-sm font-medium transition-colors'
-              : 'inline-block px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-md text-sm font-medium transition-colors'}
+              : `inline-block px-3 py-1.5 ${primaryFill} rounded-md text-sm font-medium transition-colors`}
           >
             {t('gettingStarted.downloadClients')}
           </Link>

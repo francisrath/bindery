@@ -7,7 +7,7 @@ import { indexerNeedsAttention, indexerQueryCap } from '../../api/indexers'
 import { inputCls } from './formStyles'
 import { parseCats, parsePriority } from './helpers'
 import Toggle from './Toggle'
-import { dangerLink } from '../../components/buttons'
+import { dangerLink, primaryFill } from '../../components/buttons'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
 
 // IndexerTestResultBanner renders a probe result with the same ok/warn/fail
@@ -352,7 +352,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
       {confirmDialog}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">{t('settings.indexers.heading')}</h3>
-        <button onClick={() => setShowAddIndexer(true)} className="touch-target px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium">
+        <button onClick={() => setShowAddIndexer(true)} className={`touch-target px-3 py-1.5 ${primaryFill} rounded text-xs font-medium`}>
           {t('settings.indexers.addButton')}
         </button>
       </div>
@@ -555,7 +555,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
             <p className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5">{t('settings.prowlarr.description')}</p>
           </div>
           {prowlarrInstances.length === 0 && (
-            <button onClick={() => setShowAddProwlarr(true)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium">
+            <button onClick={() => setShowAddProwlarr(true)} className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium`}>
               {t('settings.prowlarr.addButton')}
             </button>
           )}
@@ -755,7 +755,7 @@ function EditIndexerForm({ indexer, clients, onClose, onSaved }: { indexer: Inde
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
         <button onClick={handleTest} disabled={testing || !url} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
-        <button onClick={submit} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium">{t('common.save')}</button>
+        <button onClick={submit} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium`}>{t('common.save')}</button>
       </div>
     </div>
   )
@@ -843,7 +843,7 @@ function AddIndexerForm({ clients, onClose, onAdded }: { clients: DownloadClient
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
         <button onClick={handleTest} disabled={testing || !url} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
-        <button onClick={submit} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium">{t('common.save')}</button>
+        <button onClick={submit} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium`}>{t('common.save')}</button>
       </div>
     </div>
   )
@@ -905,7 +905,7 @@ function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrIn
       )}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
-        <button onClick={submit} disabled={!url || saving} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50">
+        <button onClick={submit} disabled={!url || saving} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>
           {saving ? t('common.saving') : t('common.save')}
         </button>
       </div>
@@ -974,7 +974,7 @@ function AddProwlarrForm({ onClose, onAdded }: { onClose: () => void; onAdded: (
       )}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
-        <button onClick={submit} disabled={!url || !apiKey || syncing} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50">
+        <button onClick={submit} disabled={!url || !apiKey || syncing} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>
           {syncing ? t('settings.prowlarr.savingAndSyncing') : t('settings.prowlarr.saveAndSync')}
         </button>
       </div>

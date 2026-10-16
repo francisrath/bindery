@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import type { RemapCandidate } from '../../api/client'
 import { inputCls, labelCls } from './formStyles'
 import { supportsRemapAssistant } from './helpers'
+import { primaryFill } from '../../components/buttons'
 
 interface Props {
   clientId: number
@@ -74,7 +75,7 @@ export default function RemapAssistant({ clientId, clientType, remotePath, candi
         type="button"
         onClick={() => { void apply() }}
         disabled={applying}
-        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium text-white disabled:opacity-50"
+        className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}
       >
         {applying ? t('settings.clients.remapAssist.applying') : t('settings.clients.remapAssist.apply')}
       </button>

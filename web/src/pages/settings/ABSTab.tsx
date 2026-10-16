@@ -6,7 +6,7 @@ import ABSConflictPanel from '../../components/ABSAuthorConflictsPanel'
 import { inputCls } from './formStyles'
 import PathRemapField from './PathRemapField'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
-import { slateFill } from '../../components/buttons'
+import { slateFill, primaryFill } from '../../components/buttons'
 
 const absReviewResultLimit = 10
 
@@ -671,7 +671,7 @@ function AudiobookshelfSection() {
           <button
             onClick={save}
             disabled={saving}
-            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50"
+            className={`px-3 py-2 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}
           >
             {saving ? 'Saving…' : 'Save source'}
           </button>
