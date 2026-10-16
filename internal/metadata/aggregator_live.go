@@ -145,6 +145,14 @@ func (a *Aggregator) SetAuthorEnrichers(enrichers ...AuthorEnricher) {
 	a.update(func(c *aggregatorCore) { c.authorEnrichers = list })
 }
 
+// EnrichAuthor fills author's empty photo and bio from the author enrichers
+// (#3287), and reports whether they gave a full answer. Only the author
+// profile refreshes call it; GetAuthor never enriches. author must be the
+// caller's own copy, such as the record GetAuthor returned.
+func (a *Aggregator) EnrichAuthor(ctx context.Context, author *models.Author) bool {
+	return a.load().EnrichAuthor(ctx, author)
+}
+
 // AuthorEnricherNames returns the names of the author enrichers in the order
 // they are asked.
 func (a *Aggregator) AuthorEnricherNames() []string {

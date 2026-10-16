@@ -111,6 +111,11 @@ func (c *Client) EnrichAuthor(ctx context.Context, author *models.Author) (*meta
 	}
 	ttl := cacheTTL
 	if partial {
+		// Marked, so the refresh doesn't stamp it as an answer.
+		if profile == nil {
+			profile = &metadata.AuthorProfile{}
+		}
+		profile.Partial = true
 		ttl = partialTTL
 	}
 	c.store(key, profile, ttl)
