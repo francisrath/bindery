@@ -1,0 +1,2 @@
+### Added
+- **Covers from Kindle files** (#3313). A book no metadata provider has a cover for now takes the cover embedded in its MOBI, AZW or AZW3 file, as it already did for EPUB and audiobook files. Only an image the file marks as its cover is used, never a guess at the first picture, and a provider's cover is never replaced. Kindle books already in your library pick theirs up on the next library scan.

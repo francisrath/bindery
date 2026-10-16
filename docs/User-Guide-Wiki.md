@@ -1081,8 +1081,8 @@ like everything else on that tab that names server paths.
   failed lookup as indeterminate rather than offering the row for removal.
 - **Covers from your own files.** When no metadata provider has a cover for
   a book, Bindery uses the art embedded in the file you import (M4B, MP3,
-  FLAC, EPUB), or a `cover.jpg` / `folder.jpg` in a multi-file audiobook's
-  folder. Books already in your library pick theirs up on the next library
+  FLAC, EPUB, and the cover a MOBI, AZW or AZW3 file marks as its cover), or
+  a `cover.jpg` / `folder.jpg` in a multi-file audiobook's folder. Books already in your library pick theirs up on the next library
   scan. A provider's cover is never replaced, so this only fills blanks.
 - **Your own cover.** **Upload cover** (or **Change cover**) under a book's
   cover sets it from a JPEG, PNG, WebP or GIF image of up to 10 MB. It

@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/text/encoding/charmap"
 
+	"github.com/vavallee/bindery/internal/covers"
 	"github.com/vavallee/bindery/internal/models"
 )
 
@@ -37,6 +38,9 @@ const (
 	exthISBN     = 104
 	exthTitle    = 503
 	exthLanguage = 524
+	// exthCoverOffset is the cover image's place among the image records,
+	// counted from the first image index in the MOBI header.
+	exthCoverOffset = 201
 
 	// maxKindleRecord0 caps the bytes read for record 0: the headers and EXTH
 	// block are a few kilobytes, and a cap keeps a corrupt offset from making
@@ -80,47 +84,136 @@ func ReadKindleMetadata(path string) (EpubMetadata, error) {
 		return EpubMetadata{}, fmt.Errorf("kindle: open: %w", err)
 	}
 	defer func() { _ = f.Close() }()
-	info, err := f.Stat()
+	db, err := readKindleDB(f)
 	if err != nil {
-		return EpubMetadata{}, fmt.Errorf("kindle: stat: %w", err)
+		return EpubMetadata{}, err
 	}
-	size := info.Size()
-
-	header := make([]byte, 78)
-	if _, err := f.ReadAt(header, 0); err != nil {
-		return EpubMetadata{}, errors.New("kindle: file too short for a Palm database header")
-	}
-	if !bytes.Equal(header[60:68], []byte("BOOKMOBI")) {
-		return EpubMetadata{}, errors.New("kindle: not a MOBI file")
-	}
-	if binary.BigEndian.Uint16(header[76:78]) == 0 {
-		return EpubMetadata{}, errors.New("kindle: no records")
-	}
-	recordInfo := make([]byte, 16)
-	n, _ := f.ReadAt(recordInfo, 78)
-	start := int64(binary.BigEndian.Uint32(recordInfo[0:4]))
-	end := size
-	if n >= 16 && binary.BigEndian.Uint16(header[76:78]) > 1 {
-		if next := int64(binary.BigEndian.Uint32(recordInfo[8:12])); next > start && next < end {
-			end = next
-		}
-	}
-	if start <= 0 || start >= size {
-		return EpubMetadata{}, errors.New("kindle: record 0 outside the file")
-	}
-	end = min(end, start+maxKindleRecord0)
-	rec := make([]byte, end-start)
-	if n, err := f.ReadAt(rec, start); err != nil && int64(n) != end-start {
-		return EpubMetadata{}, fmt.Errorf("kindle: read record 0: %w", err)
-	}
-	meta, err := parseMobiRecord0(rec)
+	meta, err := parseMobiRecord0(db.rec0)
 	if err != nil {
 		return EpubMetadata{}, err
 	}
 	if meta.Title == "" {
-		meta.Title = strings.TrimSpace(string(bytes.TrimRight(header[0:32], "\x00")))
+		meta.Title = strings.TrimSpace(string(bytes.TrimRight(db.header[0:32], "\x00")))
 	}
 	return meta, nil
+}
+
+// kindleDB is an open Kindle file's Palm database header and record 0.
+type kindleDB struct {
+	f       *os.File
+	size    int64
+	header  []byte
+	records uint64
+	rec0    []byte
+}
+
+// readKindleDB checks f is a Kindle book and reads its header and record 0,
+// capped at maxKindleRecord0.
+func readKindleDB(f *os.File) (*kindleDB, error) {
+	info, err := f.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("kindle: stat: %w", err)
+	}
+	db := &kindleDB{f: f, size: info.Size(), header: make([]byte, 78)}
+	if _, err := f.ReadAt(db.header, 0); err != nil {
+		return nil, errors.New("kindle: file too short for a Palm database header")
+	}
+	if !bytes.Equal(db.header[60:68], []byte("BOOKMOBI")) {
+		return nil, errors.New("kindle: not a MOBI file")
+	}
+	db.records = uint64(binary.BigEndian.Uint16(db.header[76:78]))
+	if db.records == 0 {
+		return nil, errors.New("kindle: no records")
+	}
+	start, end, ok := db.recordRange(0)
+	if !ok {
+		return nil, errors.New("kindle: record 0 outside the file")
+	}
+	end = min(end, start+maxKindleRecord0)
+	db.rec0 = make([]byte, end-start)
+	if n, err := f.ReadAt(db.rec0, start); err != nil && int64(n) != end-start {
+		return nil, fmt.Errorf("kindle: read record 0: %w", err)
+	}
+	return db, nil
+}
+
+// recordRange returns the file offsets record i spans: from its entry in the
+// record list to the next record's start, or the end of the file for the last
+// one. ok is false for a record that doesn't exist or lies outside the file.
+func (db *kindleDB) recordRange(i uint64) (start, end int64, ok bool) {
+	if i >= db.records {
+		return 0, 0, false
+	}
+	entries := make([]byte, 16)
+	n, _ := db.f.ReadAt(entries, int64(78+8*i)) //nolint:gosec // i < db.records, a uint16 count, checked above
+	if n < 4 {
+		return 0, 0, false
+	}
+	start = int64(binary.BigEndian.Uint32(entries[0:4]))
+	end = db.size
+	if n >= 12 && i+1 < db.records {
+		if next := int64(binary.BigEndian.Uint32(entries[8:12])); next > start && next < end {
+			end = next
+		}
+	}
+	if start <= 0 || start >= db.size {
+		return 0, 0, false
+	}
+	return start, end, true
+}
+
+// kindleCover returns the cover image of a MOBI, AZW or AZW3 file, or nil.
+// The MOBI header gives the record holding the book's first image (at 0x6C of
+// record 0) and EXTH 201 the cover's place counted from it; that record is the
+// raw JPEG, PNG or GIF. A file with no EXTH 201 gets no cover: the first image
+// is often a map or a publisher logo, and a cover is only ever filled, never
+// guessed. Opened like every cover source, never through a link (#2961).
+func kindleCover(filePath string) []byte {
+	f, err := openRegular(filePath)
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+	db, err := readKindleDB(f)
+	if err != nil {
+		return nil
+	}
+	idx, ok := mobiCoverRecord(db.rec0)
+	if !ok {
+		return nil
+	}
+	start, end, ok := db.recordRange(idx)
+	if !ok || end-start > covers.MaxBytes {
+		return nil
+	}
+	img := make([]byte, end-start)
+	if n, err := f.ReadAt(img, start); err != nil && int64(n) != end-start {
+		return nil
+	}
+	return img
+}
+
+// noKindleIndex is how a MOBI header and EXTH 201 say "none".
+const noKindleIndex = 0xFFFFFFFF
+
+// mobiCoverRecord returns the record number of the cover image, from the first
+// image index in the MOBI header and the offset in EXTH 201. Both are uint32s
+// added as uint64s, so the sum can't wrap on a 32-bit build.
+func mobiCoverRecord(rec []byte) (uint64, bool) {
+	if len(rec) < 112 || !bytes.Equal(rec[16:20], []byte("MOBI")) {
+		return 0, false
+	}
+	first := uint64(binary.BigEndian.Uint32(rec[108:112]))
+	offset := uint64(noKindleIndex)
+	walkEXTH(rec, func(typ uint32, val []byte) {
+		if typ == exthCoverOffset && len(val) == 4 && offset == noKindleIndex {
+			offset = uint64(binary.BigEndian.Uint32(val))
+		}
+	})
+	if first == noKindleIndex || offset == noKindleIndex {
+		return 0, false
+	}
+	return first + offset, true
 }
 
 // parseMobiRecord0 reads the MOBI header and EXTH block of record 0.
@@ -145,26 +238,11 @@ func parseMobiRecord0(rec []byte) (EpubMetadata, error) {
 		}
 	}
 
-	exthAt := 16 + u32(20)
-	hasEXTH := len(rec) >= 132 && u32(128)&0x40 != 0
-	if !hasEXTH || exthAt+12 > recLen || !bytes.Equal(rec[exthAt:exthAt+4], []byte("EXTH")) {
-		return meta, nil
-	}
-	count := u32(exthAt + 8)
-	pos := exthAt + 12
 	var isbn10 string
-	for i := uint64(0); i < count && pos+8 <= recLen; i++ {
-		typ := binary.BigEndian.Uint32(rec[pos : pos+4])
-		length := u32(pos + 4)
-		// Each record's length counts its own 8 byte header, so anything
-		// shorter is corrupt, and would never move pos forward.
-		if length < 8 || pos+length > recLen {
-			break
-		}
-		val := text(rec[pos+8 : pos+length])
-		pos += length
+	walkEXTH(rec, func(typ uint32, raw []byte) {
+		val := text(raw)
 		if val == "" {
-			continue
+			return
 		}
 		switch typ {
 		case exthTitle:
@@ -186,7 +264,7 @@ func parseMobiRecord0(rec []byte) (EpubMetadata, error) {
 				meta.Languages = append(meta.Languages, code)
 			}
 		}
-	}
+	})
 	if meta.ISBN == "" {
 		meta.ISBN = isbn10
 	}
@@ -194,6 +272,35 @@ func parseMobiRecord0(rec []byte) (EpubMetadata, error) {
 		meta.Language = meta.Languages[0]
 	}
 	return meta, nil
+}
+
+// walkEXTH calls fn with the type and raw value of each record in record 0's
+// EXTH block, in order. It reads nothing when the header doesn't flag one, and
+// stops at the first record that doesn't fit.
+func walkEXTH(rec []byte, fn func(typ uint32, val []byte)) {
+	recLen := uint64(len(rec))
+	u32 := func(at uint64) uint64 { return uint64(binary.BigEndian.Uint32(rec[at : at+4])) }
+	if len(rec) < 24 {
+		return
+	}
+	exthAt := 16 + u32(20)
+	hasEXTH := len(rec) >= 132 && u32(128)&0x40 != 0
+	if !hasEXTH || exthAt+12 > recLen || !bytes.Equal(rec[exthAt:exthAt+4], []byte("EXTH")) {
+		return
+	}
+	count := u32(exthAt + 8)
+	pos := exthAt + 12
+	for i := uint64(0); i < count && pos+8 <= recLen; i++ {
+		typ := binary.BigEndian.Uint32(rec[pos : pos+4])
+		length := u32(pos + 4)
+		// Each record's length counts its own 8 byte header, so anything
+		// shorter is corrupt, and would never move pos forward.
+		if length < 8 || pos+length > recLen {
+			return
+		}
+		fn(typ, rec[pos+8:pos+length])
+		pos += length
+	}
 }
 
 // decoderFor returns the text decoder for a MOBI text encoding: 65001 is
