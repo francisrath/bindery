@@ -501,3 +501,24 @@ func TestKindleCoverRespectsTheRecordCount(t *testing.T) {
 		t.Errorf("got %q from a record past the count", got)
 	}
 }
+
+// A file cut off inside its record list, and a record 0 too short to hold an
+// EXTH block, give no cover and no metadata rather than a misread.
+func TestKindleTruncatedFiles(t *testing.T) {
+	good := buildMobi(mobiFile{encoding: 65001, exth: []exthRecord{coverOffset(0)}, images: [][]byte{fakeImage("kindle-cover")}})
+	p := filepath.Join(t.TempDir(), "cut.azw3")
+	if err := os.WriteFile(p, good[:80], 0o644); err != nil { // the header and two bytes of the list
+		t.Fatal(err)
+	}
+	if got := kindleCover(p); got != nil {
+		t.Errorf("cover from a cut file: %q", got)
+	}
+	if _, err := ReadKindleMetadata(p); err == nil {
+		t.Error("a file cut inside its record list read without error")
+	}
+	called := false
+	walkEXTH(make([]byte, 20), func(uint32, []byte) { called = true })
+	if called {
+		t.Error("walkEXTH read records from a record 0 too short for a MOBI header")
+	}
+}
