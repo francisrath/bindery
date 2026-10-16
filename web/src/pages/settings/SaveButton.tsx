@@ -39,12 +39,10 @@ export default function SaveButton({
 }: SaveButtonProps) {
   const { t } = useTranslation()
 
-  const colour =
-    result === 'saved'
-      ? 'bg-emerald-500'
-      : result === 'error'
-        ? 'bg-red-600'
-        : `${primaryFill}`
+  // Saved keeps the primary fill, so the button doesn't jump to a lighter
+  // green with the page's text colour on it (#3265); the label carries the
+  // confirmation.
+  const colour = result === 'error' ? 'bg-red-600' : primaryFill
 
   // The saved/error states outrank "Saving…" so a fast round trip still shows
   // the confirmation rather than flashing straight back to "Save".

@@ -52,14 +52,33 @@ describe('primaryFill', () => {
     expect(ratio('#ffffff', '#006045')).toBeGreaterThanOrEqual(4.5)
   })
 
+  // A primary fill written by hand is an emerald-500 or -600 background with an
+  // emerald hover, in any order on the line. Whole class names only, so
+  // "hover:bg-emerald-600" alone is not a fill.
+  const fill = /(?<![\w:-])bg-emerald-(?:500|600)(?![\w/-])/
+  const hover = /(?<![\w-])hover:bg-emerald-/
+  // Switches and chips use emerald as a state, not a primary action, so they
+  // may pair a fill with an emerald hover.
+  const stateColourFiles = ['Switch.tsx', 'Toggle.tsx', 'FilterPopover.tsx', 'NamingTemplateField.tsx']
+
   it('is the only place the primary emerald fill is written', () => {
     const hits: string[] = []
     for (const [file, s] of Object.entries(sources)) {
+      if (stateColourFiles.some(f => file.endsWith('/' + f))) continue
       s.split('\n').forEach((line, i) => {
-        if (/bg-emerald-600 hover:bg-emerald-500/.test(line)) hits.push(`${file}:${i + 1}`)
+        if (fill.test(line) && hover.test(line)) hits.push(`${file}:${i + 1}`)
       })
     }
     expect(Object.keys(sources).length).toBeGreaterThan(100)
     expect(hits).toEqual([])
+  })
+
+  it('catches a hand-written fill in any class order, and only whole class names', () => {
+    const hand = (line: string) => fill.test(line) && hover.test(line)
+    expect(hand('bg-emerald-600 text-white hover:bg-emerald-500')).toBe(true)
+    expect(hand('hover:bg-emerald-500 px-3 bg-emerald-500')).toBe(true)
+    expect(hand('text-slate-700 hover:bg-emerald-600 hover:text-white')).toBe(false)
+    expect(hand('bg-emerald-600/60 hover:bg-emerald-500')).toBe(false)
+    expect(hand(primaryFill)).toBe(false)
   })
 })
