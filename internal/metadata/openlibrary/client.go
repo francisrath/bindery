@@ -122,6 +122,12 @@ type Client struct {
 	// don't retry it within the process lifetime.
 	workSampleMu    sync.Mutex
 	workSampleCache map[string]workEditionSample
+
+	// seriesNames caches the name of each structured series record by key
+	// ("/series/OL327402L"), "" for one OpenLibrary doesn't have, so an author
+	// sync asks about each series once per process however many works share it.
+	seriesNamesMu sync.Mutex
+	seriesNames   map[string]string
 }
 
 // New creates a new OpenLibrary client.
@@ -277,7 +283,7 @@ func (c *Client) GetBook(ctx context.Context, foreignID string) (*models.Book, e
 	}
 
 	// Parse series membership.
-	for _, s := range resp.Series {
+	for _, s := range c.resolveSeriesKeys(ctx, resp.Series) {
 		if s == "" {
 			continue
 		}
@@ -472,7 +478,7 @@ func (c *Client) authorWorks(ctx context.Context, authorForeignID string) (books
 			SortTitle:        entry.Title,
 			Description:      extractText(entry.Description),
 			Genres:           truncateSlice(entry.Subjects, 10),
-			SeriesRefs:       seriesRefsFrom(entry.Series),
+			SeriesRefs:       seriesRefsFrom(c.resolveSeriesKeys(ctx, entry.Series)),
 			MetadataProvider: "openlibrary",
 			Monitored:        true,
 			Status:           models.BookStatusWanted,
@@ -676,6 +682,58 @@ func pickPreferredLanguage(langs []string) string {
 // entry into SeriesRefs, flagging the first KEPT entry Primary. Entries whose
 // title yields no usable slug are dropped rather than sharing a ForeignID
 // (#1645).
+// resolveSeriesKeys replaces each structured series entry ("/series/OL…L #21",
+// see flexStringSlice) with its series name ("Doctor Who #21"), so it reaches
+// parseSeriesRef like the plain string form and the same series gets the same
+// ol-series id either way. An entry whose name can't be found is dropped.
+func (c *Client) resolveSeriesKeys(ctx context.Context, series []string) []string {
+	out := series[:0:0]
+	for _, s := range series {
+		key, pos, _ := strings.Cut(s, " #")
+		if !seriesKeyRe.MatchString(key) {
+			out = append(out, s)
+			continue
+		}
+		name := c.seriesName(ctx, key)
+		if name == "" {
+			continue
+		}
+		if pos != "" {
+			name += " #" + pos
+		}
+		out = append(out, name)
+	}
+	return out
+}
+
+// seriesName returns the name of a structured series record, from the cache
+// or /series/<id>.json. A record OpenLibrary doesn't have is cached as "";
+// any other failure isn't cached, so a later sync asks again.
+func (c *Client) seriesName(ctx context.Context, key string) string {
+	c.seriesNamesMu.Lock()
+	name, ok := c.seriesNames[key]
+	c.seriesNamesMu.Unlock()
+	if ok {
+		return name
+	}
+	var rec struct {
+		Name string `json:"name"`
+	}
+	err := c.getJSON(ctx, baseURL+key+".json", &rec)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		slog.Debug("openlibrary: series lookup failed", "series", key, "error", err)
+		return ""
+	}
+	name = strings.TrimSpace(rec.Name)
+	c.seriesNamesMu.Lock()
+	if c.seriesNames == nil {
+		c.seriesNames = map[string]string{}
+	}
+	c.seriesNames[key] = name
+	c.seriesNamesMu.Unlock()
+	return name
+}
+
 func seriesRefsFrom(series []string) []models.SeriesRef {
 	if len(series) == 0 {
 		return nil
