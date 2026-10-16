@@ -793,19 +793,14 @@ func (a *aggregatorCore) GetAuthor(ctx context.Context, foreignID string) (*mode
 			return nil, err
 		}
 		a.cache.set(key, cloneAuthor(author))
-		a.enrichAuthor(ctx, author)
 		return author, nil
 	}
-	// The cache holds the primary's record alone: enrichment fills the clone
-	// cachedRequest returns, so switching an enricher off takes effect at
-	// once instead of after the cache entry expires.
 	author, err := cachedRequest(ctx, a, a.cache, "author", key, func(ctx context.Context) (*models.Author, error) {
 		return provider.GetAuthor(ctx, foreignID)
 	}, cloneAuthor)
 	if err != nil {
 		return nil, err
 	}
-	a.enrichAuthor(ctx, author)
 	return author, nil
 }
 

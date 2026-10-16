@@ -1622,6 +1622,18 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 	if upstream == nil {
 		return
 	}
+	// A refresh the user asked for always asks the enrichers (#3287),
+	// whatever the stamp says; their own cache still keeps a repeat click
+	// off the network. A full answer is stamped, so the staggered refresh
+	// leaves this author alone for a month.
+	enrichAnswered := h.meta.EnrichAuthor(ctx, upstream)
+	defer func() {
+		if enrichAnswered {
+			if err := h.authors.StampEnrichment(ctx, author.ID, time.Now()); err != nil {
+				slog.Warn("author profile refresh: could not record enrichment", "author", author.Name, "error", err)
+			}
+		}
+	}()
 	now := time.Now().UTC()
 	if !mergeAuthorProfileFields(author, upstream) {
 		// Nothing new, so skip the whole row write, but the profile was
@@ -1638,6 +1650,7 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 	author.LastMetadataRefreshAt = &now
 	if err := h.authors.Update(ctx, author); err != nil {
 		slog.Warn("author profile refresh: save failed", "author", author.Name, "error", err)
+		enrichAnswered = false
 		return
 	}
 	slog.Info("refreshed author profile from metadata provider",

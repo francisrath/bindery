@@ -209,8 +209,8 @@ func TestEnrichAuthorRetriesAPartialAnswerSooner(t *testing.T) {
 			c := f.client()
 			ctx := context.Background()
 			author := &models.Author{ForeignID: "nb:author:1"}
-			if _, err := c.EnrichAuthor(ctx, author); err != nil {
-				t.Fatal(err)
+			if p, err := c.EnrichAuthor(ctx, author); err != nil || p == nil || !p.Partial {
+				t.Fatalf("got %+v, %v; want an answer marked partial", p, err)
 			}
 			// Within partialTTL the answer is served from the cache.
 			after := f.calls.Load()

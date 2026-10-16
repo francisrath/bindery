@@ -15,7 +15,11 @@ import (
 // EnrichAuthor gets the author the primary returned and answers with whatever
 // profile fields it found, each with the credit its licence asks for. It
 // returns (nil, nil) when it has nothing, and an error only for a failure
-// worth logging: enrichment is best effort and never fails the author lookup.
+// worth logging: enrichment is best effort and never fails a refresh.
+//
+// Enrichment runs only on the author profile refreshes (the staggered one and
+// the manual one), never inside GetAuthor, so an import or an add that looks
+// up many authors at once sends the enrichers nothing.
 type AuthorEnricher interface {
 	Name() string
 	EnrichAuthor(ctx context.Context, author *models.Author) (*AuthorProfile, error)
@@ -28,27 +32,36 @@ type AuthorProfile struct {
 	DescriptionSource *models.ProfileSource
 	ImageURL          string
 	ImageSource       *models.ProfileSource
+	// Partial says a source failed while the answer was built, so it may lack
+	// a field it would otherwise have. It is not stamped as an answer.
+	Partial bool
 }
 
-// enrichAuthor fills author's empty photo and bio from the author enrichers,
+// EnrichAuthor fills author's empty photo and bio from the author enrichers,
 // in order, stopping once both are set. It writes only to author, which must
-// be the caller's own copy: GetAuthor hands it a clone, so the primary's
-// cached record never carries an enriched value.
-func (a *aggregatorCore) enrichAuthor(ctx context.Context, author *models.Author) {
-	if author == nil {
-		return
+// be the caller's own copy, never the primary's cached record. answered is
+// true when there are enrichers and every one asked gave a full answer, a
+// miss included: the refresh stamps that, and asks again only once it ages.
+func (a *aggregatorCore) EnrichAuthor(ctx context.Context, author *models.Author) (answered bool) {
+	if a == nil || author == nil || len(a.authorEnrichers) == 0 {
+		return false
 	}
+	answered = true
 	for _, e := range a.authorEnrichers {
 		if author.ImageURL != "" && author.Description != "" {
-			return
+			return answered
 		}
 		profile, err := e.EnrichAuthor(ctx, author)
 		if err != nil {
 			slog.Debug("author enrichment failed", "enricher", e.Name(), "author", author.Name, "error", err)
+			answered = false
 			continue
 		}
 		if profile == nil {
 			continue
+		}
+		if profile.Partial {
+			answered = false
 		}
 		if author.ImageURL == "" && profile.ImageURL != "" {
 			author.ImageURL = profile.ImageURL
@@ -59,4 +72,5 @@ func (a *aggregatorCore) enrichAuthor(ctx context.Context, author *models.Author
 			author.DescriptionSource = profile.DescriptionSource
 		}
 	}
+	return answered
 }
