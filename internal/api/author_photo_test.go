@@ -239,3 +239,120 @@ func TestUploadPhoto_SaveFails(t *testing.T) {
 		t.Fatalf("status %d, want 500: %s", rec.Code, rec.Body.String())
 	}
 }
+
+// Clearing an uploaded photo hands the field back at once: the profile is
+// refreshed in the same request, so the provider's photo shows straight away
+// and the user's mark is gone (#3287).
+func TestClearPhoto(t *testing.T) {
+	provider := &stubMetaProvider{author: &models.Author{ForeignID: "OL1A", Name: "Kari Nordmann", ImageURL: "https://provider.example/k.jpg"}}
+	newAuthor := func(t *testing.T, src *models.ProfileSource) (coreFixture, *models.Author) {
+		f := newCoreFixture(t, provider)
+		f.h.WithCoverStore(covers.NewStore(t.TempDir()))
+		a := &models.Author{ForeignID: "OL1A", Name: "Kari Nordmann", SortName: "Nordmann, Kari", MetadataProvider: "openlibrary",
+			ImageURL: "bindery-cover:" + strings.Repeat("a", 64) + ".png", ImageSource: src}
+		if err := f.authors.Create(t.Context(), a); err != nil {
+			t.Fatal(err)
+		}
+		return f, a
+	}
+	del := func(h *AuthorHandler, id int64) *httptest.ResponseRecorder {
+		sid := strconv.FormatInt(id, 10)
+		req := withURLParam(httptest.NewRequest(http.MethodDelete, "/api/v1/author/"+sid+"/photo", nil), "id", sid)
+		rec := httptest.NewRecorder()
+		h.ClearPhoto(rec, req)
+		return rec
+	}
+
+	t.Run("an uploaded photo", func(t *testing.T) {
+		f, a := newAuthor(t, &models.ProfileSource{Provider: models.ProfileSourceUser})
+		rec := del(f.h, a.ID)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+		}
+		got, err := f.authors.GetByID(t.Context(), a.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.ImageURL != "https://provider.example/k.jpg" || got.ImageSource != nil {
+			t.Errorf("after clearing: %q from %+v; want the provider's photo, unmarked", got.ImageURL, got.ImageSource)
+		}
+		var resp models.Author
+		if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+			t.Fatal(err)
+		}
+		if resp.ImageURL != ProxyImageURL("https://provider.example/k.jpg") {
+			t.Errorf("response imageUrl %q, want the proxied provider photo", resp.ImageURL)
+		}
+	})
+	t.Run("a provider photo is refused", func(t *testing.T) {
+		f, a := newAuthor(t, nil)
+		if rec := del(f.h, a.ID); rec.Code != http.StatusConflict {
+			t.Fatalf("status %d, want 409", rec.Code)
+		}
+		if got, _ := f.authors.GetByID(t.Context(), a.ID); got.ImageURL != a.ImageURL {
+			t.Errorf("photo changed to %q", got.ImageURL)
+		}
+	})
+	t.Run("an enriched photo is refused", func(t *testing.T) {
+		f, a := newAuthor(t, &models.ProfileSource{Provider: "wikimedia-commons"})
+		if rec := del(f.h, a.ID); rec.Code != http.StatusConflict {
+			t.Fatalf("status %d, want 409", rec.Code)
+		}
+	})
+	t.Run("unknown author", func(t *testing.T) {
+		f, _ := newAuthor(t, nil)
+		if rec := del(f.h, 999999); rec.Code != http.StatusNotFound {
+			t.Fatalf("status %d, want 404", rec.Code)
+		}
+	})
+}
+
+// Another user's author is not found, as for every per-author route.
+func TestClearPhoto_OtherUsersAuthor(t *testing.T) {
+	auth.SetEnforceTenancyForTests(t, true)
+	f := seedTwoUserAuthors(t)
+	if err := func() error {
+		f.a1.ImageURL, f.a1.ImageSource = "bindery-cover:x", &models.ProfileSource{Provider: models.ProfileSourceUser}
+		return f.authors.Update(t.Context(), f.a1)
+	}(); err != nil {
+		t.Fatal(err)
+	}
+	h := NewAuthorHandler(f.authors, nil, f.books, nil, nil, nil, f.profiles, nil)
+	id := strconv.FormatInt(f.a1.ID, 10)
+	req := withURLParam(httptest.NewRequest(http.MethodDelete, "/api/v1/author/"+id+"/photo", nil), "id", id)
+	req = req.WithContext(withAuthCtx(req.Context(), f.u2, "user"))
+	rec := httptest.NewRecorder()
+	h.ClearPhoto(rec, req)
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("status %d, want 404", rec.Code)
+	}
+	if got, _ := f.authors.GetByID(t.Context(), f.a1.ID); got.ImageSource == nil {
+		t.Error("another user cleared the photo")
+	}
+}
+
+// A failed save is a server error and leaves the photo as it was.
+func TestClearPhoto_SaveFails(t *testing.T) {
+	database, err := db.OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	authors := db.NewAuthorRepo(database)
+	author := &models.Author{ForeignID: "nb:author:1", Name: "Kari Nordmann", SortName: "Nordmann, Kari", MetadataProvider: "nb",
+		ImageURL: "bindery-cover:x", ImageSource: &models.ProfileSource{Provider: models.ProfileSourceUser}}
+	if err := authors.Create(t.Context(), author); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.Exec(`CREATE TRIGGER refuse_author_update BEFORE UPDATE ON authors BEGIN SELECT RAISE(ABORT, 'read only'); END`); err != nil {
+		t.Fatal(err)
+	}
+	h := NewAuthorHandler(authors, nil, db.NewBookRepo(database), nil, nil, nil, db.NewMetadataProfileRepo(database), nil)
+	id := strconv.FormatInt(author.ID, 10)
+	req := withURLParam(httptest.NewRequest(http.MethodDelete, "/api/v1/author/"+id+"/photo", nil), "id", id)
+	rec := httptest.NewRecorder()
+	h.ClearPhoto(rec, req)
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("status %d, want 500", rec.Code)
+	}
+}

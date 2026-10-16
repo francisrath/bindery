@@ -68,3 +68,32 @@ func (h *AuthorHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	writeAuthor(w, http.StatusOK, author)
 }
+
+// ClearPhoto removes a photo the user uploaded and hands the field back to the
+// provider and the enrichers (#3287): the photo is cleared, then the author's
+// profile is refreshed as by its Refresh button, so a provider or Wikidata
+// photo shows at once instead of after the next scheduled refresh. Only an
+// uploaded photo can be cleared this way: a provider's photo would come back
+// on that same refresh, so clearing it is refused with 409.
+//
+// The stored file stays. The cover store is content addressed and shared with
+// book covers, so the same bytes may back a cover too, and a replaced book
+// cover is not deleted either.
+func (h *AuthorHandler) ClearPhoto(w http.ResponseWriter, r *http.Request) {
+	author, ok := h.loadOwnedAuthor(w, r)
+	if !ok {
+		return
+	}
+	if author.ImageSource == nil || author.ImageSource.Provider != models.ProfileSourceUser {
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "only a photo you uploaded can be removed"})
+		return
+	}
+	author.ImageURL = ""
+	author.ImageSource = nil
+	if err := h.authors.Update(r.Context(), author); err != nil {
+		writeServerError(w, r, err)
+		return
+	}
+	h.refreshAuthorProfile(r.Context(), author, true)
+	writeAuthor(w, http.StatusOK, author)
+}

@@ -561,7 +561,10 @@
       "upload": "Upload photo",
       "change": "Change photo",
       "uploading": "Uploading…",
-      "uploadFailed": "Could not upload the photo"
+      "uploadFailed": "Could not upload the photo",
+      "remove": "Remove photo",
+      "removing": "Removing…",
+      "removeFailed": "Could not remove the photo"
     }
   },
   "catalogueReconciliation": {

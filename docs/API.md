@@ -84,6 +84,7 @@ PUT    /api/v1/author/{id}                        update monitored / metadata pr
 DELETE /api/v1/author/{id}                        remove (with optional file delete)
 POST   /api/v1/author/{id}/refresh                re-pull profile and works, skipping the metadata cache; 409 while a sync for that author is running
 POST   /api/v1/author/{id}/photo                  set the photo from the request body, as `POST /book/{id}/cover` does for a cover (raw JPEG, PNG, WebP or GIF, max 10 MB; 413 over the limit, 415 for anything else); stored locally and kept as the user's own, so no refresh or enricher replaces it. Answers the author (#3287)
+DELETE /api/v1/author/{id}/photo                  remove a photo set with the POST above, then refresh the author's profile as its Refresh button does, so the provider's or an enricher's photo shows at once. 409 for a photo the user didn't upload. The stored file stays, since the cover store is shared with book covers. Answers the author (#3287)
 GET    /api/v1/author/{id}/catalogue-reconciliation
                                                     preview stale metadata-only Wanted rows
 POST   /api/v1/author/{id}/catalogue-reconciliation

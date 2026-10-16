@@ -131,4 +131,14 @@ func TestAuthorPhotoRoute_BodyCaps(t *testing.T) {
 	if rec := post(pngOfSize(covers.MaxBytes + (1 << 20))); rec.Code != http.StatusRequestEntityTooLarge || !strings.Contains(rec.Body.String(), "10 MB") {
 		t.Fatalf("far over the limit: status %d body %s", rec.Code, rec.Body.String())
 	}
+	// The uploaded photo can be cleared through the same route.
+	req := httptest.NewRequest(http.MethodDelete, "/author/"+strconv.FormatInt(author.ID, 10)+"/photo", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("clear: status %d: %s", rec.Code, rec.Body.String())
+	}
+	if got, _ := authors.GetByID(context.Background(), author.ID); got.ImageURL != "" || got.ImageSource != nil {
+		t.Errorf("after clearing: %q from %+v", got.ImageURL, got.ImageSource)
+	}
 }

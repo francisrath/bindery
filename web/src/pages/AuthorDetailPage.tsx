@@ -156,18 +156,20 @@ export default function AuthorDetailPage() {
   // Sets the photo from an image the user picks, like a book cover (#3017,
   // #3287). The response is the bare author, so only its photo fields are
   // taken: the page keeps its books, stats and series as they are.
-  const [uploadingPhoto, setUploadingPhoto] = useState(false)
-  const uploadPhoto = async (file: File | undefined) => {
-    if (!author || !file) return
-    setUploadingPhoto(true)
+  const [uploadingPhoto, setUploadingPhoto] = useState<'upload' | 'remove' | null>(null)
+  const changePhoto = async (action: 'upload' | 'remove', file?: File) => {
+    if (!author || (action === 'upload' && !file)) return
+    setUploadingPhoto(action)
     setError(null)
     try {
-      const updated = await api.uploadAuthorPhoto(author.id, file)
+      const updated = action === 'upload' ? await api.uploadAuthorPhoto(author.id, file as File) : await api.clearAuthorPhoto(author.id)
       setAuthor(a => (a ? { ...a, imageUrl: updated.imageUrl, imageSource: updated.imageSource } : a))
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('authorDetail.photo.uploadFailed', 'Could not upload the photo'))
+      setError(e instanceof Error ? e.message : action === 'upload'
+        ? t('authorDetail.photo.uploadFailed', 'Could not upload the photo')
+        : t('authorDetail.photo.removeFailed', 'Could not remove the photo'))
     } finally {
-      setUploadingPhoto(false)
+      setUploadingPhoto(null)
     }
   }
   // The sync poll stopped trying (#3058): a 404/403, or a few failures in a row.
@@ -1088,17 +1090,30 @@ export default function AuthorDetailPage() {
             }
           />
           <label className={`touch-target mt-2 block text-center text-xs text-accent-text hover:underline cursor-pointer has-[:focus-visible]:underline ${uploadingPhoto ? 'opacity-50 pointer-events-none' : ''}`}>
-            {uploadingPhoto
+            {uploadingPhoto === 'upload'
               ? t('authorDetail.photo.uploading', 'Uploading…')
               : author.imageUrl ? t('authorDetail.photo.change', 'Change photo') : t('authorDetail.photo.upload', 'Upload photo')}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
               className="sr-only"
-              disabled={uploadingPhoto}
-              onChange={e => { void uploadPhoto(e.target.files?.[0]); e.target.value = '' }}
+              disabled={uploadingPhoto !== null}
+              onChange={e => { void changePhoto('upload', e.target.files?.[0]); e.target.value = '' }}
             />
           </label>
+          {/* Only an uploaded photo can be removed: the provider's or an
+              enricher's would come straight back on the refresh that
+              removing runs (#3287). */}
+          {author.imageSource?.provider === 'user' && (
+            <button
+              type="button"
+              className="touch-target block w-full text-center text-xs text-slate-600 dark:text-zinc-400 hover:underline disabled:opacity-50"
+              disabled={uploadingPhoto !== null}
+              onClick={() => { void changePhoto('remove') }}
+            >
+              {uploadingPhoto === 'remove' ? t('authorDetail.photo.removing', 'Removing…') : t('authorDetail.photo.remove', 'Remove photo')}
+            </button>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold mb-1 [overflow-wrap:anywhere]">{author.authorName}</h2>

@@ -368,6 +368,9 @@ export const authorsApi = {
   // Bindery and kept as the user's own.
   uploadAuthorPhoto: (id: number, image: Blob) =>
     request<Author>(`/author/${id}/photo`, { method: 'POST', body: image, headers: { 'Content-Type': image.type || 'application/octet-stream' } }),
+  // Clears an uploaded photo; the answer carries the provider's or an
+  // enricher's photo when one is found straight away.
+  clearAuthorPhoto: (id: number) => request<Author>(`/author/${id}/photo`, { method: 'DELETE' }),
   // Genre override (#1446): set + lock the genre list on every book of the
   // author so metadata refresh keeps the user's taxonomy.
   applyAuthorGenres: (id: number, genres: string[]) =>

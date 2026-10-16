@@ -23,10 +23,13 @@ func registerBookCoverRoutes(r chi.Router, h bookCoverRouteHandler) {
 
 type authorPhotoRouteHandler interface {
 	UploadPhoto(http.ResponseWriter, *http.Request)
+	ClearPhoto(http.ResponseWriter, *http.Request)
 }
 
 // registerAuthorPhotoRoutes mounts the author photo upload route, with the
-// same raised body cap as the cover upload (#3287).
+// same raised body cap as the cover upload, and the route that clears an
+// uploaded photo (#3287).
 func registerAuthorPhotoRoutes(r chi.Router, h authorPhotoRouteHandler) {
 	r.With(api.WithMaxBody(covers.MaxBytes+1)).Post("/author/{id}/photo", h.UploadPhoto)
+	r.Delete("/author/{id}/photo", h.ClearPhoto)
 }

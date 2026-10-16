@@ -534,7 +534,10 @@
       "upload": "Last opp bilde",
       "change": "Bytt bilde",
       "uploading": "Laster opp…",
-      "uploadFailed": "Kunne ikke laste opp bildet"
+      "uploadFailed": "Kunne ikke laste opp bildet",
+      "remove": "Fjern bildet",
+      "removing": "Fjerner…",
+      "removeFailed": "Kunne ikke fjerne bildet"
     }
   },
   "catalogueReconciliation": {

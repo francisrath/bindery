@@ -22,6 +22,7 @@ vi.mock('../api/client', async importOriginal => {
       relinkAuthorUpstream: vi.fn(),
       updateAuthor: vi.fn(),
       uploadAuthorPhoto: vi.fn(),
+      clearAuthorPhoto: vi.fn(),
       deleteAuthor: vi.fn(),
       deleteAuthorAlias: vi.fn(),
       searchAuthorWanted: vi.fn(),
@@ -379,6 +380,31 @@ describe('AuthorDetailPage', () => {
     const input = await screen.findByLabelText('Upload photo')
     fireEvent.change(input, { target: { files: [new File(['x'], 'photo.png', { type: 'image/png' })] } })
     expect(await screen.findByText('Could not upload the photo')).toBeInTheDocument()
+  })
+
+  // Removing an uploaded photo hands the field back: the answer carries the
+  // provider's photo, credited if an enricher found it.
+  it('removes an uploaded photo and shows the one that replaces it', async () => {
+    vi.mocked(api.clearAuthorPhoto).mockResolvedValue({ ...author, imageUrl: 'https://upload.example/k.jpg', imageSource: { provider: 'wikimedia-commons', url: 'https://commons.example/wiki/File:K.jpg', license: 'CC BY 2.5' } })
+    renderAuthorDetailPage([], 'grid', { imageUrl: '/api/v1/images?url=bindery-cover%3Aabc', imageSource: { provider: 'user', url: '' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+    await waitFor(() => expect(api.clearAuthorPhoto).toHaveBeenCalledWith(42))
+    expect(await screen.findByTestId('author-photo-credit')).toHaveTextContent('Photo: CC BY 2.5, via Wikimedia Commons')
+    expect(screen.queryByRole('button', { name: 'Remove photo' })).toBeNull()
+  })
+
+  it('offers no Remove photo for a photo the user did not upload', async () => {
+    renderAuthorDetailPage([], 'grid', { imageUrl: 'https://covers.example/a.jpg' })
+    await screen.findByRole('heading', { level: 2 })
+    expect(screen.queryByRole('button', { name: 'Remove photo' })).toBeNull()
+  })
+
+  it('reports a failed photo removal', async () => {
+    vi.mocked(api.clearAuthorPhoto).mockRejectedValue('network down')
+    renderAuthorDetailPage([], 'grid', { imageUrl: '/api/v1/images?url=bindery-cover%3Aabc', imageSource: { provider: 'user', url: '' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+    expect(await screen.findByText('Could not remove the photo')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Remove photo' })).toBeEnabled()
   })
 
   it('sends nothing when the file picker is cancelled', async () => {
