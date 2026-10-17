@@ -434,3 +434,49 @@ func TestStripTrackingLeavesPlainURLs(t *testing.T) {
 		}
 	}
 }
+
+// During an outage each author would wait out the request timeout. After
+// failureLimit requests in a row fail outright the client holds for
+// failureHold; any answer resets the count.
+func TestEnrichAuthorBacksOffAfterRepeatedFailures(t *testing.T) {
+	f := newFake(t)
+	f.search = func(w http.ResponseWriter, _ string) { w.WriteHeader(http.StatusBadGateway) }
+	c := f.client()
+	ctx := context.Background()
+	for i := range failureLimit {
+		if _, err := c.EnrichAuthor(ctx, &models.Author{ForeignID: fmt.Sprintf("nb:author:%d", i+1)}); err == nil || errors.Is(err, ErrHeld) {
+			t.Fatalf("failure %d: %v, want the request's own error", i+1, err)
+		}
+	}
+	sent := f.calls.Load()
+	if _, err := c.EnrichAuthor(ctx, &models.Author{ForeignID: "nb:author:99"}); !errors.Is(err, ErrHeld) || f.calls.Load() != sent {
+		t.Errorf("after %d failures in a row: %v and %d new requests, want ErrHeld and none", failureLimit, err, f.calls.Load()-sent)
+	}
+	// Once the hold has passed it asks again.
+	c.now = func() time.Time { return time.Now().Add(failureHold + time.Minute) }
+	if _, err := c.EnrichAuthor(ctx, &models.Author{ForeignID: "nb:author:100"}); errors.Is(err, ErrHeld) {
+		t.Error("still held after failureHold")
+	}
+
+	// An answer between failures resets the count.
+	g := newFake(t)
+	var fail atomic.Bool
+	fail.Store(true)
+	g.search = func(w http.ResponseWriter, _ string) {
+		if fail.Load() {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		fmt.Fprint(w, `{"query":{"search":[]}}`)
+	}
+	d := g.client()
+	for i := range failureLimit - 1 {
+		_, _ = d.EnrichAuthor(ctx, &models.Author{ForeignID: fmt.Sprintf("nb:author:%d", i+1)})
+	}
+	fail.Store(false)
+	_, _ = d.EnrichAuthor(ctx, &models.Author{ForeignID: "nb:author:50"})
+	fail.Store(true)
+	if _, err := d.EnrichAuthor(ctx, &models.Author{ForeignID: "nb:author:51"}); errors.Is(err, ErrHeld) {
+		t.Error("held although an answer came between the failures")
+	}
+}
