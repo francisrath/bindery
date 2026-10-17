@@ -3324,10 +3324,11 @@ func cleanLayoutTitle(dir string) string {
 // "Title - Author" filename (#754): the first directory under the root is the
 // author, and the file's parent is the book folder.
 //
-// When that parent is one disc of a multi-disc audiobook ("CD1", "Disc 2") it
-// names a part rather than the book, so the folder above it names the book
-// instead (#2723), by the cd/disc rule the library scan's unmatched grouping
-// already uses (discSetNameRe, #2672): "Book 1", "Vol 1" and bare numbers are
+// When that parent is one disc of a multi-disc audiobook ("CD1", "Disc 2", or
+// the book's own title in front, "Fjellvinden Disc 1", #3327) it names a part
+// rather than the book, so the folder above it names the book instead (#2723),
+// by the cd/disc rule the library scan's unmatched grouping already uses
+// (isDiscSetName, #2672): "Book 1", "Vol 1" and bare numbers are
 // left alone, because in a library those name separate books of a series as
 // often as they name discs. The folder above counts only when a book folder
 // separates it from the author: in <root>/<Author>/<disc>/<file> the parent is
@@ -3351,7 +3352,7 @@ func bookFolderFromLayout(path string, roots ...string) (author, bookFolder stri
 			// file's parent names the book — unless it is a disc folder with a
 			// book folder above it.
 			idx := len(parts) - 2
-			if idx > 1 && discSetNameRe.MatchString(parts[idx]) {
+			if idx > 1 && isDiscSetName(parts[idx], parts[idx-1]) {
 				idx--
 			}
 			folder := filepath.Dir(path)

@@ -178,7 +178,12 @@ func discSetChecker(roots []string) func(folder string) bool {
 				isRoot = true
 			}
 		}
-		if !isRoot && scanRootFor(folder, roots) != "" {
+		if root := scanRootFor(folder, roots); !isRoot && root != "" {
+			// A disc named after its book counts only in a book folder,
+			// <root>/<Author>/<Book>: one level down the folder is the
+			// author's, shared with every other book (#3327).
+			rel, _ := filepath.Rel(root, folder)
+			titledOK := strings.Contains(rel, string(filepath.Separator))
 			if entries, err := os.ReadDir(folder); err == nil {
 				var discs []string
 				names := true
@@ -191,7 +196,7 @@ func discSetChecker(roots []string) func(folder string) bool {
 						continue
 					}
 					discs = append(discs, dir)
-					names = names && discSetNameRe.MatchString(e.Name())
+					names = names && (discSetNameRe.MatchString(e.Name()) || titledOK && isTitledDisc(e.Name(), filepath.Base(folder)))
 				}
 				result = names && AllDiscFolders(discs)
 			}
@@ -224,7 +229,7 @@ func unitKeyFor(f unmatchedScanFile, root string, isDiscSet func(string) bool) (
 		if parent == root {
 			return "file\x00" + f.path, ""
 		}
-		if discSetNameRe.MatchString(filepath.Base(parent)) && isDiscSet(filepath.Dir(parent)) {
+		if isDiscSetName(filepath.Base(parent), filepath.Base(filepath.Dir(parent))) && isDiscSet(filepath.Dir(parent)) {
 			parent = filepath.Dir(parent)
 		}
 		return "folder\x00" + parent, parent

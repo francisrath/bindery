@@ -81,6 +81,26 @@ func TestEnumerateImportUnits_BoundaryHeuristic(t *testing.T) {
 			wantDirs:  map[string]bool{"Dune": true},
 		},
 		{
+			// CD rips name each disc after its album tag (#3327).
+			name: "disc folders named after the book are ONE unit",
+			files: []string{
+				"Kari Nordmann/Fjellvinden (2002)/Fjellvinden Disc 1/01.mp3",
+				"Kari Nordmann/Fjellvinden (2002)/Fjellvinden Disc 1/02.mp3",
+				"Kari Nordmann/Fjellvinden (2002)/Fjellvinden (Disc 2)/01.mp3",
+			},
+			wantNames: []string{"Fjellvinden (2002)"},
+			wantDirs:  map[string]bool{"Fjellvinden (2002)": true},
+		},
+		{
+			name: "a disc named after another book stays its own unit",
+			files: []string{
+				"Kari Nordmann/Fjellvinden (2002)/Fjellvinden Disc 1/01.mp3",
+				"Kari Nordmann/Fjellvinden (2002)/Havgapet Disc 2/01.mp3",
+			},
+			wantNames: []string{"Fjellvinden Disc 1", "Havgapet Disc 2"},
+			wantDirs:  map[string]bool{"Fjellvinden Disc 1": true, "Havgapet Disc 2": true},
+		},
+		{
 			name:      "loose audio folder is ONE audiobook unit",
 			files:     []string{"Frank Herbert/Dune/dune.m4b"},
 			wantNames: []string{"Dune"},

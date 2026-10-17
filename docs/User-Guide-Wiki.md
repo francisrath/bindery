@@ -836,7 +836,8 @@ A library scan attaches every file it can match with confidence and leaves
 the rest for you. Those books wait on **Import → In your library**, the page
 `/import` opens on. Each row is one **book**, not one file: a 193 track
 audiobook folder is one row, a folder whose audio subfolders are all discs
-(`CD1`, `Disc 2`, `Disk 3`) is one row named after it, and `Dune.epub` beside
+(`CD1`, `Disc 2`, `Disk 3`, or the book's own title in front, as CD rips name
+them: `Fjellvinden (2002)/Fjellvinden Disc 1`) is one row named after it, and `Dune.epub` beside
 `Dune.mobi` is one row. An `Artwork` folder without audio, or a hidden or
 system folder such as `@eaDir`, does not stop a disc set from grouping.
 Folders named `1`, `2`, `Book 1` or `Part 1` stay separate rows; when they are
@@ -949,7 +950,8 @@ Things worth knowing:
   what it matches into the library, moving or copying the files.
 - It lists one row per **book**, the same idea as the list above. A folder of
   audio is one row, and so is a folder whose audio subfolders are all pieces of
-  one recording (`CD1`, `Disc 2`, `Disk 3`, `Part 4`, `Chapter 5`). Subfolders
+  one recording (`CD1`, `Disc 2`, `Disk 3`, `Part 4`, `Chapter 5`, or the
+  book's own title followed by a CD or disc number, `Fjellvinden Disc 1`). Subfolders
   named `Book 1`, `Vol 2` or a bare `1` are separate books, because a series
   stored that way is several books rather than one long one, so each gets its
   own row and its own match.
