@@ -3,10 +3,16 @@ package openlibrary
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"slices"
+	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
+	"unicode/utf8"
+
+	"github.com/vavallee/bindery/internal/metadata/providerhttp"
 )
 
 // OpenLibrary's structured series record names no series, only a key; it is
@@ -17,14 +23,16 @@ func TestFlexStringSliceStructuredSeries(t *testing.T) {
 		in   string
 		want []string
 	}{
-		"string position":   {`[{"series":{"key":"/series/OL1L"},"position":"21"}]`, []string{"/series/OL1L #21"}},
-		"number position":   {`[{"series":{"key":"/series/OL1L"},"position":2.5}]`, []string{"/series/OL1L #2.5"}},
-		"no position":       {`[{"series":{"key":"/series/OL1L"}}]`, []string{"/series/OL1L"}},
-		"odd position":      {`[{"series":{"key":"/series/OL1L"},"position":"1-3"}]`, []string{"/series/OL1L"}},
-		"bad key":           {`[{"series":{"key":"/series/../authors/OL1A"},"position":"1"}]`, nil},
-		"not a series key":  {`[{"series":{"key":"/works/OL1W"}}]`, nil},
-		"no series field":   {`[{"position":"1"}]`, nil},
-		"mixed, order kept": {`["Vindserien #1",{"series":{"key":"/series/OL2L"},"position":"3"},{"title":"Fjellserien"}]`, []string{"Vindserien #1", "/series/OL2L #3", "Fjellserien"}},
+		"string position":    {`[{"series":{"key":"/series/OL1L"},"position":"21"}]`, []string{"/series/OL1L #21"}},
+		"number position":    {`[{"series":{"key":"/series/OL1L"},"position":2.5}]`, []string{"/series/OL1L #2.5"}},
+		"no position":        {`[{"series":{"key":"/series/OL1L"}}]`, []string{"/series/OL1L"}},
+		"odd position":       {`[{"series":{"key":"/series/OL1L"},"position":"1-3"}]`, []string{"/series/OL1L"}},
+		"bad key":            {`[{"series":{"key":"/series/../authors/OL1A"},"position":"1"}]`, nil},
+		"not a series key":   {`[{"series":{"key":"/works/OL1W"}}]`, nil},
+		"key with no digits": {`[{"series":{"key":"/series/OLL"},"position":"1"}]`, nil},
+		"title and series":   {`[{"title":"Fjellserien","series":{"key":"/series/OL1L"},"position":"2"}]`, []string{"Fjellserien"}},
+		"no series field":    {`[{"position":"1"}]`, nil},
+		"mixed, order kept":  {`["Vindserien #1",{"series":{"key":"/series/OL2L"},"position":"3"},{"title":"Fjellserien"}]`, []string{"Vindserien #1", "/series/OL2L #3", "Fjellserien"}},
 	} {
 		t.Run(name, func(t *testing.T) {
 			var got flexStringSlice
@@ -62,7 +70,7 @@ func TestGetBookResolvesStructuredSeries(t *testing.T) {
 
 // An author's works that share a series ask OpenLibrary about it once. A
 // series OpenLibrary doesn't have is dropped and remembered; a failed lookup
-// is dropped but asked again later.
+// is dropped and remembered for seriesRetryAfter, then asked again.
 func TestAuthorWorksSeriesLookups(t *testing.T) {
 	var asked, missing, broken atomic.Int32
 	works := `{"size":4,"entries":[
@@ -100,7 +108,66 @@ func TestAuthorWorksSeriesLookups(t *testing.T) {
 	if asked.Load() != 1 || missing.Load() != 1 {
 		t.Errorf("lookups: found %d, missing %d; want each asked once over two syncs", asked.Load(), missing.Load())
 	}
+	if broken.Load() != 1 {
+		t.Errorf("a failed lookup was asked %d times over two syncs, want 1 (remembered)", broken.Load())
+	}
+	prev := seriesRetryAfter
+	seriesRetryAfter = 0
+	t.Cleanup(func() { seriesRetryAfter = prev })
+	if _, err := c.GetAuthorWorks(context.Background(), "OL1A"); err != nil {
+		t.Fatal(err)
+	}
 	if broken.Load() != 2 {
-		t.Errorf("a failed lookup was asked %d times over two syncs, want 2 (not cached)", broken.Load())
+		t.Errorf("a failed lookup was asked %d times once seriesRetryAfter passed, want 2", broken.Load())
+	}
+}
+
+// A series endpoint answering 503 costs one lookup (with its retries), not
+// one per work: 50 works in one series used to make 50 lookups of 4 requests
+// each, and every 5xx holds the whole client.
+func TestSeriesLookupOutageAskedOnce(t *testing.T) {
+	defer providerhttp.SetBaseDelay(time.Millisecond)()
+	var hits atomic.Int32
+	entries := make([]string, 50)
+	for i := range entries {
+		entries[i] = fmt.Sprintf(`{"key":"/works/OL%dW","title":"Fjellvinden %d","series":[{"series":{"key":"/series/OL10L"},"position":"%d"}]}`, i+1, i+1, i+1)
+	}
+	pt := &pathTransport{t: t, handlers: map[string]interface{}{
+		"/authors/OL1A/works.json": `{"size":50,"entries":[` + strings.Join(entries, ",") + `]}`,
+		"/search.json":             `{"docs":[]}`,
+		"/series/OL10L.json":       func(*http.Request) string { hits.Add(1); return `{"error":"unavailable"}` },
+	}, status: map[string]int{"/series/OL10L.json": http.StatusServiceUnavailable}}
+	c := &Client{http: &http.Client{Transport: pt}}
+
+	books, err := c.GetAuthorWorks(context.Background(), "OL1A")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(books) != 50 {
+		t.Fatalf("got %d works, want 50", len(books))
+	}
+	if n := hits.Load(); n < 1 || n > providerhttp.MaxRetries+1 {
+		t.Errorf("50 works sharing a failing series made %d requests, want one lookup (at most %d)", n, providerhttp.MaxRetries+1)
+	}
+	for _, b := range books {
+		if len(b.SeriesRefs) != 0 {
+			t.Fatalf("%q kept an unresolved series: %+v", b.Title, b.SeriesRefs)
+		}
+	}
+}
+
+// A series name is trimmed, and capped, since it now comes from a network
+// record rather than the work itself.
+func TestSeriesNameTrimmedAndCapped(t *testing.T) {
+	long := strings.Repeat("ø", maxSeriesNameRunes+40)
+	c := newClientWithPaths(t, map[string]interface{}{
+		"/series/OL1L.json": `{"name":"  Vindserien  "}`,
+		"/series/OL2L.json": `{"name":"` + long + `"}`,
+	})
+	if got := c.seriesName(context.Background(), "/series/OL1L"); got != "Vindserien" {
+		t.Errorf("name %q, want it trimmed", got)
+	}
+	if got := c.seriesName(context.Background(), "/series/OL2L"); utf8.RuneCountInString(got) != maxSeriesNameRunes {
+		t.Errorf("name of %d runes, want %d", utf8.RuneCountInString(got), maxSeriesNameRunes)
 	}
 }

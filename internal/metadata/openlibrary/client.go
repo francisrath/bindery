@@ -126,9 +126,20 @@ type Client struct {
 	// seriesNames caches the name of each structured series record by key
 	// ("/series/OL327402L"), "" for one OpenLibrary doesn't have, so an author
 	// sync asks about each series once per process however many works share it.
+	// seriesFailed remembers when a lookup last failed, so during an outage
+	// the works sharing a series don't each retry it (see seriesRetryAfter).
 	seriesNamesMu sync.Mutex
 	seriesNames   map[string]string
+	seriesFailed  map[string]time.Time
 }
+
+// seriesRetryAfter is how long a failed series lookup is remembered. A 5xx
+// costs a request and its retries, and holds the whole client, so an author
+// whose 200 works share one series must not ask about it 200 times.
+var seriesRetryAfter = 5 * time.Minute
+
+// maxSeriesNameRunes caps a series name read from a network record.
+const maxSeriesNameRunes = 255
 
 // New creates a new OpenLibrary client.
 func New() *Client {
@@ -678,12 +689,8 @@ func pickPreferredLanguage(langs []string) string {
 	return langs[0]
 }
 
-// seriesRefsFrom parses the OL series strings attached to a works-endpoint
-// entry into SeriesRefs, flagging the first KEPT entry Primary. Entries whose
-// title yields no usable slug are dropped rather than sharing a ForeignID
-// (#1645).
 // resolveSeriesKeys replaces each structured series entry ("/series/OL…L #21",
-// see flexStringSlice) with its series name ("Doctor Who #21"), so it reaches
+// see flexStringSlice) with its series name ("Vindserien #21"), so it reaches
 // parseSeriesRef like the plain string form and the same series gets the same
 // ol-series id either way. An entry whose name can't be found is dropped.
 func (c *Client) resolveSeriesKeys(ctx context.Context, series []string) []string {
@@ -712,28 +719,44 @@ func (c *Client) resolveSeriesKeys(ctx context.Context, series []string) []strin
 func (c *Client) seriesName(ctx context.Context, key string) string {
 	c.seriesNamesMu.Lock()
 	name, ok := c.seriesNames[key]
+	failedAt, failed := c.seriesFailed[key]
 	c.seriesNamesMu.Unlock()
 	if ok {
 		return name
+	}
+	if failed && time.Since(failedAt) < seriesRetryAfter {
+		return ""
 	}
 	var rec struct {
 		Name string `json:"name"`
 	}
 	err := c.getJSON(ctx, baseURL+key+".json", &rec)
+	c.seriesNamesMu.Lock()
+	defer c.seriesNamesMu.Unlock()
 	if err != nil && !errors.Is(err, ErrNotFound) {
 		slog.Debug("openlibrary: series lookup failed", "series", key, "error", err)
+		if c.seriesFailed == nil {
+			c.seriesFailed = map[string]time.Time{}
+		}
+		c.seriesFailed[key] = time.Now()
 		return ""
 	}
 	name = strings.TrimSpace(rec.Name)
-	c.seriesNamesMu.Lock()
+	if r := []rune(name); len(r) > maxSeriesNameRunes {
+		name = strings.TrimSpace(string(r[:maxSeriesNameRunes]))
+	}
 	if c.seriesNames == nil {
 		c.seriesNames = map[string]string{}
 	}
 	c.seriesNames[key] = name
-	c.seriesNamesMu.Unlock()
+	delete(c.seriesFailed, key)
 	return name
 }
 
+// seriesRefsFrom parses the OL series strings attached to a works-endpoint
+// entry into SeriesRefs, flagging the first KEPT entry Primary. Entries whose
+// title yields no usable slug are dropped rather than sharing a ForeignID
+// (#1645).
 func seriesRefsFrom(series []string) []models.SeriesRef {
 	if len(series) == 0 {
 		return nil
