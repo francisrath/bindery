@@ -3,17 +3,22 @@ package api
 import (
 	"context"
 	"net/http"
+	"sync/atomic"
 	"testing"
 
 	"github.com/vavallee/bindery/internal/metadata"
 	"github.com/vavallee/bindery/internal/models"
 )
 
-type countingEnricher struct{ calls int }
+// countingEnricher counts its calls atomically: the add and refresh syncs ask
+// it from their own goroutine.
+type countingEnricher struct{ n atomic.Int32 }
+
+func (e *countingEnricher) calls() int { return int(e.n.Load()) }
 
 func (e *countingEnricher) Name() string { return "counting" }
 func (e *countingEnricher) EnrichAuthor(context.Context, *models.Author) (*metadata.AuthorProfile, error) {
-	e.calls++
+	e.n.Add(1)
 	return &metadata.AuthorProfile{ImageURL: "https://commons.example/k.jpg", ImageSource: &models.ProfileSource{Provider: "wikimedia-commons"}}, nil
 }
 
@@ -54,8 +59,8 @@ func TestRelinkKeepsProfileCreditsAccurate(t *testing.T) {
 		if got.ImageURL != "https://commons.example/old.jpg" || got.ImageSource == nil || *got.ImageSource != *commons {
 			t.Errorf("photo %q from %+v: the enriched photo should stay with its credit", got.ImageURL, got.ImageSource)
 		}
-		if e.calls != 0 {
-			t.Errorf("a relink asked the enrichers %d times", e.calls)
+		if e.calls() != 0 {
+			t.Errorf("a relink asked the enrichers %d times", e.calls())
 		}
 	}
 

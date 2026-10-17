@@ -40,6 +40,11 @@ const (
 	// defaultHold is how long the client stays quiet after Wikimedia answers
 	// 429 or 503 without a usable Retry-After.
 	defaultHold = 15 * time.Minute
+	// failureHold is how long it stays quiet after failureLimit requests in a
+	// row failed outright (no answer, or an unexpected status): during an
+	// outage each author would otherwise wait out the 15 second timeout.
+	failureHold  = 5 * time.Minute
+	failureLimit = 3
 	// thumbWidth is the width asked of Commons; the author page shows a
 	// 128px circle, so 400px is plenty for a high density screen.
 	thumbWidth = 400
@@ -64,6 +69,7 @@ type Client struct {
 	mu        sync.Mutex
 	cache     map[string]cacheEntry
 	holdUntil time.Time
+	failures  int // requests failed in a row; see failureLimit
 }
 
 type cacheEntry struct {
@@ -236,8 +242,28 @@ func (c *Client) hold(retryAfter string) {
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.holdForLocked(d)
+}
+
+func (c *Client) holdForLocked(d time.Duration) {
 	if until := c.now().Add(d); until.After(c.holdUntil) {
 		c.holdUntil = until
+	}
+}
+
+// noteResult counts requests that failed outright in a row, and holds the
+// client for failureHold once failureLimit of them have. Any answer resets
+// the count.
+func (c *Client) noteResult(failed bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if !failed {
+		c.failures = 0
+		return
+	}
+	if c.failures++; c.failures >= failureLimit {
+		c.failures = 0
+		c.holdForLocked(failureHold)
 	}
 }
 
@@ -455,6 +481,10 @@ func (c *Client) getJSON(ctx context.Context, endpoint string, out any) error {
 	req.Header.Set("Accept", "application/json")
 	resp, err := c.http.Do(req)
 	if err != nil {
+		// A cancelled lookup says nothing about Wikimedia.
+		if ctx.Err() == nil {
+			c.noteResult(true)
+		}
 		return err
 	}
 	defer resp.Body.Close()
@@ -463,10 +493,13 @@ func (c *Client) getJSON(ctx context.Context, endpoint string, out any) error {
 		c.hold(resp.Header.Get("Retry-After"))
 		return ErrHeld
 	case resp.StatusCode == http.StatusNotFound:
+		c.noteResult(false)
 		return nil
 	case resp.StatusCode != http.StatusOK:
+		c.noteResult(true)
 		return fmt.Errorf("wikidata: %s answered %d", req.URL.Host, resp.StatusCode)
 	}
+	c.noteResult(false)
 	return json.NewDecoder(io.LimitReader(resp.Body, maxBody)).Decode(out)
 }
 

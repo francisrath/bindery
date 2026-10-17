@@ -81,3 +81,45 @@ func TestRefreshMetadata_FailedEnrichmentIsNotStamped(t *testing.T) {
 		t.Error("the profile refresh itself should still be stamped")
 	}
 }
+
+// A credited bio (#3287) survives a scheduled refresh whose provider has no
+// bio, credit and all; a bio the provider does supply replaces it and takes
+// the credit away with it.
+func TestPersistRefreshedAuthorKeepsACreditedBio(t *testing.T) {
+	f := newRefreshFixture(t, 1)
+	ctx := context.Background()
+	id := f.ids["OL000A"]
+	wiki := &models.ProfileSource{Provider: "wikipedia", URL: "https://no.wikipedia.example/k", License: "CC BY-SA 4.0"}
+	stored, err := f.authors.GetByID(ctx, id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stored.Description, stored.DescriptionSource = "Kari Nordmann is a writer.", wiki
+	if err := f.authors.Update(ctx, stored); err != nil {
+		t.Fatal(err)
+	}
+	reload := func() *models.Author {
+		t.Helper()
+		a, err := f.authors.GetByID(ctx, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return a
+	}
+
+	author := reload()
+	if !f.s.persistRefreshedAuthor(ctx, author, &models.Author{ForeignID: "OL000A"}, author.UpdatedAtRaw) {
+		t.Fatal("refresh not written")
+	}
+	if got := reload(); got.Description != "Kari Nordmann is a writer." || got.DescriptionSource == nil || *got.DescriptionSource != *wiki {
+		t.Errorf("after a refresh with no bio: %q from %+v; want the credited bio kept", got.Description, got.DescriptionSource)
+	}
+
+	author = reload()
+	if !f.s.persistRefreshedAuthor(ctx, author, &models.Author{ForeignID: "OL000A", Description: "From the provider."}, author.UpdatedAtRaw) {
+		t.Fatal("refresh not written")
+	}
+	if got := reload(); got.Description != "From the provider." || got.DescriptionSource != nil {
+		t.Errorf("after a refresh with a provider bio: %q from %+v; want the provider's, uncredited", got.Description, got.DescriptionSource)
+	}
+}
