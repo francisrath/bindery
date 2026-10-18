@@ -121,11 +121,14 @@ func TestAllDiscFolders_Titled(t *testing.T) {
 	root := t.TempDir()
 	bookDir := seedTitledDiscs(t, root, "Kari Nordmann", "Fjellvinden (2002)", "Fjellvinden", 2)
 	discs := []string{filepath.Join(bookDir, "Fjellvinden Disc 1"), filepath.Join(bookDir, "Fjellvinden Disc 2")}
-	if !AllDiscFolders(discs) {
+	if !AllDiscFolders(discs, true) {
 		t.Error("a titled disc set was not taken as one audiobook")
 	}
+	if AllDiscFolders(discs, false) {
+		t.Error("a titled disc set was taken without the caller allowing it")
+	}
 	writeFileAt(t, filepath.Join(bookDir, "Havgapet Disc 3", "01.mp3"))
-	if AllDiscFolders(append(discs, filepath.Join(bookDir, "Havgapet Disc 3"))) {
+	if AllDiscFolders(append(discs, filepath.Join(bookDir, "Havgapet Disc 3")), true) {
 		t.Error("a disc named after another book was taken into the set")
 	}
 }

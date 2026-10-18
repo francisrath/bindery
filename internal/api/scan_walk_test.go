@@ -92,6 +92,17 @@ func TestEnumerateImportUnits_BoundaryHeuristic(t *testing.T) {
 			wantDirs:  map[string]bool{"Fjellvinden (2002)": true},
 		},
 		{
+			// The parent is the author folder: it must never become a book,
+			// whatever its disc folders are called (#3327).
+			name: "disc folders named after the author do not make the author a book",
+			files: []string{
+				"Kari Nordmann/Kari Nordmann Disc 1/01.mp3",
+				"Kari Nordmann/Kari Nordmann Disc 2/01.mp3",
+			},
+			wantNames: []string{"Kari Nordmann Disc 1", "Kari Nordmann Disc 2"},
+			wantDirs:  map[string]bool{"Kari Nordmann Disc 1": true, "Kari Nordmann Disc 2": true},
+		},
+		{
 			name: "a disc named after another book stays its own unit",
 			files: []string{
 				"Kari Nordmann/Fjellvinden (2002)/Fjellvinden Disc 1/01.mp3",

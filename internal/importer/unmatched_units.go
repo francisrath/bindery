@@ -198,7 +198,7 @@ func discSetChecker(roots []string) func(folder string) bool {
 					discs = append(discs, dir)
 					names = names && (discSetNameRe.MatchString(e.Name()) || titledOK && isTitledDisc(e.Name(), filepath.Base(folder)))
 				}
-				result = names && AllDiscFolders(discs)
+				result = names && AllDiscFolders(discs, titledOK)
 			}
 		}
 		cache[folder] = result

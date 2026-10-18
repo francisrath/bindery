@@ -69,14 +69,18 @@ func IsDiscFolderName(name string) bool {
 }
 
 // AllDiscFolders reports whether every directory in dirs is a disc/part folder
-// (by name, or a cd/disc label after its parent folder's own title, #3327)
-// that actually holds audio somewhere beneath it. Both conditions are
+// (by name) that actually holds audio somewhere beneath it. With titled set it
+// also takes a cd/disc label after the parent folder's own title (#3327). The
+// caller sets it only for a parent at book depth, at least two levels under a
+// root: one level down the parent is an author folder, and "Kari Nordmann
+// Disc 1" there must not make the author folder a book. Both conditions are
 // required so a shelf of audiobook folders with numeric-ish names isn't collapsed
 // into one book, and an empty "CD1" placeholder doesn't fake a multi-disc set.
-func AllDiscFolders(dirs []string) bool {
+func AllDiscFolders(dirs []string, titled bool) bool {
 	for _, d := range dirs {
 		name := filepath.Base(d)
-		if !discFolderRe.MatchString(name) && !isTitledDisc(name, filepath.Base(filepath.Dir(d))) {
+		isDisc := discFolderRe.MatchString(name) || titled && isTitledDisc(name, filepath.Base(filepath.Dir(d)))
+		if !isDisc {
 			return false
 		}
 		if !dirSubtreeHasAudio(d) {
