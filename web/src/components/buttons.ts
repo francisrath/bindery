@@ -12,6 +12,15 @@
 // sites that need a larger touch target don't end up with two conflicting
 // padding utilities on one element: `className={`${btn.danger} ${btnSize.sm}`}`.
 
+// Solid emerald fill for primary actions, with its own text colour. btn.primary
+// uses it, and so do the primary buttons that keep their own padding and shape:
+// those used to set the colours themselves, and most set no text colour, so in
+// the dark theme they took the page's zinc-100 at 3.3:1 (#3265). The colour of
+// every primary button is set here and nowhere else. White on emerald-700 is
+// 5.4:1, and the hover goes darker, to emerald-800 at 7.6:1, rather than
+// lighter: emerald-600 and -500 left white at 3.7:1 and 2.5:1.
+export const primaryFill = 'bg-emerald-700 hover:bg-emerald-800 text-white'
+
 const base =
   'inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-colors ' +
   'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-1 ' +
@@ -20,7 +29,7 @@ const base =
 
 export const btn = {
   // Primary action (grab, save, add an entity).
-  primary: `${base} bg-emerald-600 hover:bg-emerald-500 text-white focus-visible:ring-emerald-500`,
+  primary: `${base} ${primaryFill} focus-visible:ring-emerald-500`,
   // Secondary action (filled neutral, lower weight than primary).
   secondary: `${base} bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 text-slate-800 dark:text-zinc-200 focus-visible:ring-slate-400`,
   // Tertiary action (ghost, lowest emphasis — e.g. row "Refresh").

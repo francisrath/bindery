@@ -1,2 +1,0 @@
-### Fixed
-- **Keyboard focus is visible on cards, in the mobile menu and in popup menus** (#3237). The focus ring was cut off where a link fills a box that clips its overflow: the author and book cards, the book cards on an author's page, the author links on Wanted and the mobile menu links. The items in the More, account and metadata links menus showed focus only as a faint background change. They all now show the full ring.

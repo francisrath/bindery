@@ -497,7 +497,8 @@ webhooks. The three ways of reaching Calibre or CWA are easy to mix up; the
 **The file's language is checked at import.** The language filter at grab
 time can only read the release name, so a release that does not say its
 language gets through it. When the download arrives, Bindery reads the
-language the EPUB declares (its `dc:language`) and compares it with the
+language the ebook declares (an EPUB's `dc:language`, or the language a MOBI,
+AZW or AZW3 file records in its header) and compares it with the
 languages the book may be in: the allowed languages on the author's metadata
 profile, or, when that profile allows any language, the preferred search
 language if it is set to English. That is the same rule the release name was
@@ -601,7 +602,8 @@ File Naming (`import.ebook.content_check`, admin only):
 Block is opt in because a wrongly refused download costs more than a missed
 mismatch. The check only runs for downloads Bindery grabbed for a book. A library
 scan, manual import, **Match to book** and a download matched to its book from
-the file's own metadata are never checked, and only EPUB is read. Bindery does not
+the file's own metadata are never checked, and only EPUB and Kindle files (MOBI,
+AZW, AZW3) are read. Bindery does not
 read the book's text and does not write anything into the file.
 
 **The files' audio tags are checked at import (audiobooks).** An audiobook
@@ -1079,8 +1081,8 @@ like everything else on that tab that names server paths.
   failed lookup as indeterminate rather than offering the row for removal.
 - **Covers from your own files.** When no metadata provider has a cover for
   a book, Bindery uses the art embedded in the file you import (M4B, MP3,
-  FLAC, EPUB), or a `cover.jpg` / `folder.jpg` in a multi-file audiobook's
-  folder. Books already in your library pick theirs up on the next library
+  FLAC, EPUB, and the cover a MOBI, AZW or AZW3 file marks as its cover), or
+  a `cover.jpg` / `folder.jpg` in a multi-file audiobook's folder. Books already in your library pick theirs up on the next library
   scan. A provider's cover is never replaced, so this only fills blanks.
 - **Your own cover.** **Upload cover** (or **Change cover**) under a book's
   cover sets it from a JPEG, PNG, WebP or GIF image of up to 10 MB. It
@@ -1428,6 +1430,21 @@ If your naming template uses `{SortAuthor}`, the same value names the folder on
 disk, so the letter an author files under and the folder it lives in always
 agree.
 
+## Finding a setting when you do not know its tab
+
+The search box at the top of Settings matches tab names and section headings
+(Telemetry, File Naming, API Keys and so on) in your language, and for admins also
+the key of any registered setting. Press `/` to jump to the box, type a few
+letters, then use the arrow keys and Enter, or just tap a result. Enter on its own
+takes the first one, and Escape clears the box. A tab or key result opens that
+tab; a heading result also scrolls to the section. The list closes when you click
+away, and says when more than eight things matched.
+
+It does not search individual field labels or help text, so a setting that has no
+heading of its own is found through its tab or section. Non admins are only
+offered the tabs and sections they can see: the admin sections of General, such
+as File Naming and Downloads, are left out for them.
+
 ## Settings most people never touch
 
 The curated Settings tabs hold the things nearly every install cares about. Behind
@@ -1553,6 +1570,54 @@ Check the Queue for the error. Usual causes: category mismatch, the client
 and Bindery seeing the same storage at different paths (set a **path remap**
 on the download client), or files the container can't read. **Retry import**
 after fixing. ([troubleshooting](Troubleshooting-Wiki.md))
+
+**A red "Imports have a problem right now" notice shows on the Authors page.**
+Bindery has imported at least one download before (a `bookImported` or
+`downloadFolderImported` history event), but right now it cannot. The notice is
+shown to admins only and says which area to look at:
+
+- a folder Bindery imports into is missing or not writable: each root folder, or
+  the library folder when you have no root folders (plus the audiobook folder
+  when set);
+- a download folder is missing or not readable. Only readability is required,
+  so a read only download folder used in copy mode is fine. This check is
+  skipped when a path remap is set, globally or on an enabled client, and for an
+  empty download folder (the Windows default);
+- no enabled indexer;
+- no enabled download client;
+- every enabled download client failed its last health check (unreachable, or
+  its download folder is not readable).
+
+Folders are checked without writing anything (no probe files), at most every 30
+seconds. The notice never names a folder path; the Settings page it links to
+does. Limits worth knowing:
+
+- **It needs two views.** A problem has to be seen for two minutes before the
+  notice appears. The page checks when it opens and again when you return to
+  the tab (at most once a minute), not on a timer. So the first view after a
+  restart, or the first view of a new problem, only starts the clock; the notice
+  shows on a view at least two minutes later (a reload or switching back to the
+  tab). If more than ten minutes pass between views the clock starts over, and a
+  user who stays on one page the whole time sees nothing.
+- **Client health is slow.** It is the stored result of the 15 minute periodic
+  check. A client that restarted for a moment can show red for up to about 15
+  minutes after the two minute wait, and a fix takes as long to clear. The
+  message says the client could not be reached or its download folder is not
+  readable, because the check cannot tell which.
+- **A hung mount reports nothing.** If a network mount never answers its first
+  check, there is no earlier result to fall back on, so nothing is reported
+  until it answers.
+- **One folder is enough.** A single unavailable root folder (an external drive
+  you took offline on purpose) raises the notice even though imports into your
+  other root folders still work. The message says one library or download folder
+  is not available, not that everything is blocked.
+- On Windows only the folder's existence and that it can be opened are checked,
+  not whether it is writable.
+
+Installs that never imported a download, such as ones that only scan an
+existing library or use Calibre or Audiobookshelf, are not nagged.
+(`GET /api/v1/system/setup-state` carries `blocked`, `blockedArea` and
+`blockedReason` for admins.)
 
 **My browser can reach qBittorrent but Bindery's Test fails.**
 In Docker, `localhost` inside Bindery's container is Bindery, not the client —

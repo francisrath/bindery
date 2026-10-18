@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, QualityProfile } from '../../api/client'
 import { inputCls, labelCls } from './formStyles'
-import { dangerLink } from '../../components/buttons'
+import { dangerLink, primaryFill } from '../../components/buttons'
 import FormatList from './FormatList'
 import { EditorItem, partitionItems } from './qualitySummary'
 
@@ -57,7 +57,7 @@ export default function QualityTab() {
         <button
           type="button"
           onClick={() => setCreating(true)}
-          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium text-white"
+          className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium`}
         >
           {t('settings.quality.newProfile')}
         </button>
@@ -302,7 +302,7 @@ function QualityProfileForm({
         <button
           type="submit"
           disabled={saving || !name.trim()}
-          className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-xs font-medium text-white"
+          className={`px-3 py-1.5 ${primaryFill} disabled:opacity-50 rounded text-xs font-medium`}
         >
           {saving ? t('common.saving') : profile ? t('settings.quality.saveChanges') : t('settings.quality.createProfile')}
         </button>

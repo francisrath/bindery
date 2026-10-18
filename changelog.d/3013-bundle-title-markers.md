@@ -1,2 +1,0 @@
-### Fixed
-- **More bundle titles stay out of the wanted list** (#3013) - a work whose title ends in "(Set)", such as "Just Beyond (Set)", is now dropped from every author catalogue as a box set. With **Skip part books** on, titles like "Harry Potter (series) 1-3", "How To Train Your Dragon - 10 Books" and "2 Daniel Silva Books!" are skipped too, and so is a real title that ends in a count, such as "Top 100 Books". Titles that only start with a number, such as "10 Books That Changed America", are left alone.

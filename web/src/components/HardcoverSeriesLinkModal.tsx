@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api, Series, SeriesHardcoverLink, SeriesHardcoverSearchResult } from '../api/client'
 import { hardcoverSeriesUrl } from '../util/metadataSource'
 import { useModal } from './useModal'
+import { primaryFill } from './buttons'
 
 interface HardcoverSeriesLinkModalProps {
   series: Series
@@ -255,7 +256,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
             type="button"
             onClick={confirmSelection}
             disabled={!selected || saving}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
+            className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
           >
             {saving ? 'Saving...' : 'Confirm Selection'}
           </button>

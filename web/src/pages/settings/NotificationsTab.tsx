@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { api, NotificationConfig } from '../../api/client'
 import { inputCls } from './formStyles'
 import Toggle from './Toggle'
-import { dangerLink } from '../../components/buttons'
+import { dangerLink, primaryFill } from '../../components/buttons'
 import { urlInputAttrs } from '../../util/inputAttrs'
 
 // The seven trigger chips, in the order both forms render them, paired with the
@@ -62,7 +62,7 @@ export default function NotificationsTab() {
     <div>
       <div className="flex flex-wrap gap-2 justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">{t('settings.notifications.heading')}</h3>
-        <button onClick={() => setShowAddNotification(true)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium">
+        <button onClick={() => setShowAddNotification(true)} className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium`}>
           {t('settings.notifications.addButton')}
         </button>
       </div>
@@ -256,7 +256,7 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
       )}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">Cancel</button>
-        <button onClick={submit} disabled={saving} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed rounded text-sm font-medium">Save</button>
+        <button onClick={submit} disabled={saving} className={`px-3 py-1.5 ${primaryFill} disabled:opacity-60 disabled:cursor-not-allowed rounded text-sm font-medium`}>Save</button>
       </div>
     </div>
   )
@@ -357,7 +357,7 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
       )}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">Cancel</button>
-        <button onClick={submit} disabled={saving} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed rounded text-sm font-medium">Save</button>
+        <button onClick={submit} disabled={saving} className={`px-3 py-1.5 ${primaryFill} disabled:opacity-60 disabled:cursor-not-allowed rounded text-sm font-medium`}>Save</button>
       </div>
     </div>
   )

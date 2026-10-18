@@ -5,7 +5,7 @@ import { inputCls } from './formStyles'
 import Toggle from './Toggle'
 import PathRemapField from './PathRemapField'
 import { addRemapRule, downloadClientPathRemapHelp, rtorrentScgiIgnoredFields, supportsRemapAssistant } from './helpers'
-import { dangerLink } from '../../components/buttons'
+import { dangerLink, primaryFill } from '../../components/buttons'
 import ClientDiagnosePanel from './ClientDiagnosePanel'
 import RemapAssistant from './RemapAssistant'
 import { literalInputAttrs, portInputAttrs, secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
@@ -106,7 +106,7 @@ export default function ClientsTab({ clients, setClients }: Props) {
     <div>
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">{t('settings.clients.heading')}</h3>
-        <button onClick={() => setShowAddClient(true)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium">
+        <button onClick={() => setShowAddClient(true)} className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium`}>
           {t('settings.clients.addButton')}
         </button>
       </div>
@@ -473,7 +473,7 @@ function EditClientForm({ client, onClose, onSaved }: { client: DownloadClient; 
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
         <button onClick={handleTest} disabled={testing || !host} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
-        <button onClick={submit} disabled={saving} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50">{t('common.save')}</button>
+        <button onClick={submit} disabled={saving} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>{t('common.save')}</button>
       </div>
     </div>
   )
@@ -704,7 +704,7 @@ function AddClientForm({ onClose, onAdded }: { onClose: () => void; onAdded: (c:
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
         <button onClick={handleTest} disabled={testing || !host} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
-        <button onClick={submit} disabled={saving} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50">{t('common.save')}</button>
+        <button onClick={submit} disabled={saving} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>{t('common.save')}</button>
       </div>
     </div>
   )

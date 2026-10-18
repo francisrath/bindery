@@ -475,6 +475,7 @@ func main() {
 		WithVersion(version).
 		WithStoragePaths(cfg.LibraryDir, cfg.AudiobookDir, rootFolderRepo).
 		WithMetadata(metaAgg).
+		WithSeriesMatchState(db.NewABSSeriesMatchRepo(database)).
 		WithEnhancedHardcoverSeriesEnabled(func(ctx context.Context) bool {
 			return api.HardcoverFeatureStateFor(ctx, settingsRepo, cfg.EnhancedHardcoverAPI).EnhancedHardcoverAPI
 		}).
@@ -678,7 +679,7 @@ func main() {
 	} else {
 		slog.Warn("download client startup health check skipped", "error", err)
 	}
-	setupStateHandler := api.NewSetupStateHandler(indexerRepo, dlClientRepo, authorRepo, settingsRepo)
+	setupStateHandler := api.NewSetupStateHandler(indexerRepo, dlClientRepo, authorRepo, settingsRepo).WithBlockedChecks(cfg, downloadHealth, historyRepo, rootFolderRepo)
 	dlClientHandler := api.NewDownloadClientHandler(dlClientRepo).
 		WithHealth(downloadHealth).
 		WithContentBreakerReset(importScanner.ResetContentBreaker).

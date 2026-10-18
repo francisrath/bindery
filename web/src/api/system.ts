@@ -26,6 +26,11 @@ export interface SetupState {
   hasGrab: boolean
   hasImport: boolean
   complete: boolean
+  /** Admin-only. The pipeline imported once but cannot import now. */
+  blocked?: boolean
+  /** Names the problem and the fix, never a path. English; the UI localises by blockedArea. */
+  blockedReason?: string
+  blockedArea?: 'storage' | 'indexer' | 'download-client'
 }
 
 export interface LogEntry {

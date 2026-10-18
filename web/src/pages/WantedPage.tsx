@@ -14,6 +14,7 @@ import { safeHref } from '../util/safeHref'
 import { formatBytes } from '../util/format'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
 import CoverImage from '../components/CoverImage'
+import { primaryFill } from '../components/buttons'
 
 // Shared grid template so the header row and every list row line up exactly.
 // columns: checkbox · cover · title+author · format · actions
@@ -432,7 +433,7 @@ export default function WantedPage() {
                         type="button"
                         onClick={() => searchBook(book)}
                         disabled={searchingId === book.id}
-                        className="px-2 py-1 rounded text-xs font-medium bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50 transition-colors"
+                        className={`px-2 py-1 rounded text-xs font-medium ${primaryFill} disabled:opacity-50 transition-colors`}
                       >
                         {searchingId === book.id ? t('wanted.searching') : t('common.search')}
                       </button>
@@ -481,7 +482,7 @@ export default function WantedPage() {
                               ? 'bg-emerald-700 text-emerald-200'
                               : grabbingGuid === r.guid
                               ? 'bg-emerald-600/60 text-white/70'
-                              : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                              : `${primaryFill}`
                           }`}
                         >
                           {grabbedGuid === r.guid ? t('wanted.grabbed') : grabbingGuid === r.guid ? t('wanted.grabbing') : t('wanted.grab')}

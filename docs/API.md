@@ -371,6 +371,7 @@ PATCH  /api/v1/series/{id}                        monitor / unmonitor (admin)
 POST   /api/v1/series/{id}/merge                  merge other series into this one: {"sourceIds":[..],"title":"optional rename","dryRun":true} previews (admin)
 POST   /api/v1/series/{id}/books                  add a book or update its position: {"bookId":1,"positionInSeries":"2","primarySeries":true}; positionInSeries is optional (admin)
 DELETE /api/v1/series/{id}/books/{bookId}         take a book out of the series, and keep it out on refresh (admin)
+POST   /api/v1/abs/import                         start an Audiobookshelf import (admin): {"dryRun":true,"libraryIds":[..],"full":true}, all optional. libraryIds must be a subset of the configured libraries (400 on an unknown id), full re-runs the Hardcover series match for every item
 ```
 
 Taking a book out of a series is remembered (#2554): a refresh that still
@@ -1081,7 +1082,7 @@ same object rides on the `bookImported` history row's `data` and webhook in
 }
 ```
 
-`mismatches` lists the EPUBs that disagreed on both title and author, at most 10 of them, with `moreTitles` saying how many more there were and `filesRead` how many EPUBs were opened (at most 20 per release). For an
+`mismatches` lists the ebook files (EPUB, or MOBI, AZW or AZW3 since #3016) that disagreed on both title and author, at most 10 of them, with `moreTitles` saying how many more there were and `filesRead` how many were opened (at most 20 per release). For an
 audiobook (#3246) the object reports what the audio tags said:
 
 ```json

@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, Author, AuthorMonitorMode, MetadataProfile, MonitorNewItems, QualityProfile, RootFolder, Series, UpdateAuthorRequest } from '../api/client'
 import { useModal } from './useModal'
+import { primaryFill } from './buttons'
 
 interface Props {
   author: Author
@@ -396,7 +397,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
           <button
             onClick={save}
             disabled={loading || saving}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium text-white"
+            className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
           >
             {saving ? t('common.saving', 'Saving…') : t('common.save', 'Save')}
           </button>

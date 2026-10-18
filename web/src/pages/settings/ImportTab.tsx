@@ -4,6 +4,7 @@ import { api, BINDERY_BASE, Book, HardcoverList, ImportList, ImportListSyncProgr
 import { inputCls } from './formStyles'
 import GoodreadsImportSection from './GoodreadsImportSection'
 import { secretInputAttrs } from '../../util/inputAttrs'
+import { primaryFill } from '../../components/buttons'
 
 interface MigrateResult {
   requested?: number
@@ -81,7 +82,7 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
         <p className="text-xs text-slate-600 dark:text-zinc-500 mb-3">
           {t('settings.import.csvDescription')}
         </p>
-        <label className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium cursor-pointer">
+        <label className={`inline-flex items-center gap-2 px-3 py-2 ${primaryFill} rounded text-sm font-medium cursor-pointer`}>
           {uploading === 'csv' ? t('settings.import.importingCsv') : t('settings.import.uploadCsv')}
           <input
             type="file"
@@ -99,7 +100,7 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
         <p className="text-xs text-slate-600 dark:text-zinc-500 mb-3">
           {t('settings.import.readarrDescription')}
         </p>
-        <label className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium cursor-pointer">
+        <label className={`inline-flex items-center gap-2 px-3 py-2 ${primaryFill} rounded text-sm font-medium cursor-pointer`}>
           {uploading === 'readarr' ? t('settings.import.importingReadarr') : t('settings.import.uploadReadarr')}
           <input
             type="file"
@@ -246,7 +247,7 @@ function ManualImportSection() {
               <button
                 onClick={handleImport}
                 disabled={importing || !selectedBook}
-                className="mt-4 px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-sm font-medium"
+                className={`mt-4 px-3 py-2 ${primaryFill} disabled:opacity-50 rounded text-sm font-medium`}
               >
                 {importing ? t('settings.import.manualImportImporting') : t('settings.import.manualImportConfirm')}
               </button>
@@ -277,7 +278,7 @@ function FolderImportLink() {
         <p className="text-xs text-slate-600 dark:text-zinc-500 max-w-xl">
           {t('settings.import.folderMovedBody', 'Scanning a folder and importing what it matches is on the Import page now, beside the books a library scan could not match.')}
         </p>
-        <a href={`${BINDERY_BASE}/import?view=folder`} className="px-3 py-1.5 rounded-md text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white">
+        <a href={`${BINDERY_BASE}/import?view=folder`} className={`px-3 py-1.5 rounded-md text-sm font-medium ${primaryFill}`}>
           {t('settings.import.folderMovedLink', 'Open Import')}
         </a>
       </div>
@@ -721,7 +722,7 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
                   <button
                     onClick={() => handleSaveOverride(il)}
                     disabled={busy || !(overrideDraft[il.id] ?? '').trim()}
-                    className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-xs font-medium"
+                    className={`px-3 py-2 ${primaryFill} disabled:opacity-50 rounded text-xs font-medium`}
                   >
                     {t('common.save')}
                   </button>

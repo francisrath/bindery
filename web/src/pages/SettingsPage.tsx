@@ -1,8 +1,9 @@
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { lazyWithReload } from '../util/lazyWithReload'
 import { useTranslation } from 'react-i18next'
 import { api, DownloadClient, Indexer, ProwlarrInstance } from '../api/client'
+import SettingsSearch, { SettingsSearchPick } from './settings/SettingsSearch'
 import { useAuth } from '../auth/AuthContext'
 import ProtocolMismatchWarning from '../components/ProtocolMismatchWarning'
 import { BELOW_MD, useMediaQuery } from '../components/useMediaQuery'
@@ -172,6 +173,56 @@ export default function SettingsPage() {
     return () => { document.title = 'Bindery' }
   }, [])
 
+  // Settings search (#3059). The tab list is the same one the sidebar and the
+  // phone select show, so a non admin never gets a result for a tab they
+  // cannot open. Setting keys load on first use, and only for admins.
+  const searchTabs = useMemo(() => {
+    const ids: Tab[] = ['general', 'about', ...(isAdmin ? ADMIN_GROUPS.flatMap(g => g.tabs) : [])]
+    return ids.map(id => ({ id, label: tabLabel(id) }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, t])
+  const [settingKeys, setSettingKeys] = useState<string[] | undefined>(undefined)
+  const keysRequested = useRef(false)
+  const loadSettingKeys = useCallback(() => {
+    if (!isAdmin || keysRequested.current) return
+    keysRequested.current = true
+    api.listSettingDescriptors()
+      .then(ds => setSettingKeys((ds ?? []).filter(d => d.state === 'active').map(d => d.key)))
+      .catch(() => { keysRequested.current = false })
+  }, [isAdmin])
+
+  // After a search result is picked: switch tab, then scroll to the heading.
+  // The tab chunk is lazy and some tabs render after a fetch, so wait for the
+  // heading to appear instead of assuming it is there.
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [pendingHeading, setPendingHeading] = useState<string | null>(null)
+  useEffect(() => {
+    const root = contentRef.current
+    if (!pendingHeading || !root) return
+    const find = () => Array.from(root.querySelectorAll<HTMLElement>('h3, h4'))
+      .find(h => h.textContent?.trim() === pendingHeading)
+    const land = (h: HTMLElement) => {
+      h.tabIndex = -1
+      h.scrollIntoView?.({ block: 'start' })
+      h.focus({ preventScroll: true })
+      setPendingHeading(null)
+    }
+    const now = find()
+    if (now) { land(now); return }
+    const observer = new MutationObserver(() => {
+      const h = find()
+      if (h) { observer.disconnect(); land(h) }
+    })
+    observer.observe(root, { childList: true, subtree: true })
+    const giveUp = window.setTimeout(() => { observer.disconnect(); setPendingHeading(null) }, 4000)
+    return () => { observer.disconnect(); window.clearTimeout(giveUp) }
+  }, [pendingHeading, tab])
+
+  const onSearchPick = useCallback((pick: SettingsSearchPick) => {
+    setTab(pick.tab)
+    setPendingHeading(pick.heading ?? null)
+  }, [setTab])
+
   const renderTab = () => {
     switch (tab) {
       case 'general': return <GeneralTab onNavigate={navigateToTab} />
@@ -215,6 +266,8 @@ export default function SettingsPage() {
     <div>
       <h2 className="text-2xl font-bold mb-6">{t('settings.title')}</h2>
 
+      <SettingsSearch tabs={searchTabs} isAdmin={isAdmin} settingKeys={settingKeys} onPick={onSearchPick} onActivate={loadSettingKeys} />
+
       <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-stretch md:items-start">
         {narrow ? (
           // Below md the sidebar stacked above the content, so tapping a tab
@@ -241,7 +294,7 @@ export default function SettingsPage() {
             ))}
           </select>
         ) : (
-          <nav className="w-full md:w-44 flex-shrink-0 space-y-0.5">
+          <nav aria-label={t('settings.title')} className="w-full md:w-44 flex-shrink-0 space-y-0.5">
             <SettingsNavLink tab="general" active={tab} onSelect={setTab} label={t('settings.tabs.general')} />
             <SettingsNavLink tab="about" active={tab} onSelect={setTab} label={t('settings.tabs.about', 'About')} />
 
@@ -264,7 +317,7 @@ export default function SettingsPage() {
         )}
 
         {/* Tab content */}
-        <div className="flex-1 min-w-0">
+        <div ref={contentRef} className="flex-1 min-w-0">
           <Suspense fallback={<TabFallback label={t('settings.loadingTab')} />}>
             {renderTab()}
           </Suspense>

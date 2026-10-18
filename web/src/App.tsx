@@ -20,6 +20,7 @@ import { REQUESTS_CHANGED_EVENT } from './pages/requests/requestLabels'
 import { useTheme } from './theme'
 import ScrollRestoration from './components/ScrollRestoration'
 import { lazyWithReload } from './util/lazyWithReload'
+import { primaryFill } from './components/buttons'
 
 // Route-scoped error boundary: a render crash in one page shows an inline error
 // inside the content area (the nav/header stay usable) instead of bubbling to
@@ -115,7 +116,7 @@ function NotFoundPage() {
       </p>
       <Link
         to="/"
-        className="inline-block mt-6 px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium"
+        className={`inline-block mt-6 px-4 py-2 rounded ${primaryFill} text-sm font-medium`}
       >
         {t('notFound.home', 'Go to Authors')}
       </Link>
@@ -187,7 +188,7 @@ function Shell() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-4 h-16">
             <Link to="/" className="flex items-center gap-2 flex-shrink-0 group" onClick={() => setMenuOpen(false)}>
-              <Logo className="w-14 h-14 rounded-full transition-transform group-hover:scale-105" />
+              <Logo alt="" className="w-14 h-14 rounded-full transition-transform group-hover:scale-105" />
               <h1 className="text-lg font-bold tracking-tight">Bindery</h1>
             </Link>
 

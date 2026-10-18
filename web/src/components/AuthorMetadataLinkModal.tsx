@@ -4,6 +4,7 @@ import { api, ApiError, Author, AuthorConflictBody, RelinkAuthorLinkCandidate } 
 import { metadataSourceLink } from '../util/metadataSource'
 import { useModal } from './useModal'
 import CoverImage from './CoverImage'
+import { primaryFill } from './buttons'
 
 interface Props {
   author: Author
@@ -125,7 +126,7 @@ export default function AuthorMetadataLinkModal({ author, onClose, onLinked }: P
             <button
               type="submit"
               disabled={searching || !query.trim()}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded-md text-sm font-medium"
+              className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
             >
               {searching ? t('authorMetadataLink.searching', 'Searching…') : t('authorMetadataLink.search', 'Search')}
             </button>
@@ -209,7 +210,7 @@ export default function AuthorMetadataLinkModal({ author, onClose, onLinked }: P
                   type="button"
                   onClick={() => link(candidate)}
                   disabled={linking !== null}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-xs font-medium flex-shrink-0"
+                  className={`px-3 py-1.5 ${primaryFill} disabled:opacity-50 rounded text-xs font-medium flex-shrink-0`}
                 >
                   {linking === candidate.foreignAuthorId ? t('authorMetadataLink.linking', 'Linking…') : t('authorMetadataLink.link', 'Link')}
                 </button>

@@ -1,2 +1,0 @@
-### Added
-- **Path remap assistant** (#2031) - when Test says Bindery can't read a qBittorrent, NZBGet or rTorrent client's completed folder, the warning now shows the folder the client reports, lets you pick the matching Bindery folder, previews a path before and after, and saves the remap and re-tests in one step. Other client types are unchanged. The Test response gains `remotePath` and `remapCandidates`.

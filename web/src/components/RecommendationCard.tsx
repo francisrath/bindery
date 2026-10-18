@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { BINDERY_BASE, Recommendation } from '../api/client'
 import MoreMenu from './MoreMenu'
 import CoverImage from './CoverImage'
+import { primaryFill } from './buttons'
 
 interface RecommendationCardProps {
   rec: Recommendation
@@ -80,7 +81,7 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
         <div className="flex items-center gap-1.5 mt-3">
           <button
             onClick={() => onAdd(rec.id)}
-            className="flex-1 px-2 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-medium transition-colors"
+            className={`flex-1 px-2 py-1.5 ${primaryFill} rounded text-xs font-medium transition-colors`}
           >
             {t('discover.addToWanted')}
           </button>

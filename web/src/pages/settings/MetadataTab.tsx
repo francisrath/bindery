@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, AuthorMonitorMode, MetadataProfile } from '../../api/client'
 import { inputCls } from './formStyles'
-import { dangerLink } from '../../components/buttons'
+import { dangerLink, primaryFill } from '../../components/buttons'
 import Toggle from './Toggle'
 
 function isAuthorMonitorMode(value: string): value is AuthorMonitorMode {
@@ -282,7 +282,7 @@ export default function MetadataTab() {
       <section>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">{t('settings.metadata.heading')}</h3>
-          <button onClick={() => setCreating(true)} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium">
+          <button onClick={() => setCreating(true)} className={`px-3 py-1.5 ${primaryFill} rounded text-xs font-medium`}>
             {t('settings.metadata.newProfile')}
           </button>
         </div>
@@ -395,7 +395,10 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
         skipMissingDate,
         skipMissingIsbn,
         skipPartBooks,
-        allowedLanguages: languages.join(','),
+        // The server fills an empty list with English on create, so a new
+        // profile with nothing ticked says "any" outright (#3293). An edit
+        // keeps the empty list it always stored.
+        allowedLanguages: !profile && languages.length === 0 ? 'any' : languages.join(','),
         unknownLanguageBehavior,
       }
       if (profile) {
@@ -489,7 +492,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
         <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
           {t('common.cancel')}
         </button>
-        <button type="submit" disabled={saving} className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-xs font-medium">
+        <button type="submit" disabled={saving} className={`px-3 py-1.5 ${primaryFill} disabled:opacity-50 rounded text-xs font-medium`}>
           {saving ? t('common.saving') : profile ? t('settings.metadata.saveChanges') : t('settings.metadata.createProfile')}
         </button>
       </div>

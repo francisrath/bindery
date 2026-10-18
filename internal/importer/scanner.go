@@ -2494,8 +2494,8 @@ func (s *Scanner) tryImportInternal(ctx context.Context, dl *models.Download, do
 		// (move mode deletes it on commit). Only when we actually intend to
 		// backfill, so we never open the zip needlessly. Under a restricted
 		// profile the first allowed declared language wins (relabelLanguage).
-		if readLanguage && detectedLang == "" && IsEpubFile(srcFile) {
-			if meta, err := ReadEpubMetadata(srcFile); err == nil && meta.Language != "" {
+		if readLanguage && detectedLang == "" && HasEmbeddedMetadata(srcFile) {
+			if meta, err := ReadEbookMetadata(srcFile); err == nil && meta.Language != "" {
 				detectedLang = langCheck.relabelLanguage(meta)
 			}
 		}

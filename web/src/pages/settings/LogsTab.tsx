@@ -8,6 +8,7 @@ import Toggle from './Toggle'
 import { useSaveResult } from './useSaveResult'
 import { usePolling } from '../../components/usePolling'
 import { BELOW_SM, useMediaQuery } from '../../components/useMediaQuery'
+import { primaryFill } from '../../components/buttons'
 
 // <input type="datetime-local"> produces "2026-08-12T14:03" — no zone, which
 // the API's RFC3339 parse rejects, so the range was silently ignored. The
@@ -282,7 +283,7 @@ export default function LogsTab() {
       </div>
 
       {/* Log output */}
-      <div className="font-mono text-xs bg-slate-50 dark:bg-black rounded-lg border border-slate-200 dark:border-zinc-900 overflow-auto max-h-[60dvh]">
+      <div role="region" aria-label={t('settings.logs.heading')} tabIndex={0} className="focus-visible:outline-2 focus-visible:outline-emerald-600 dark:focus-visible:outline-emerald-500 -outline-offset-2 font-mono text-xs bg-slate-50 dark:bg-black rounded-lg border border-slate-200 dark:border-zinc-900 overflow-auto max-h-[60dvh]">
         {(() => {
           const formatAttr = (k: string, v: unknown) => {
             const s = String(v)
@@ -435,7 +436,7 @@ export default function LogsTab() {
               <button
                 onClick={handleBackup}
                 disabled={creatingBackup}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-sm font-medium disabled:opacity-50"
+                className={`px-4 py-2 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}
               >
                 {creatingBackup ? t('settings.general.backupCreating') : t('settings.general.backupButton')}
               </button>

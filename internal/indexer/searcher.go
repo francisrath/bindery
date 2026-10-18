@@ -8,11 +8,13 @@ import (
 	"log/slog"
 	"math"
 	"regexp"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/vavallee/bindery/internal/indexer/newznab"
 	"github.com/vavallee/bindery/internal/isbnutil"
@@ -1517,6 +1519,11 @@ var releaseLanguageTags = map[string]string{
 	"livre audio": "fre",
 	"german":      "ger", "deutsch": "ger",
 	"hoerbuch": "ger", "ungekuerzt": "ger", "gekuerzt": "ger",
+	// The same two words with the umlaut stripped outright by an indexer,
+	// "Thron aus Asche und Gold 01 - King of Scars (ungekrzt)" (#3268). They
+	// are not words in any other language, and the umlaut-flex cannot reach
+	// them because there is no letter left to flex.
+	"ungekrzt": "ger", "gekrzt": "ger",
 	"spanish": "spa", "espanol": "spa", "español": "spa",
 	"dutch": "dut", "netherlands": "dut", "nederlands": "dut",
 	"luisterboek": "dut", "hoorspel": "dut",
@@ -1566,6 +1573,180 @@ func releaseLanguageCodes(norm string) []string {
 	return out
 }
 
+// sceneMarkerTokens are the words that mark the metadata suffix of a scene
+// audiobook release name ("Author-Title-AUDIOBOOK-WEB-MP3-DE-2023-GRP").
+// Everything after the last of them is release metadata, not title (#3271).
+var sceneMarkerTokens = map[string]bool{
+	"audiobook": true, "abook": true, "mp3": true, "m4b": true, "flac": true, "aac": true,
+}
+
+// sceneDiscRe matches the disc tokens scene audiobook groups put where a
+// format marker would go: "4CD", "2MP3CD", "MP3CD". They never occur as title
+// words, so they mark a scene suffix like a marker does (#3268).
+var sceneDiscRe = regexp.MustCompile(`(?i)^(\d+cd|\d*mp3cd)$`)
+
+// isSceneMarker reports whether tok starts or ends the marker part of a scene
+// name: a format or audiobook word, or a disc token.
+func isSceneMarker(tok string) bool {
+	return sceneMarkerTokens[strings.ToLower(tok)] || sceneDiscRe.MatchString(tok)
+}
+
+// releaseLanguageCodeSet is every code releaseLanguageTags can produce. A
+// scene code only counts when it normalizes into this set, so it stays inside
+// the vocabulary the profile editor offers, and a token such as "web" or a
+// group name that NormalizeLanguageCode passes through unchanged is ignored.
+var releaseLanguageCodeSet = func() map[string]bool {
+	set := make(map[string]bool, len(releaseLanguageTags))
+	for _, code := range releaseLanguageTags {
+		set[code] = true
+	}
+	return set
+}()
+
+var (
+	// sceneTokenRe splits a raw release name into the same letter and digit
+	// runs NormalizeRelease keeps as tokens.
+	sceneTokenRe = regexp.MustCompile(`[\p{L}\p{N}]+`)
+	// sceneTrailerRe matches what can follow the release group at the end of
+	// a name: a usenet part counter ("(1/12)"), quotes and spaces, or a file
+	// extension. They are stripped first so the last token is the group.
+	sceneTrailerRe = regexp.MustCompile(`(?i)(\s*[(\[]\d+/\d+[)\]]|["'\s]+|\.(nzb|torrent|nfo|par2|rar|zip|epub|mobi|azw3?|pdf|mp3|m4b|m4a|flac))$`)
+	sceneYearRe    = regexp.MustCompile(`^(19|20)\d\d$`)
+)
+
+// sceneLanguageCodes returns the language codes in the scene suffix of a raw
+// release name: tokens after the last scene marker that are a language code
+// ("DE", "POR", "NO"), read through models.NormalizeReleaseLanguageCode so
+// the country codes groups use ("SE", "DK") count too. As bare words most of
+// these are common ("de", "no", "it"), which is why #2274 left them out; they
+// are only read after a scene marker, never in the title.
+//
+// It takes the raw name, not NormalizeRelease's, because the shape matters. A
+// scene suffix is joined by separators ("-WEB-MP3-DE-2023-GRP"). One with
+// spaces in it is usually prose ("(Audiobook) read by Ola De Vries", "MP3 -
+// Hi Quality - 2010"), so there a token only counts when it is uppercase and
+// sits right before a year or the group ("-DE-2005-GRP iNT").
+func sceneLanguageCodes(title string) []string {
+	for {
+		trimmed := sceneTrailerRe.ReplaceAllString(title, "")
+		if trimmed == title {
+			break
+		}
+		title = trimmed
+	}
+	locs := sceneTokenRe.FindAllStringIndex(title, -1)
+	toks := make([]string, len(locs))
+	for i, loc := range locs {
+		toks[i] = title[loc[0]:loc[1]]
+	}
+	out := sceneLeadingCodes(title, locs, toks)
+	// The suffix starts after the last marker. A marker in first position is
+	// a leading tag ("[MP3] Author - Title"), not a suffix, so it doesn't
+	// count. The last token is the release group, and a group can be named
+	// like a language code ("-2026-TR").
+	start := -1
+	for i, tok := range toks {
+		if i > 0 && isSceneMarker(tok) {
+			start = i + 1
+		}
+	}
+	end := len(toks) - 1
+	if start < 0 || start >= end {
+		return out
+	}
+	spaced := strings.ContainsFunc(title[locs[start-1][1]:], unicode.IsSpace)
+	for i := start; i < end; i++ {
+		tok := toks[i]
+		if spaced && !spacedSceneCode(toks, i, end) {
+			continue
+		}
+		if code := models.NormalizeReleaseLanguageCode(strings.ToLower(tok)); releaseLanguageCodeSet[code] && !slices.Contains(out, code) {
+			out = append(out, code)
+		}
+	}
+	return out
+}
+
+// sceneLeadingCodes reads the other half of the scene shape (#3268): a code
+// placed BEFORE the marker, "Nick Hornby-A Long Way Down-DE-AUDIOBOOK-4CD-FLAC-
+// 2005-GRP" or "Title-3MP3CD-DE-2005-GRP" (the disc token is the marker there).
+// The bare code is as common a word as it is after a marker, so every one of
+// these has to hold, and a miss is cheaper than an English release dropped:
+//
+//   - the token is 2 or 3 ASCII capitals, and directly joined by one separator
+//     on each side, to the token before it and to a marker or disc token after;
+//   - nothing before the code is a title word in the same breath: the text
+//     before it holds a lowercase letter, so an all-caps name, where capitals
+//     say nothing ("STEPHEN_KING-IT-AUDIOBOOK-..."), is never read;
+//   - from the code to a year there is no whitespace, the year is joined to
+//     what follows, and a group follows the year, so the spaced prose of
+//     human-written names never qualifies;
+//   - "IT" and "NO" are never read here. They are English words and titles
+//     ("Stephen_King-IT-AUDIOBOOK-..."), and capitals cannot tell them apart
+//     from the codes. They still count AFTER a marker, where a title cannot be.
+func sceneLeadingCodes(title string, locs [][]int, toks []string) []string {
+	var out []string
+	for i := 1; i+1 < len(toks); i++ {
+		tok := toks[i]
+		if len(tok) < 2 || len(tok) > 3 || strings.ToUpper(tok) != tok || strings.IndexFunc(tok, func(r rune) bool { return r < 'A' || r > 'Z' }) >= 0 {
+			continue
+		}
+		if tok == "IT" || tok == "NO" || !isSceneMarker(toks[i+1]) || !sceneJoint(title[locs[i-1][1]:locs[i][0]]) || !sceneJoint(title[locs[i][1]:locs[i+1][0]]) {
+			continue
+		}
+		if !strings.ContainsFunc(title[:locs[i][0]], unicode.IsLower) {
+			continue
+		}
+		year := -1
+		for j := i + 2; j+1 < len(toks); j++ {
+			if sceneYearRe.MatchString(toks[j]) {
+				year = j
+				break
+			}
+		}
+		if year < 0 || strings.ContainsFunc(title[locs[i][0]:locs[year][1]], unicode.IsSpace) || !sceneJoint(title[locs[year][1]:locs[year+1][0]]) {
+			continue
+		}
+		if code := models.NormalizeReleaseLanguageCode(strings.ToLower(tok)); releaseLanguageCodeSet[code] && !slices.Contains(out, code) {
+			out = append(out, code)
+		}
+	}
+	return out
+}
+
+// spacedSceneCode decides whether the all-caps token at i counts as a language
+// code inside a suffix that has spaces in it (end is the group, the last
+// token). Two shapes qualify:
+//
+//   - right before a year: "-DE-2005-GRP iNT", "Audiobook - FR 2019". When
+//     that year is the last token, so no group follows it, IT, NO and HI are
+//     refused, being words ("Audiobook - IT 2017", "Hi 2010", "Dr. NO");
+//   - right before the group, with a marker or a year directly before the
+//     code: "Audiobook DE GRP", "ABOOK 2020 DK GRP". A group that is a bare
+//     number ("MP3 PT 2") is a part counter, not a group, and IT, NO and HI
+//     are refused here too ("3CD IT GRP").
+//
+// Anything else is prose ("read by Robert DE NIRO", "DE LUXE").
+func spacedSceneCode(toks []string, i, end int) bool {
+	tok := toks[i]
+	if tok != strings.ToUpper(tok) {
+		return false
+	}
+	if i+1 <= end && sceneYearRe.MatchString(toks[i+1]) {
+		return i+1 != end || (tok != "IT" && tok != "NO" && tok != "HI")
+	}
+	if i+1 != end || i == 0 || strings.Trim(toks[end], "0123456789") == "" || tok == "IT" || tok == "NO" || tok == "HI" {
+		return false
+	}
+	return isSceneMarker(toks[i-1]) || sceneYearRe.MatchString(toks[i-1])
+}
+
+// sceneJoint reports whether sep is exactly one scene separator, with no space
+// either side of it.
+func sceneJoint(sep string) bool {
+	return sep == "-" || sep == "_" || sep == "."
+}
+
 // FilterByAllowedLanguages drops results whose release name is tagged with a
 // language outside the metadata profile's allowed set. Untagged releases
 // always pass — most releases carry no language marker, and dropping them
@@ -1599,7 +1780,7 @@ func FilterByAllowedLanguages(results []newznab.SearchResult, allowed []string) 
 	for _, r := range results {
 		norm := NormalizeRelease(r.Title)
 		ok := true
-		for _, code := range releaseLanguageCodes(norm) {
+		for _, code := range append(releaseLanguageCodes(norm), sceneLanguageCodes(r.Title)...) {
 			if !set[code] {
 				ok = false
 				break

@@ -9,7 +9,7 @@ import TapToReveal from '../components/TapToReveal'
 import { usePagination } from '../components/usePagination'
 import { usePolling } from '../components/usePolling'
 import { summarizeError, ERROR_SUMMARY_LEN } from './queueError'
-import { btn, btnSize } from '../components/buttons'
+import { btn, btnSize, primaryFill } from '../components/buttons'
 import { formatBytes } from '../util/format'
 import { downloadStatusBadge, isFailed, isMatchable, isResendable, isRetryable } from '../components/downloadStatus'
 import { ModalPanel } from '../components/useModal'
@@ -676,7 +676,7 @@ export default function QueuePage() {
                       <button
                         onClick={() => handleGrabPending(item.id)}
                         disabled={grabbingPending !== null}
-                        className="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded font-medium"
+                        className={`px-3 py-1.5 text-xs ${primaryFill} disabled:opacity-50 rounded font-medium`}
                       >
                         {grabbingPending === item.id ? 'Grabbing…' : 'Grab Now'}
                       </button>

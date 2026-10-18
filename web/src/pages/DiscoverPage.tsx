@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { api, Recommendation } from '../api/client'
 import RecommendationRow from '../components/RecommendationRow'
+import { primaryFill } from '../components/buttons'
 
 const ROW_ORDER: Array<{ type: string; labelKey: string }> = [
   { type: 'series', labelKey: 'discover.rows.series' },
@@ -172,7 +173,7 @@ export default function DiscoverPage() {
               so the tab is as precise as this can get. */}
           <Link
             to="/settings?tab=metadata"
-            className="inline-block px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+            className={`inline-block px-4 py-2 ${primaryFill} rounded-lg text-sm font-medium transition-colors`}
           >
             {t('discover.empty.goToSettings')}
           </Link>

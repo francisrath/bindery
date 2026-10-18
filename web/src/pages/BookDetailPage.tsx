@@ -9,7 +9,7 @@ import MarkdownDescription from '../components/MarkdownDescription'
 import MoreMenu from '../components/MoreMenu'
 import Section from '../components/Section'
 import Switch from '../components/Switch'
-import { btn, btnSize, dangerLink } from '../components/buttons'
+import { btn, btnSize, dangerLink, primaryFill } from '../components/buttons'
 import { useIsAdmin } from '../auth/AuthContext'
 import MediaBadge from '../components/MediaBadge'
 import CalibreDeliveryChip from '../components/CalibreDeliveryChip'
@@ -188,7 +188,7 @@ export function SearchResultsSection({
       <button
         onClick={() => onGrab(r)}
         disabled={grabbing !== null}
-        className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 rounded text-[11px] font-medium flex-shrink-0"
+        className={`px-3 py-2 ${primaryFill} disabled:opacity-50 rounded text-[11px] font-medium flex-shrink-0`}
       >
         {grabbing === r.guid ? 'Grabbing…' : 'Grab'}
       </button>

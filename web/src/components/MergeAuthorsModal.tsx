@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from './useConfirmDialog'
 import { api, Author } from '../api/client'
 import { useModal } from './useModal'
+import { primaryFill } from './buttons'
 
 interface Props {
   authors: Author[]
@@ -157,7 +158,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
           <button
             onClick={submit}
             disabled={!canSubmit}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium text-white"
+            className={`px-4 py-2 ${primaryFill} disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm font-medium`}
           >
             {busy ? t('mergeAuthorsModal.merging') : t('mergeAuthorsModal.mergeButton')}
           </button>

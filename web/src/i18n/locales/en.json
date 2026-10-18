@@ -1007,6 +1007,16 @@
       "advanced": "Advanced"
     },
     "sectionLabel": "Settings section",
+    "search": {
+      "label": "Find a settings tab or section",
+      "placeholder": "Try telemetry, naming or a setting key",
+      "results": "Settings search results",
+      "none": "No matching tab or section",
+      "count_one": "{{count}} result",
+      "count_other": "{{count}} results",
+      "more": "Showing {{shown}} of {{total}}. Keep typing to narrow it down.",
+      "moreAnnounce": "{{total}} results, showing the first {{shown}}. Keep typing to narrow it down."
+    },
     "groups": {
       "sources": "Sources",
       "library": "Library",
@@ -1965,7 +1975,14 @@
     "grab": "Grab a book",
     "import": "First book imported",
     "progress": "{{done}} of {{total}} steps done",
-    "next": "Next:"
+    "next": "Next:",
+    "blocked": {
+      "title": "Imports have a problem right now",
+      "storage": "A library or download folder is not available, so imports that use it will fail.",
+      "storageAction": "Check storage",
+      "indexer": "No indexer is enabled, so nothing can be searched.",
+      "downloadClient": "No download client is enabled, or every enabled one failed its last health check (unreachable, or its download folder is not readable), so finished downloads cannot be imported."
+    }
   },
   "protocolMismatch": {
     "torrent": "A Torznab indexer is enabled but no torrent download client (qBittorrent, Transmission, Deluge, rTorrent) is — its releases can be found but never downloaded.",

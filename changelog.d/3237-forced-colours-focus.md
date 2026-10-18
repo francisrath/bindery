@@ -1,2 +1,0 @@
-### Fixed
-- **Keyboard focus is visible with forced colours on** (#3237). In Windows High Contrast and other forced-colours modes, buttons, switches, tabs, the Links menu trigger, pagination and the import rows showed no focus indicator, because their focus ring is a shadow that forced colours removes. They now keep a transparent outline that forced colours paints. Nothing changes with forced colours off.

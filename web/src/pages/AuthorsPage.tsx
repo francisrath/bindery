@@ -17,7 +17,7 @@ import BulkNotice from '../components/BulkNotice'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
 import { useView } from '../components/useView'
 import SetupChecklist from '../components/SetupChecklist'
-import { btn, btnSize } from '../components/buttons'
+import { btn, btnSize, primaryFill } from '../components/buttons'
 import { useIsAdmin } from '../auth/AuthContext'
 import Switch from '../components/Switch'
 import { ModalPanel } from '../components/useModal'
@@ -468,7 +468,7 @@ export default function AuthorsPage() {
               its usual secondary-then-primary reading order. */}
           <button
             onClick={() => setAddMode('author')}
-            className="order-first sm:order-none px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-md text-sm font-medium transition-colors"
+            className={`order-first sm:order-none px-4 py-2 ${primaryFill} rounded-md text-sm font-medium transition-colors`}
           >
             {t('authors.addAuthor')}
           </button>
@@ -774,7 +774,7 @@ export default function AuthorsPage() {
               <button
                 onClick={runMonitoringBulk}
                 disabled={bulkBusy}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm font-medium text-white transition-colors"
+                className={`px-4 py-2 ${primaryFill} disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors`}
               >
                 {t('common.apply', 'Apply')}
               </button>
@@ -882,7 +882,7 @@ export default function AuthorsPage() {
               <button
                 onClick={runBulkSetMonitorMode}
                 disabled={bulkBusy}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm font-medium text-white transition-colors"
+                className={`px-4 py-2 ${primaryFill} disabled:opacity-50 disabled:cursor-not-allowed rounded-md text-sm font-medium transition-colors`}
               >
                 {bulkBusy ? t('common.saving', 'Saving…') : t('authors.bulkSetMonitorModeApply', 'Apply monitor mode')}
               </button>

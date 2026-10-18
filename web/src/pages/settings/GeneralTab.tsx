@@ -13,7 +13,7 @@ import RenameFilesModal from '../../components/RenameFilesModal'
 import NamingTemplateField from './NamingTemplateField'
 import SaveButton from './SaveButton'
 import { useSaveResult } from './useSaveResult'
-import { slateFill } from '../../components/buttons'
+import { slateFill, primaryFill } from '../../components/buttons'
 
 // Tab identifiers used by onNavigate for soft (no-reload) cross-tab links.
 // Kept loose (string) so GeneralTab doesn't need to import SettingsPage's Tab
@@ -1179,7 +1179,7 @@ function ChangePasswordForm({ username }: { username: string }) {
       <input type="password" autoComplete="new-password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={inputCls} />
       {error && <div className="text-xs text-red-600 dark:text-red-400">{error}</div>}
       {success && <div className="text-xs text-emerald-600 dark:text-emerald-400">Password updated</div>}
-      <button type="submit" disabled={submitting || !current || !next} className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded text-xs font-medium disabled:opacity-50">
+      <button type="submit" disabled={submitting || !current || !next} className={`px-3 py-2 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}>
         {submitting ? 'Updating…' : 'Change password'}
       </button>
     </form>

@@ -444,9 +444,11 @@ func (s *Scanner) checkEbookContent(ctx context.Context, book *models.Book, auth
 	if mode == contentCheckOff || book == nil || bookIsCompilationBy(book.Title, authorName(author)) {
 		return contentCheckResult{}
 	}
+	// Kindle files carry the same title and author in their EXTH block
+	// (#3016), so they are compared alongside EPUBs.
 	var epubs []string
 	for _, f := range files {
-		if IsEpubFile(f) {
+		if HasEmbeddedMetadata(f) {
 			epubs = append(epubs, f)
 		}
 	}
@@ -479,7 +481,7 @@ func (s *Scanner) checkEbookContent(ctx context.Context, book *models.Book, auth
 		if ctx.Err() != nil {
 			break
 		}
-		meta, err := ReadEpubMetadata(f)
+		meta, err := ReadEbookMetadata(f)
 		if err != nil {
 			continue
 		}
