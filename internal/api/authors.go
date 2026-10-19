@@ -1099,8 +1099,7 @@ func (h *AuthorHandler) Update(w http.ResponseWriter, r *http.Request) {
 		author.AudiobookRootFolderID = nil
 	}
 
-	if err := h.authors.Update(r.Context(), author); err != nil {
-		writeServerError(w, r, err)
+	if !h.saveAuthorIfUnchanged(w, r, author) {
 		return
 	}
 

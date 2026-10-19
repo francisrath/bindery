@@ -530,6 +530,7 @@
       "bio": "Biografi fra {{source}}, {{license}}",
       "bioNoLicense": "Biografi fra {{source}}"
     },
+    "saveConflict": "Forfatteren ble endret mens du lagret. Last inn siden på nytt og prøv igjen.",
     "photo": {
       "upload": "Last opp bilde",
       "change": "Bytt bilde",

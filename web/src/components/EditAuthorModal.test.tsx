@@ -288,6 +288,18 @@ describe('EditAuthorModal', () => {
     })
   })
 
+  // A save the server refused because the author changed meanwhile (#3287)
+  // tells the user to reload rather than showing the raw 409 text.
+  it('asks to reload when the author changed while saving', async () => {
+    vi.mocked(api.updateAuthor).mockRejectedValue(Object.assign(new Error('this author changed while you were saving; reload and try again'), { status: 409 }))
+    render(<EditAuthorModal author={baseAuthor} onClose={onClose} onSaved={onSaved} />)
+    const { metadata } = await getSelects()
+    fireEvent.change(metadata, { target: { value: '11' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+    expect(await screen.findByText('This author changed while you were saving. Reload the page and try again.')).toBeInTheDocument()
+    expect(onSaved).not.toHaveBeenCalled()
+  })
+
   it('shows an error message when save fails', async () => {
     vi.mocked(api.updateAuthor).mockRejectedValue(new Error('HTTP 500: server error'))
 

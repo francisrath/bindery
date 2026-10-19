@@ -557,6 +557,7 @@
       "bio": "Bio from {{source}}, {{license}}",
       "bioNoLicense": "Bio from {{source}}"
     },
+    "saveConflict": "This author changed while you were saving. Reload the page and try again.",
     "photo": {
       "upload": "Upload photo",
       "change": "Change photo",

@@ -17,6 +17,7 @@ import MarkdownDescription from '../components/MarkdownDescription'
 import { authorProviderKey, canLinkAuthorMetadata } from '../util/authorMetadata'
 import { metadataRetrievedDate, metadataSourceLink } from '../util/metadataSource'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
+import { authorSaveError } from '../util/authorSaveError'
 import { canonicalLanguage, languageName } from '../util/language'
 import { btn, btnSize } from '../components/buttons'
 import Switch from '../components/Switch'
@@ -165,9 +166,9 @@ export default function AuthorDetailPage() {
       const updated = action === 'upload' ? await api.uploadAuthorPhoto(author.id, file as File) : await api.clearAuthorPhoto(author.id)
       setAuthor(a => (a ? { ...a, imageUrl: updated.imageUrl, imageSource: updated.imageSource } : a))
     } catch (e) {
-      setError(e instanceof Error ? e.message : action === 'upload'
+      setError(authorSaveError(e, t, action === 'upload'
         ? t('authorDetail.photo.uploadFailed', 'Could not upload the photo')
-        : t('authorDetail.photo.removeFailed', 'Could not remove the photo'))
+        : t('authorDetail.photo.removeFailed', 'Could not remove the photo')))
     } finally {
       setUploadingPhoto(null)
     }
@@ -467,7 +468,7 @@ export default function AuthorDetailPage() {
       await api.updateAuthor(author.id, { monitored: !author.monitored })
       setAuthor({ ...author, monitored: !author.monitored })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Update failed')
+      setError(authorSaveError(e, t, 'Update failed'))
     }
   }
 

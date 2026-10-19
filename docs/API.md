@@ -80,11 +80,11 @@ POST   /api/v1/author                             add an author (triggers async 
 POST   /api/v1/author/book                        add one book by foreign id (creates its author if needed)
 POST   /api/v1/author/bulk                        bulk add/update
 GET    /api/v1/author/{id}                        author detail
-PUT    /api/v1/author/{id}                        update monitored / metadata profile, or the bio: `description` set by hand is kept as the user's own and no refresh replaces it; an empty string clears it for the provider to fill again (#3287)
+PUT    /api/v1/author/{id}                        update monitored / metadata profile, or the bio: `description` set by hand is kept as the user's own and no refresh replaces it; an empty string clears it for the provider to fill again (#3287). 409 when the author changed since it was read, such as a scheduled refresh in between: reload and save again
 DELETE /api/v1/author/{id}                        remove (with optional file delete)
 POST   /api/v1/author/{id}/refresh                re-pull profile and works, skipping the metadata cache; 409 while a sync for that author is running
-POST   /api/v1/author/{id}/photo                  set the photo from the request body, as `POST /book/{id}/cover` does for a cover (raw JPEG, PNG, WebP or GIF, max 10 MB; 413 over the limit, 415 for anything else); stored locally and kept as the user's own, so no refresh or enricher replaces it. Answers the author (#3287)
-DELETE /api/v1/author/{id}/photo                  remove a photo set with the POST above, then refresh the author's profile as its Refresh button does, so the provider's or an enricher's photo shows at once. 409 for a photo the user didn't upload. The stored file stays, since the cover store is shared with book covers. Answers the author (#3287)
+POST   /api/v1/author/{id}/photo                  set the photo from the request body, as `POST /book/{id}/cover` does for a cover (raw JPEG, PNG, WebP or GIF, max 10 MB; 413 over the limit, 415 for anything else); stored locally and kept as the user's own, so no refresh or enricher replaces it. 409 when the author changed since it was read. Answers the author (#3287)
+DELETE /api/v1/author/{id}/photo                  remove a photo set with the POST above, then refresh the author's profile as its Refresh button does, so the provider's or an enricher's photo shows at once. 409 for a photo the user didn't upload, or when the author changed since it was read. The stored file stays, since the cover store is shared with book covers. Answers the author (#3287)
 GET    /api/v1/author/{id}/catalogue-reconciliation
                                                     preview stale metadata-only Wanted rows
 POST   /api/v1/author/{id}/catalogue-reconciliation

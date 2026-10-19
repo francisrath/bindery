@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { api, Author, AuthorMonitorMode, MetadataProfile, MonitorNewItems, QualityProfile, RootFolder, Series, UpdateAuthorRequest } from '../api/client'
 import { useModal } from './useModal'
 import { primaryFill } from './buttons'
+import { authorSaveError } from '../util/authorSaveError'
 
 interface Props {
   author: Author
@@ -165,7 +166,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
       onSaved(updated)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('editAuthorModal.saveFail', 'Failed to save'))
+      setError(authorSaveError(err, t, t('editAuthorModal.saveFail', 'Failed to save')))
     } finally {
       setSaving(false)
     }

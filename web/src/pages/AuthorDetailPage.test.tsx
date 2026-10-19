@@ -393,6 +393,42 @@ describe('AuthorDetailPage', () => {
     expect(screen.queryByRole('button', { name: 'Remove photo' })).toBeNull()
   })
 
+  // A bio the user wrote is theirs: nobody to credit (#3287).
+  it('shows no bio credit for a bio the user wrote', async () => {
+    renderAuthorDetailPage([], 'grid', { description: 'Mine.', descriptionSource: { provider: 'user', url: '' } })
+    await screen.findByRole('heading', { level: 2 })
+    expect(screen.queryByTestId('author-bio-credit')).toBeNull()
+  })
+
+  it('accepts exactly the image types the server stores', async () => {
+    renderAuthorDetailPage([], 'grid', { imageUrl: '' })
+    expect(await screen.findByLabelText('Upload photo')).toHaveAttribute('accept', 'image/jpeg,image/png,image/webp,image/gif')
+  })
+
+  // While one photo request runs, neither control can start another.
+  it('disables both photo controls while uploading or removing', async () => {
+    const user = { imageUrl: '/api/v1/images?url=bindery-cover%3Aabc', imageSource: { provider: 'user', url: '' } }
+    vi.mocked(api.uploadAuthorPhoto).mockReturnValue(new Promise(() => {}))
+    renderAuthorDetailPage([], 'grid', user)
+    fireEvent.change(await screen.findByLabelText('Change photo'), { target: { files: [new File(['x'], 'p.png', { type: 'image/png' })] } })
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Remove photo' })).toBeDisabled())
+    expect(document.querySelector('input[type=file]')).toBeDisabled()
+    cleanup()
+
+    vi.mocked(api.clearAuthorPhoto).mockReturnValue(new Promise(() => {}))
+    renderAuthorDetailPage([], 'grid', user)
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Removing…' })).toBeDisabled())
+    expect(document.querySelector('input[type=file]')).toBeDisabled()
+  })
+
+  it('asks to reload when the author changed while removing the photo', async () => {
+    vi.mocked(api.clearAuthorPhoto).mockRejectedValue(new ApiError(409, { error: 'this author changed while you were saving; reload and try again' }, 'Conflict'))
+    renderAuthorDetailPage([], 'grid', { imageUrl: '/api/v1/images?url=bindery-cover%3Aabc', imageSource: { provider: 'user', url: '' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+    expect(await screen.findByText('This author changed while you were saving. Reload the page and try again.')).toBeInTheDocument()
+  })
+
   it('offers no Remove photo for a photo the user did not upload', async () => {
     renderAuthorDetailPage([], 'grid', { imageUrl: 'https://covers.example/a.jpg' })
     await screen.findByRole('heading', { level: 2 })

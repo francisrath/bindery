@@ -62,8 +62,7 @@ func (h *AuthorHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	author.ImageURL = ref
 	author.ImageSource = &models.ProfileSource{Provider: models.ProfileSourceUser}
-	if err := h.authors.Update(r.Context(), author); err != nil {
-		writeServerError(w, r, err)
+	if !h.saveAuthorIfUnchanged(w, r, author) {
 		return
 	}
 	writeAuthor(w, http.StatusOK, author)
@@ -90,10 +89,31 @@ func (h *AuthorHandler) ClearPhoto(w http.ResponseWriter, r *http.Request) {
 	}
 	author.ImageURL = ""
 	author.ImageSource = nil
-	if err := h.authors.Update(r.Context(), author); err != nil {
-		writeServerError(w, r, err)
+	if !h.saveAuthorIfUnchanged(w, r, author) {
 		return
 	}
 	h.refreshAuthorProfile(r.Context(), author, true)
 	writeAuthor(w, http.StatusOK, author)
+}
+
+// errAuthorChanged is the 409 a manual author save answers when the row
+// changed since it was read, such as a scheduled profile refresh committing in
+// between. The page shows it and the user saves again.
+const errAuthorChanged = "this author changed while you were saving; reload and try again"
+
+// saveAuthorIfUnchanged writes a manual edit only if the author row is as the
+// handler read it, the same guard the scheduled refresh uses
+// (persistRefreshedAuthor), so neither silently overwrites the other. It
+// answers 409 or 500 itself and reports whether the save happened.
+func (h *AuthorHandler) saveAuthorIfUnchanged(w http.ResponseWriter, r *http.Request, author *models.Author) bool {
+	written, err := h.authors.UpdateIfUnchanged(r.Context(), author, author.UpdatedAtRaw)
+	if err != nil {
+		writeServerError(w, r, err)
+		return false
+	}
+	if !written {
+		writeJSON(w, http.StatusConflict, map[string]string{"error": errAuthorChanged})
+		return false
+	}
+	return true
 }

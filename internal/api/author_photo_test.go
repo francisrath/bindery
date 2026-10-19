@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -354,5 +355,129 @@ func TestClearPhoto_SaveFails(t *testing.T) {
 	h.ClearPhoto(rec, req)
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status %d, want 500", rec.Code)
+	}
+}
+
+// refreshDuringRead is a request body that, on its first read, saves a change
+// to the author the way a scheduled refresh does, so the handler's write comes
+// after another write to the row it read.
+type refreshDuringRead struct {
+	t       *testing.T
+	authors *db.AuthorRepo
+	id      int64
+	body    io.Reader
+	done    bool
+}
+
+func (r *refreshDuringRead) Read(p []byte) (int, error) {
+	if !r.done {
+		r.done = true
+		a, err := r.authors.GetByID(r.t.Context(), r.id)
+		if err != nil {
+			r.t.Fatal(err)
+		}
+		a.RatingsCount = 4242
+		if err := r.authors.Update(r.t.Context(), a); err != nil {
+			r.t.Fatal(err)
+		}
+	}
+	return r.body.Read(p)
+}
+
+// A manual save that lands after a refresh wrote the row is refused with 409
+// instead of overwriting the refresh (#3287): the photo upload and Edit Author.
+func TestManualSavesRefuseAStaleRow(t *testing.T) {
+	check := func(t *testing.T, authors *db.AuthorRepo, id int64, rec *httptest.ResponseRecorder, wantImage string) {
+		t.Helper()
+		if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), "changed") {
+			t.Fatalf("status %d: %s; want 409", rec.Code, rec.Body.String())
+		}
+		got, err := authors.GetByID(t.Context(), id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.RatingsCount != 4242 || got.ImageURL != wantImage {
+			t.Errorf("the refresh was overwritten: ratings %d, photo %q", got.RatingsCount, got.ImageURL)
+		}
+	}
+	t.Run("upload", func(t *testing.T) {
+		h, authors, author, _ := photoFixture(t)
+		id := strconv.FormatInt(author.ID, 10)
+		body := &refreshDuringRead{t: t, authors: authors, id: author.ID, body: bytes.NewReader(pngBytes)}
+		req := withURLParam(httptest.NewRequest(http.MethodPost, "/api/v1/author/"+id+"/photo", body), "id", id)
+		rec := httptest.NewRecorder()
+		h.UploadPhoto(rec, req)
+		check(t, authors, author.ID, rec, author.ImageURL)
+	})
+	t.Run("edit author", func(t *testing.T) {
+		h, authors, author, _ := photoFixture(t)
+		id := strconv.FormatInt(author.ID, 10)
+		body := &refreshDuringRead{t: t, authors: authors, id: author.ID, body: strings.NewReader(`{"description":"Mine."}`)}
+		req := withURLParam(httptest.NewRequest(http.MethodPut, "/api/v1/author/"+id, body), "id", id)
+		rec := httptest.NewRecorder()
+		h.Update(rec, req)
+		check(t, authors, author.ID, rec, author.ImageURL)
+		if got, _ := authors.GetByID(t.Context(), author.ID); got.Description == "Mine." {
+			t.Error("the refused edit was saved anyway")
+		}
+	})
+	t.Run("the shared guard", func(t *testing.T) {
+		h, authors, author, _ := photoFixture(t)
+		stale, err := authors.GetByID(t.Context(), author.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fresh := *stale
+		fresh.RatingsCount = 4242
+		if err := authors.Update(t.Context(), &fresh); err != nil {
+			t.Fatal(err)
+		}
+		stale.ImageURL, stale.ImageSource = "", nil // what ClearPhoto writes
+		rec := httptest.NewRecorder()
+		if h.saveAuthorIfUnchanged(rec, httptest.NewRequest(http.MethodDelete, "/", nil), stale) || rec.Code != http.StatusConflict {
+			t.Fatalf("a stale save went through: status %d", rec.Code)
+		}
+		check(t, authors, author.ID, rec, author.ImageURL)
+	})
+}
+
+// A PUT that resends the bio the author already has, as an API client may,
+// does not claim it as the user's.
+func TestUpdateUnchangedBioIsNotMarked(t *testing.T) {
+	h, authors, author, _ := photoFixture(t)
+	author.Description = "From the provider."
+	if err := authors.Update(t.Context(), author); err != nil {
+		t.Fatal(err)
+	}
+	id := strconv.FormatInt(author.ID, 10)
+	req := withURLParam(httptest.NewRequest(http.MethodPut, "/api/v1/author/"+id, strings.NewReader(`{"description":"From the provider.","monitored":true}`)), "id", id)
+	rec := httptest.NewRecorder()
+	h.Update(rec, req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	if got, _ := authors.GetByID(t.Context(), author.ID); got.DescriptionSource != nil {
+		t.Errorf("an unchanged bio was marked %+v", got.DescriptionSource)
+	}
+}
+
+// Removing an uploaded photo blanks it even when the provider has none to
+// put back.
+func TestClearPhoto_ProviderHasNoPhoto(t *testing.T) {
+	f := newCoreFixture(t, &stubMetaProvider{author: &models.Author{ForeignID: "OL1A", Name: "Kari Nordmann"}})
+	f.h.WithCoverStore(covers.NewStore(t.TempDir()))
+	a := &models.Author{ForeignID: "OL1A", Name: "Kari Nordmann", SortName: "Nordmann, Kari", MetadataProvider: "openlibrary",
+		ImageURL: "bindery-cover:" + strings.Repeat("b", 64) + ".png", ImageSource: &models.ProfileSource{Provider: models.ProfileSourceUser}}
+	if err := f.authors.Create(t.Context(), a); err != nil {
+		t.Fatal(err)
+	}
+	sid := strconv.FormatInt(a.ID, 10)
+	rec := httptest.NewRecorder()
+	f.h.ClearPhoto(rec, withURLParam(httptest.NewRequest(http.MethodDelete, "/api/v1/author/"+sid+"/photo", nil), "id", sid))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status %d: %s", rec.Code, rec.Body.String())
+	}
+	if got, _ := f.authors.GetByID(t.Context(), a.ID); got.ImageURL != "" || got.ImageSource != nil {
+		t.Errorf("after clearing with no provider photo: %q from %+v; want none", got.ImageURL, got.ImageSource)
 	}
 }
