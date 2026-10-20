@@ -368,7 +368,7 @@ export default function AdvancedTab() {
           </div>
         ) : (
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-xs text-slate-500 dark:text-zinc-500">
+            <p className="text-xs text-fg-muted">
               {d.secret
                 ? t('settings.advanced.secretElsewhere', 'Set on its own settings screen, never through this tab.')
                 : d.state === 'internal'
@@ -395,7 +395,7 @@ export default function AdvancedTab() {
         )}
 
         {bounds.length > 0 && editable && (
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+          <p className="mt-1 text-[11px] text-fg-muted">
             {d.min && (
               <span>
                 {t('settings.advanced.min', 'Minimum')} <span className="font-mono">{d.min}</span>

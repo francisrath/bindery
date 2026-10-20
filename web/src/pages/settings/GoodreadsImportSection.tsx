@@ -191,7 +191,7 @@ export default function GoodreadsImportSection() {
                   <li key={r.row.rowNumber}>
                     <span className="text-slate-800 dark:text-zinc-200">{r.row.title}</span>
                     {' — '}
-                    <span className="text-slate-500 dark:text-zinc-500">{r.reason}</span>
+                    <span className="text-fg-muted">{r.reason}</span>
                   </li>
                 ))}
               </ul>
@@ -208,7 +208,7 @@ export default function GoodreadsImportSection() {
           )}
 
           {preview.resolved === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-zinc-500">
+            <p className="text-xs text-fg-muted">
               {t('settings.import.goodreadsNoResolved')}
             </p>
           ) : (
@@ -249,7 +249,7 @@ export default function GoodreadsImportSection() {
                 <li key={title}>
                   <span className="text-slate-800 dark:text-zinc-200">{title}</span>
                   {': '}
-                  <span className="text-slate-500 dark:text-zinc-500">{reason}</span>
+                  <span className="text-fg-muted">{reason}</span>
                 </li>
               ))}
             </ul>

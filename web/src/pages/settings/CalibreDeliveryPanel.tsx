@@ -95,7 +95,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
       tone: 'text-amber-600 dark:text-amber-400',
     }
   } else {
-    reach = { text: t('settings.calibre.deliveries.reachableUnknown'), tone: 'text-slate-500 dark:text-zinc-500' }
+    reach = { text: t('settings.calibre.deliveries.reachableUnknown'), tone: 'text-fg-muted' }
   }
   // In pull (#2833) Bindery never probes Calibre; the plugin checks in.
   const pulling = summary?.mode === 'plugin' && summary?.transport === 'pull'
@@ -123,7 +123,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
         </p>
       )}
       {!summary && !loadError && (
-        <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.deliveries.loading')}</p>
+        <p className="text-xs text-fg-muted">{t('settings.calibre.deliveries.loading')}</p>
       )}
 
       {summary && (
@@ -145,7 +145,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
           <span data-testid="calibre-delivery-reachability" className={`break-all ${reach.tone}`}>
             {reach.text}
             {!pulling && target?.checkedAt && (
-              <span className="text-slate-500 dark:text-zinc-500">
+              <span className="text-fg-muted">
                 {' '}({t('settings.calibre.deliveries.checkedAt', { time: when(target.checkedAt) })})
               </span>
             )}
@@ -188,7 +188,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
             {t('settings.calibre.deliveries.failedHeading')}
           </p>
           {items.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.deliveries.failedEmpty')}</p>
+            <p className="text-xs text-fg-muted">{t('settings.calibre.deliveries.failedEmpty')}</p>
           ) : (
             <>
               <div
@@ -220,7 +220,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
                 </table>
               </div>
               {failed && failed.total > items.length && (
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   {t('settings.calibre.deliveries.failedMore', { shown: items.length, total: failed.total })}
                 </p>
               )}

@@ -83,7 +83,7 @@ export default function AuthSettings() {
         </p>
 
         {displayed.length === 0 && !showAdd && (
-          <p className="text-sm text-slate-500 dark:text-zinc-500">{t('settings.oidc.empty')}</p>
+          <p className="text-sm text-fg-muted">{t('settings.oidc.empty')}</p>
         )}
 
         {displayed.map(p => (
@@ -244,7 +244,7 @@ function AddProviderForm({
         {callbackClipboard.status === 'manual' && (
           <ClipboardManualFallback text={callbackClipboard.manualText} className="mt-2" />
         )}
-        <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-1">
+        <p className="text-[11px] text-fg-muted mt-1">
           {t('settings.oidc.callbackUrlHint')}
         </p>
         {baseConfigured === false && (
@@ -379,15 +379,15 @@ function DiscoveryResultView({ result, entered }: { result: DiscoveryResult; ent
         <p className="text-emerald-700 dark:text-emerald-400">{t('settings.oidc.testDiscoveryOk')}</p>
       )}
       <p className="break-all">
-        <span className="text-slate-500 dark:text-zinc-500">authorize:</span>{' '}
+        <span className="text-fg-muted">authorize:</span>{' '}
         {discovered.authorization_endpoint}
       </p>
       <p className="break-all">
-        <span className="text-slate-500 dark:text-zinc-500">token:</span> {discovered.token_endpoint}
+        <span className="text-fg-muted">token:</span> {discovered.token_endpoint}
       </p>
       {discovered.scopes_supported && discovered.scopes_supported.length > 0 && (
         <p className="break-all">
-          <span className="text-slate-500 dark:text-zinc-500">scopes:</span>{' '}
+          <span className="text-fg-muted">scopes:</span>{' '}
           {discovered.scopes_supported.join(' ')}
         </p>
       )}

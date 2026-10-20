@@ -653,7 +653,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               className={`${inputCls} font-mono opacity-80 cursor-default`}
             />
             {storage && !storage.audiobookDownloadDir && (
-              <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.general.audiobookDownloadDirFallback')}</p>
+              <p className="text-xs text-fg-muted mt-1">{t('settings.general.audiobookDownloadDirFallback')}</p>
             )}
           </div>
           <div>
@@ -679,7 +679,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               className={`${inputCls} font-mono opacity-80 cursor-default`}
             />
             {storage && !storage.audiobookDir && (
-              <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.general.audiobookDirFallback')}</p>
+              <p className="text-xs text-fg-muted mt-1">{t('settings.general.audiobookDirFallback')}</p>
             )}
           </div>
           {storage && (
@@ -733,7 +733,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                   <span>{t('settings.general.alreadyTracked')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.already_tracked}</span></span>
                 )}
               </div>
-              <p className="mt-1 text-slate-500 dark:text-zinc-500">
+              <p className="mt-1 text-fg-muted">
                 {new Date(lastScan.ran_at).toLocaleString()}
               </p>
               {(() => {
@@ -742,7 +742,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                   : [lastScan.library_dir, lastScan.audiobook_dir].filter((p): p is string => !!p)
                 if (paths.length === 0) return null
                 return (
-                  <p className="mt-1 text-slate-500 dark:text-zinc-500">
+                  <p className="mt-1 text-fg-muted">
                     {t('settings.general.scannedPaths')}{' '}
                     {paths.map((p, i) => (
                       <span key={i} className="font-mono text-slate-700 dark:text-zinc-300 break-all">
@@ -957,7 +957,7 @@ function dirStatus(storage: StorageHealth | null, name: string): StorageDirStatu
 function StorageHealthBadge({ status, loading }: { status: StorageDirStatus | undefined; loading: boolean }) {
   const { t } = useTranslation()
   if (loading) {
-    return <span className="ml-2 text-[11px] font-normal text-slate-500 dark:text-zinc-500">{t('settings.general.storageHealthChecking')}</span>
+    return <span className="ml-2 text-[11px] font-normal text-fg-muted">{t('settings.general.storageHealthChecking')}</span>
   }
   if (!status) return null
 
@@ -1078,8 +1078,8 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
             <option value="local-only">Local only (bypass for private IPs)</option>
             <option value="disabled">Disabled (no auth)</option>
           </select>
-          {cfg.mode === 'enabled' && <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">Always requires login, regardless of network origin.</p>}
-          {cfg.mode === 'local-only' && <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">Login is bypassed for requests from private / LAN IP ranges. Still requires login from the internet.</p>}
+          {cfg.mode === 'enabled' && <p className="text-xs text-fg-muted mt-1">Always requires login, regardless of network origin.</p>}
+          {cfg.mode === 'local-only' && <p className="text-xs text-fg-muted mt-1">Login is bypassed for requests from private / LAN IP ranges. Still requires login from the internet.</p>}
           {cfg.mode === 'disabled' && <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">No authentication — only safe when Bindery is behind a trusted reverse proxy that enforces access control.</p>}
           {/* Server-authored warning for the mode just chosen (currently
               local-only with no trusted proxy configured). Rendered verbatim so
@@ -1115,7 +1115,7 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
             <ClipboardManualFallback text={apiKeyClipboard.manualText} className="mt-2" />
           )}
           {!showKey && (
-            <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-1">
+            <p className="text-[11px] text-fg-muted mt-1">
               Regenerating invalidates the current key — update all external integrations afterward.
             </p>
           )}

@@ -73,11 +73,11 @@ export default function ClientDiagnosePanel({ result, onClose }: Props) {
             <div className="min-w-0">
               <div>
                 <span className="font-medium">{checkTitle(c)}</span>
-                <span className="ml-2 text-slate-500 dark:text-zinc-500">{t(`settings.clients.diagnose.status.${c.status}`, c.status)}</span>
+                <span className="ml-2 text-fg-muted">{t(`settings.clients.diagnose.status.${c.status}`, c.status)}</span>
               </div>
               <p className={`${labelCls} break-words`}>{c.message}</p>
               {c.fix && c.status !== 'pass' && c.status !== 'skipped' && (
-                <p className="text-slate-500 dark:text-zinc-500 break-words">{c.fix}</p>
+                <p className="text-fg-muted break-words">{c.fix}</p>
               )}
             </div>
           </li>

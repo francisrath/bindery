@@ -84,7 +84,7 @@ export default function RootFoldersTab() {
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 mt-0.5">{t('settings.rootfolders.free', { size: formatBytesZero(rf.freeSpace) })}</p>
+                  <p className="text-xs text-fg-muted mt-0.5">{t('settings.rootfolders.free', { size: formatBytesZero(rf.freeSpace) })}</p>
                 </div>
                 <button
                   onClick={async () => {

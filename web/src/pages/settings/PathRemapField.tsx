@@ -14,7 +14,7 @@ export default function PathRemapField({ id, label, value, onChange, placeholder
         placeholder={placeholder}
         className={inputCls}
       />
-      <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-1">
+      <p className="text-[11px] text-fg-muted mt-1">
         {help} Use comma-separated <code className="text-[10px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">from:to</code> prefix rewrites.
       </p>
     </div>

@@ -144,7 +144,7 @@ export default function DatabaseCheckSection() {
                   <tr key={`${r.childTable}->${r.parentTable}->${r.onDelete}#${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                     <td className="py-1 pr-3 font-mono">
                       {r.childTable} {'->'} {r.parentTable}
-                      {r.onDelete && <span className="text-slate-500 dark:text-zinc-500"> ({r.onDelete})</span>}
+                      {r.onDelete && <span className="text-fg-muted"> ({r.onDelete})</span>}
                     </td>
                     <td className="py-1 pr-3 font-mono">{r.violations}</td>
                     <td className="py-1">{onDeleteLabel(r.onDelete)}</td>
@@ -166,7 +166,7 @@ export default function DatabaseCheckSection() {
         )}
 
         {report && (
-          <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+          <p className="text-[11px] text-fg-muted">
             {t('settings.general.dbCheckCheckedAt', { time: new Date(report.checkedAt).toLocaleString() })}
           </p>
         )}
@@ -188,13 +188,13 @@ export default function DatabaseCheckSection() {
                     <tr key={`${r.childTable}->${r.parentTable}->${r.onDelete}#${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                       <td className="py-1 pr-3 font-mono">
                         {r.childTable} {'->'} {r.parentTable}
-                        {r.onDelete && <span className="text-slate-500 dark:text-zinc-500"> ({r.onDelete})</span>}
+                        {r.onDelete && <span className="text-fg-muted"> ({r.onDelete})</span>}
                       </td>
                       <td className="py-1 pr-3 font-mono">{r.violations}</td>
                       <td className="py-1">
                         {actionLabel(r.action)}
                         {r.fixable > 0 && r.fixable < r.violations && (
-                          <span className="block text-slate-500 dark:text-zinc-500">
+                          <span className="block text-fg-muted">
                             {t('settings.general.dbCleanupPartial', { count: r.violations - r.fixable })}
                           </span>
                         )}
@@ -262,7 +262,7 @@ export default function DatabaseCheckSection() {
                       <tr key={`${r.childTable}->${r.parentTable}->${r.onDelete}#${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                         <td className="py-1 pr-3 font-mono">
                           {r.childTable} {'->'} {r.parentTable}
-                          {r.onDelete && <span className="text-slate-500 dark:text-zinc-500"> ({r.onDelete})</span>}
+                          {r.onDelete && <span className="text-fg-muted"> ({r.onDelete})</span>}
                         </td>
                         <td className="py-1 pr-3 font-mono">{r.violations}</td>
                         <td className="py-1">{actionLabel(r.action)}</td>

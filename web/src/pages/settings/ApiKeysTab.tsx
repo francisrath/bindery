@@ -179,7 +179,7 @@ export default function ApiKeysTab() {
                 <label className="block text-xs text-fg-muted">
                   {t('settings.general.hardcoverApiToken', 'Hardcover API Token')}
                 </label>
-                <span className={`text-[11px] font-medium ${hardcoverTokenConfigured ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-500'}`}>
+                <span className={`text-[11px] font-medium ${hardcoverTokenConfigured ? 'text-emerald-600 dark:text-emerald-400' : 'text-fg-muted'}`}>
                   {hardcoverTokenConfigured
                     ? t('settings.general.hardcoverTokenConfigured', 'Token configured')
                     : t('settings.general.hardcoverTokenNotConfigured', 'No token configured')}
@@ -283,7 +283,7 @@ export default function ApiKeysTab() {
             {opdsClipboard.status === 'manual' && (
               <ClipboardManualFallback text={opdsClipboard.manualText} className="mt-2" />
             )}
-            <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1.5">{t('settings.general.opdsHint')}</p>
+            <p className="text-xs text-fg-muted mt-1.5">{t('settings.general.opdsHint')}</p>
           </div>
         </div>
       </section>

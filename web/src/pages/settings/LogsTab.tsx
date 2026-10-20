@@ -179,7 +179,7 @@ export default function LogsTab() {
 
         {/* Runtime log level */}
         <div className="flex items-center gap-2 text-xs">
-          <label htmlFor={`${fid}-level`} className="text-slate-500 dark:text-zinc-500 font-medium">Runtime level</label>
+          <label htmlFor={`${fid}-level`} className="text-fg-muted font-medium">Runtime level</label>
           <select
             id={`${fid}-level`}
             value={logLevel}
@@ -202,7 +202,7 @@ export default function LogsTab() {
           onClick={() => setLogAutoRefresh(v => !v)}
           className={`text-xs px-2.5 py-1 rounded border transition-colors ${logAutoRefresh
             ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-            : 'border-slate-300 dark:border-zinc-700 text-slate-500 dark:text-zinc-500'}`}
+            : 'border-slate-300 dark:border-zinc-700 text-fg-muted'}`}
         >
           {logAutoRefresh ? `⏸ ${t('settings.logs.autoRefresh')}` : `▶ ${t('settings.logs.autoRefresh')}`}
         </button>
@@ -220,7 +220,7 @@ export default function LogsTab() {
           width at the 16px touch font ran past a 320px screen. */}
       <div className="flex flex-wrap items-center gap-2 mb-3 text-xs">
         <div className="flex items-center gap-1 w-full sm:w-auto min-w-0">
-          <span className="text-slate-500 dark:text-zinc-500">{t('settings.logs.from')}</span>
+          <span className="text-fg-muted">{t('settings.logs.from')}</span>
           <input
             type="datetime-local"
             aria-label={t('settings.logs.from')}
@@ -230,7 +230,7 @@ export default function LogsTab() {
           />
         </div>
         <div className="flex items-center gap-1 w-full sm:w-auto min-w-0">
-          <span className="text-slate-500 dark:text-zinc-500">{t('settings.logs.to')}</span>
+          <span className="text-fg-muted">{t('settings.logs.to')}</span>
           <input
             type="datetime-local"
             aria-label={t('settings.logs.to')}
@@ -264,7 +264,7 @@ export default function LogsTab() {
             setLogFrom(''); setLogTo(''); setLogComponent(''); setLogSearch(''); setLogFilter('all')
             fetchLogs(0, {})
           }}
-          className="px-2 py-1 rounded border border-slate-300 dark:border-zinc-700 text-slate-500 dark:text-zinc-500 text-xs"
+          className="px-2 py-1 rounded border border-slate-300 dark:border-zinc-700 text-fg-muted text-xs"
         >
           {t('settings.logs.clearFilters')}
         </button>
@@ -276,7 +276,7 @@ export default function LogsTab() {
           download
           data-testid="download-logs"
           title={t('settings.logs.downloadHint')}
-          className="px-2 py-1 rounded border border-slate-300 dark:border-zinc-700 text-slate-500 dark:text-zinc-500 text-xs hover:text-slate-900 dark:hover:text-white"
+          className="px-2 py-1 rounded border border-slate-300 dark:border-zinc-700 text-fg-muted text-xs hover:text-slate-900 dark:hover:text-white"
         >
           ⬇ {t('settings.logs.download')}
         </a>
@@ -322,10 +322,10 @@ export default function LogsTab() {
                     <div className="flex flex-wrap items-baseline gap-x-2">
                       <span className="text-slate-500 dark:text-zinc-600 whitespace-nowrap" title={r.iso}>{r.ts}</span>
                       <span className={`font-semibold ${r.levelCls}`}>{r.level}</span>
-                      {r.component && <span className="text-slate-500 dark:text-zinc-500">{r.component}</span>}
+                      {r.component && <span className="text-fg-muted">{r.component}</span>}
                     </div>
                     <div className="text-slate-800 dark:text-zinc-200 break-words whitespace-pre-wrap">{r.msgText}</div>
-                    {r.attrStr && <div className="text-slate-500 dark:text-zinc-500 break-words whitespace-pre-wrap">{r.attrStr}</div>}
+                    {r.attrStr && <div className="text-fg-muted break-words whitespace-pre-wrap">{r.attrStr}</div>}
                   </li>
                 ))}
               </ul>
@@ -345,9 +345,9 @@ export default function LogsTab() {
                   <tr key={r.key} className="border-b border-slate-200 dark:border-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-900/50">
                     <td className="pl-3 pr-2 py-0.5 text-slate-500 dark:text-zinc-600 whitespace-nowrap align-top" title={r.iso}>{r.ts}</td>
                     <td className={`pr-2 py-0.5 whitespace-nowrap font-semibold align-top ${r.levelCls}`}>{r.level}</td>
-                    <td className="pr-2 py-0.5 text-slate-500 dark:text-zinc-500 whitespace-nowrap align-top">{r.component}</td>
+                    <td className="pr-2 py-0.5 text-fg-muted whitespace-nowrap align-top">{r.component}</td>
                     <td className="pr-2 py-0.5 text-slate-800 dark:text-zinc-200 break-words whitespace-pre-wrap align-top">{r.msgText}</td>
-                    <td className="pr-3 py-0.5 text-slate-500 dark:text-zinc-500 break-words whitespace-pre-wrap align-top">{r.attrStr}</td>
+                    <td className="pr-3 py-0.5 text-fg-muted break-words whitespace-pre-wrap align-top">{r.attrStr}</td>
                   </tr>
                 ))}
               </tbody>
@@ -460,7 +460,7 @@ export default function LogsTab() {
                   <li key={b.name} className="flex items-center justify-between text-xs text-fg-muted">
                     <span>
                       <span className="font-mono">{b.name}</span>
-                      <span className="ml-2 text-slate-500 dark:text-zinc-500">{formatBytesZero(b.size)} · {formatRelativeTime(b.modTime)}</span>
+                      <span className="ml-2 text-fg-muted">{formatBytesZero(b.size)} · {formatRelativeTime(b.modTime)}</span>
                     </span>
                     <button
                       onClick={() => handleDeleteBackup(b.name)}

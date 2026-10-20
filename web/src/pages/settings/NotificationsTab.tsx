@@ -29,7 +29,7 @@ const TRIGGER_HINTS: Array<{ key: string; label: string; labelKey?: string }> = 
 function TriggerHints() {
   const { t } = useTranslation()
   return (
-    <ul className="mt-2 space-y-0.5 text-xs text-slate-500 dark:text-zinc-500" aria-label={t('settings.notifications.triggerHintsLabel')}>
+    <ul className="mt-2 space-y-0.5 text-xs text-fg-muted" aria-label={t('settings.notifications.triggerHintsLabel')}>
       {TRIGGER_HINTS.map(h => (
         <li key={h.key}>
           <span className="font-medium text-fg-muted">{h.labelKey ? t(h.labelKey) : h.label}</span>
@@ -114,7 +114,7 @@ export default function NotificationsTab() {
                     </button>
                     {confirmDeleteNotification === n.id ? (
                       <span className="flex items-center gap-1.5">
-                        <span className="text-xs text-slate-500 dark:text-zinc-500">{t('common.delete')}?</span>
+                        <span className="text-xs text-fg-muted">{t('common.delete')}?</span>
                         <button
                           onClick={async () => {
                             await api.deleteNotification(n.id)
@@ -123,7 +123,7 @@ export default function NotificationsTab() {
                           }}
                           className={`text-xs font-medium ${dangerLink}`}
                         >{t('common.yes')}</button>
-                        <button onClick={() => setConfirmDeleteNotification(null)} className="text-xs text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300">{t('common.no')}</button>
+                        <button onClick={() => setConfirmDeleteNotification(null)} className="text-xs text-fg-muted hover:text-slate-700 dark:hover:text-zinc-300">{t('common.no')}</button>
                       </span>
                     ) : (
                       <button onClick={() => setConfirmDeleteNotification(n.id)} className={`text-xs ${dangerLink}`}>
@@ -223,7 +223,7 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
       <div>
         <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">ntfy topic (optional)</label>
         <input id={`${fid}-1`} value={topic} onChange={e => setTopic(e.target.value)} placeholder="my-topic" className={inputCls} />
-        <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">For ntfy: set the topic here and point the URL at the ntfy server root (e.g. https://ntfy.sh). Bindery then posts a JSON body ntfy renders natively, instead of printing raw JSON.</p>
+        <p className="text-xs text-fg-muted mt-1">For ntfy: set the topic here and point the URL at the ntfy server root (e.g. https://ntfy.sh). Bindery then posts a JSON body ntfy renders natively, instead of printing raw JSON.</p>
       </div>
       <div>
         <label htmlFor={`${fid}-2`} className="block text-xs text-fg-muted mb-1">Custom headers (JSON, optional)</label>
@@ -234,7 +234,7 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
           rows={3}
           className={`${inputCls} font-mono text-xs`}
         />
-        <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">For ntfy auth, Discord routing, or any custom header. Leave blank to send none.</p>
+        <p className="text-xs text-fg-muted mt-1">For ntfy auth, Discord routing, or any custom header. Leave blank to send none.</p>
       </div>
       <div>
         <p className="text-xs text-fg-muted mb-2">Trigger on:</p>
@@ -324,7 +324,7 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
       <div>
         <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">ntfy topic (optional)</label>
         <input id={`${fid}-1`} value={topic} onChange={e => setTopic(e.target.value)} placeholder="my-topic" className={inputCls} />
-        <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">For ntfy: set the topic here and point the URL at the ntfy server root (e.g. https://ntfy.sh). Bindery then posts a JSON body ntfy renders natively, instead of printing raw JSON.</p>
+        <p className="text-xs text-fg-muted mt-1">For ntfy: set the topic here and point the URL at the ntfy server root (e.g. https://ntfy.sh). Bindery then posts a JSON body ntfy renders natively, instead of printing raw JSON.</p>
       </div>
       <div>
         <label htmlFor={`${fid}-2`} className="block text-xs text-fg-muted mb-1">Custom headers (JSON, optional)</label>
@@ -335,7 +335,7 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
           rows={3}
           className={`${inputCls} font-mono text-xs`}
         />
-        <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">For ntfy auth, Discord routing, or any custom header. Leave blank to send none.</p>
+        <p className="text-xs text-fg-muted mt-1">For ntfy auth, Discord routing, or any custom header. Leave blank to send none.</p>
       </div>
       <div>
         <p className="text-xs text-fg-muted mb-2">Trigger on:</p>

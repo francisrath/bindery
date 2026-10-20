@@ -97,7 +97,7 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
             <summary className="cursor-pointer text-red-600 dark:text-red-400">Show {Object.keys(r.failures).length} failures</summary>
             <ul className="mt-2 space-y-0.5 font-mono">
               {Object.entries(r.failures).map(([name, reason]) => (
-                <li key={name}><span className="text-slate-800 dark:text-zinc-200">{name}</span>: <span className="text-slate-500 dark:text-zinc-500">{reason}</span></li>
+                <li key={name}><span className="text-slate-800 dark:text-zinc-200">{name}</span>: <span className="text-fg-muted">{reason}</span></li>
               ))}
             </ul>
           </details>
@@ -284,7 +284,7 @@ function ManualImportSection() {
           {result.match !== 'none' && (
             <div className="flex items-center gap-3">
               <div>
-                <label htmlFor={`${fid}-1`} className="block text-xs text-slate-500 dark:text-zinc-500 mb-1">{t('settings.import.manualImportFormatLabel')}</label>
+                <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{t('settings.import.manualImportFormatLabel')}</label>
                 <select id={`${fid}-1`} className={inputCls} value={format} onChange={e => setFormat(e.target.value)}>
                   <option value="">{t('settings.import.manualImportFormatAuto')}</option>
                   <option value="ebook">{t('settings.import.manualImportFormatEbook')}</option>

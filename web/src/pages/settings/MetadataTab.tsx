@@ -559,7 +559,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
             )
           })}
         </div>
-        <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-2">
+        <p className="text-[11px] text-fg-muted mt-2">
           {t('settings.metadata.formLanguagesHint')}
         </p>
       </div>
@@ -573,7 +573,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
           <option value="pass">{t('settings.metadata.formUnknownLanguagePass')}</option>
           <option value="fail">{t('settings.metadata.formUnknownLanguageFail')}</option>
         </select>
-        <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-2">
+        <p className="text-[11px] text-fg-muted mt-2">
           {t('settings.metadata.formUnknownLanguageHint')}
         </p>
       </div>
@@ -588,7 +588,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
         </div>
       </div>
       {minEditionCount > 0 && (
-        <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+        <p className="text-[11px] text-fg-muted">
           {t('settings.metadata.formMinEditionCountHint')}
         </p>
       )}

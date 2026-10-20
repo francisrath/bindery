@@ -450,7 +450,7 @@ function AudiobookshelfSection() {
   }
 
   if (loading) {
-    return <section className="text-sm text-slate-500 dark:text-zinc-500">Loading Audiobookshelf…</section>
+    return <section className="text-sm text-fg-muted">Loading Audiobookshelf…</section>
   }
 
   const hasImportCredentials = Boolean(draft.apiKey.trim() || config?.apiKeyConfigured)
@@ -559,7 +559,7 @@ function AudiobookshelfSection() {
               Select each ABS book library to import from this source.
             </p>
           </div>
-          <span className="text-[11px] text-slate-500 dark:text-zinc-500 whitespace-nowrap">
+          <span className="text-[11px] text-fg-muted whitespace-nowrap">
             {draft.libraryIds.length} selected
           </span>
         </div>
@@ -591,7 +591,7 @@ function AudiobookshelfSection() {
                   />
                   <span className="min-w-0">
                     <span className="block truncate font-medium">{lib.name || lib.id}</span>
-                    <span className="block truncate text-[11px] text-slate-500 dark:text-zinc-500">
+                    <span className="block truncate text-[11px] text-fg-muted">
                       {lib.provider ? `${lib.provider} · ${lib.id}` : lib.id}
                     </span>
                   </span>
@@ -600,7 +600,7 @@ function AudiobookshelfSection() {
             })}
           </div>
         ) : (
-          <p className="mt-3 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mt-3 text-xs text-fg-muted">
             No libraries selected. Use Test connection or List libraries to discover accessible book libraries.
           </p>
         )}
@@ -640,7 +640,7 @@ function AudiobookshelfSection() {
             placeholder={config?.apiKeyConfigured ? 'Saved key is hidden. Enter a new key to rotate it.' : 'Paste an ABS API key'}
             className={inputCls}
           />
-          <p className="text-[11px] text-slate-500 dark:text-zinc-500 mt-1">
+          <p className="text-[11px] text-fg-muted mt-1">
             {config?.apiKeyConfigured
               ? 'A key is already stored and stays write-only. Leaving this blank keeps the saved key. Use a key for a user that can access the selected book libraries; ABS admin permissions are not required.'
               : 'Use a key for a user that can access the selected book libraries. ABS admin permissions are not required, and the saved key never comes back to the browser after you store it.'}
@@ -787,7 +787,7 @@ function AudiobookshelfSection() {
                           <span className="min-w-0 flex-1 overflow-hidden">
                             <span className="block truncate">{result.title || result.itemId}</span>
                             {result.message && (
-                              <span className="block truncate text-[10px] text-slate-500 dark:text-zinc-500">{result.message}</span>
+                              <span className="block truncate text-[10px] text-fg-muted">{result.message}</span>
                             )}
                           </span>
                           <span className="flex-shrink-0 uppercase tracking-wide">{result.outcome}</span>
@@ -855,7 +855,7 @@ function AudiobookshelfSection() {
             </div>
 
             {runs.length === 0 && (
-              <p className="text-sm text-slate-500 dark:text-zinc-500">No ABS import runs recorded yet.</p>
+              <p className="text-sm text-fg-muted">No ABS import runs recorded yet.</p>
             )}
 
             {runs.slice(0, 5).map(run => {
@@ -867,7 +867,7 @@ function AudiobookshelfSection() {
                     <p className="text-sm font-medium text-slate-800 dark:text-zinc-200 truncate">
                       Run #{run.id} · {run.dryRun ? 'Dry-run' : 'Live import'} · {absRunStatusLabel(run.status)}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                    <p className="text-[11px] text-fg-muted">
                       {new Date(run.startedAt).toLocaleString()} · {run.source.label || run.sourceLabel} · {absRunLibraryLabel(run)}
                     </p>
                   </div>
@@ -925,7 +925,7 @@ function AudiobookshelfSection() {
                             {rollbackPreviewChanges.map(action => (
                               <div key={`change-${action.entityType}-${action.externalId}-${action.localId}-${action.action}`} className="text-[11px] text-slate-700 dark:text-zinc-300">
                                 <span className="font-medium">{rollbackActionLabel(action)}</span>
-                                <span className="block text-slate-500 dark:text-zinc-500 truncate">{rollbackActionDetail(action)}</span>
+                                <span className="block text-fg-muted truncate">{rollbackActionDetail(action)}</span>
                               </div>
                             ))}
                           </div>
@@ -943,7 +943,7 @@ function AudiobookshelfSection() {
                             {rollbackPreviewRetained.map(action => (
                               <div key={`retain-${action.entityType}-${action.externalId}-${action.localId}-${action.action}`} className="text-[11px] text-slate-700 dark:text-zinc-300">
                                 <span className="font-medium">{rollbackActionLabel(action)}</span>
-                                <span className="block text-slate-500 dark:text-zinc-500 truncate">{rollbackActionDetail(action)}</span>
+                                <span className="block text-fg-muted truncate">{rollbackActionDetail(action)}</span>
                               </div>
                             ))}
                           </div>
@@ -1010,7 +1010,7 @@ function AudiobookshelfSection() {
           {showReviewItems && (
             <>
               {reviewItems.length === 0 && (
-                <p className="text-sm text-slate-500 dark:text-zinc-500">No queued ABS review items.</p>
+                <p className="text-sm text-fg-muted">No queued ABS review items.</p>
               )}
 
               {groupedReviewItems.map(group => (
@@ -1091,7 +1091,7 @@ function AudiobookshelfSection() {
                               className="w-full text-left rounded border border-slate-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/40 px-2 py-1.5 text-xs hover:border-emerald-400 disabled:opacity-50"
                             >
                               <span className="block font-medium text-slate-800 dark:text-zinc-200 truncate">{author.authorName}</span>
-                              {author.disambiguation && <span className="block text-[11px] text-slate-500 dark:text-zinc-500 truncate">{author.disambiguation}</span>}
+                              {author.disambiguation && <span className="block text-[11px] text-fg-muted truncate">{author.disambiguation}</span>}
                             </button>
                           ))}
                         </div>
@@ -1124,7 +1124,7 @@ function AudiobookshelfSection() {
                               className="w-full text-left rounded border border-slate-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/40 px-2 py-1.5 text-xs hover:border-emerald-400 disabled:opacity-50"
                             >
                               <span className="block font-medium text-slate-800 dark:text-zinc-200 truncate">{book.title}</span>
-                              {book.author?.authorName && <span className="block text-[11px] text-slate-500 dark:text-zinc-500 truncate">{book.author.authorName}</span>}
+                              {book.author?.authorName && <span className="block text-[11px] text-fg-muted truncate">{book.author.authorName}</span>}
                             </button>
                           ))}
                         </div>

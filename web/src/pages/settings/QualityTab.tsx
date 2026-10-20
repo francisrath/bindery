@@ -155,7 +155,7 @@ function ProfileRow({
                           key={item.quality}
                           className={`text-[10px] px-2 py-0.5 rounded ${item.allowed
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
-                            : 'bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-500'}`}
+                            : 'bg-slate-200 dark:bg-zinc-800 text-fg-muted'}`}
                         >
                           {i + 1}. {item.quality}
                         </li>
@@ -269,7 +269,7 @@ function QualityProfileForm({
 
       <div>
         <label className={labelCls}>{t('settings.quality.formPreference')}</label>
-        <p className="text-[11px] text-slate-500 dark:text-zinc-500 mb-2">
+        <p className="text-[11px] text-fg-muted mb-2">
           {t('settings.quality.formPreferenceHint')}
         </p>
         <div className="space-y-4">

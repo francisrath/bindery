@@ -142,7 +142,7 @@ export default function NamingTemplateField({
       {/* Live preview */}
       {!validation.empty && (
         <p className="text-xs text-fg-muted mt-1.5">
-          <span className="text-slate-500 dark:text-zinc-500">
+          <span className="text-fg-muted">
             {t('settings.general.naming.previewLabel')}
           </span>{' '}
           <code
@@ -161,7 +161,7 @@ export default function NamingTemplateField({
         // role="alert" so screen readers announce the still-blocking empty
         // state (Save stays disabled). Kept visually muted — it's a "required"
         // prompt, not a hard error like traversal — but still announced.
-        <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1.5" role="alert">
+        <p className="text-xs text-fg-muted mt-1.5" role="alert">
           {t('settings.general.naming.hintEmpty', 'Required — enter at least one token or path segment.')}
         </p>
       )}

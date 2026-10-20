@@ -156,7 +156,7 @@ export default function GrimmoryTab() {
         <div>
           <label htmlFor={`${fid}-3`} className="block text-xs font-medium mb-1">
             Password
-            <span className="ml-1 text-slate-500 dark:text-zinc-500 font-normal">
+            <span className="ml-1 text-fg-muted font-normal">
               {config?.passwordConfigured && !draft.password ? '(configured — leave blank to keep)' : ''}
             </span>
           </label>
@@ -168,7 +168,7 @@ export default function GrimmoryTab() {
             placeholder={config?.passwordConfigured ? '••••••••' : ''}
             className={inputCls}
           />
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+          <p className="mt-1 text-[11px] text-fg-muted">
             Bindery signs in to Grimmory with these credentials (current Grimmory has no API tokens).
             Use an account with upload permission — a dedicated one is a good idea.
           </p>
@@ -176,7 +176,7 @@ export default function GrimmoryTab() {
         <div>
           <label htmlFor={`${fid}-4`} className="block text-xs font-medium mb-1">
             API token
-            <span className="ml-1 text-slate-500 dark:text-zinc-500 font-normal">
+            <span className="ml-1 text-fg-muted font-normal">
               {config?.apiKeyConfigured && !draft.apiKey ? '(configured — leave blank to keep)' : '(optional)'}
             </span>
           </label>
@@ -188,7 +188,7 @@ export default function GrimmoryTab() {
             placeholder="Only if a future Grimmory release adds token auth"
             className={inputCls}
           />
-          <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+          <p className="mt-1 text-[11px] text-fg-muted">
             If set, the token is sent as a Bearer credential and the username/password login is skipped
             (<a href="https://github.com/orgs/grimmory-tools/discussions/1487" target="_blank" rel="noopener noreferrer" className="underline">grimmory-tools#1487</a>).
           </p>
@@ -234,7 +234,7 @@ export default function GrimmoryTab() {
           {sync?.running ? 'Pushing…' : 'Push all to Grimmory'}
         </button>
         {!config?.enabled && (
-          <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-500">Enable and save the integration first.</p>
+          <p className="mt-2 text-[11px] text-fg-muted">Enable and save the integration first.</p>
         )}
         {syncError && <p className="mt-2 text-red-500 text-xs">{syncError}</p>}
         {sync && (sync.running || sync.finishedAt) && (
@@ -257,7 +257,7 @@ export default function GrimmoryTab() {
           </div>
         )}
         {sync && sync.totalPushedFiles > 0 && (
-          <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-500">
+          <p className="mt-2 text-[11px] text-fg-muted">
             {sync.totalPushedFiles} file{sync.totalPushedFiles === 1 ? '' : 's'} pushed so far
             {sync.lastPushedAt ? `, last at ${new Date(sync.lastPushedAt).toLocaleString()}` : ''}.
           </p>

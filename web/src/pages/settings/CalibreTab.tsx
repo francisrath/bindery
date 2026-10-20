@@ -809,7 +809,7 @@ function CalibreRunsList({
       </div>
 
       {runs.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-zinc-500">
+        <p className="text-sm text-fg-muted">
           {t('settings.calibre.runs.empty')}
         </p>
       )}
@@ -831,7 +831,7 @@ function CalibreRunsList({
                 <p className="text-sm font-medium text-slate-800 dark:text-zinc-200 truncate">
                   {t('settings.calibre.runs.runLabel', { runId: run.id, status: statusLabel(run.status) })}
                 </p>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                <p className="text-[11px] text-fg-muted">
                   {t('settings.calibre.runs.startedAt', {
                     startedAt: new Date(run.startedAt).toLocaleString(),
                   })}
@@ -927,7 +927,7 @@ export function CalibreRollbackModal({
           <p className="text-xs text-fg-muted">{t('settings.calibre.runs.modalIntro')}</p>
 
           {previewLoading && (
-            <p className="text-sm text-slate-500 dark:text-zinc-500">{t('settings.calibre.runs.previewing')}</p>
+            <p className="text-sm text-fg-muted">{t('settings.calibre.runs.previewing')}</p>
           )}
 
           {error && (
@@ -968,11 +968,11 @@ export function CalibreRollbackModal({
                   {t('settings.calibre.runs.actionsHeading')}
                 </p>
                 {nothingToRollBack ? (
-                  <p className="text-xs text-slate-500 dark:text-zinc-500" data-testid="calibre-rollback-nothing">
+                  <p className="text-xs text-fg-muted" data-testid="calibre-rollback-nothing">
                     {display.dryRun ? t('settings.calibre.runs.nothingToRollBackDryRun') : t('settings.calibre.runs.nothingToRollBack')}
                   </p>
                 ) : actions.length === 0 ? (
-                  <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.runs.noActions')}</p>
+                  <p className="text-xs text-fg-muted">{t('settings.calibre.runs.noActions')}</p>
                 ) : (
                   <div className="max-h-64 overflow-y-auto rounded border border-slate-200 dark:border-zinc-800">
                     <table className="w-full text-xs">
@@ -989,7 +989,7 @@ export function CalibreRollbackModal({
                             <td className="px-2 py-1 text-fg-muted truncate">
                               {action.displayName || action.externalId}
                             </td>
-                            <td className="px-2 py-1 text-slate-500 dark:text-zinc-500 truncate">
+                            <td className="px-2 py-1 text-fg-muted truncate">
                               {action.reason || ''}
                             </td>
                           </tr>

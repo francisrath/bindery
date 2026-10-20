@@ -48,7 +48,7 @@ export default function FormatList({
               key={item.quality}
               className="flex items-center gap-2 px-3 py-1.5 rounded border border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900"
             >
-              <span className="text-[10px] w-4 text-right text-slate-500 dark:text-zinc-500">{i + 1}.</span>
+              <span className="text-[10px] w-4 text-right text-fg-muted">{i + 1}.</span>
               <label className="flex items-center gap-2 cursor-pointer text-xs flex-1 min-w-0">
                 <input
                   type="checkbox"
@@ -56,7 +56,7 @@ export default function FormatList({
                   onChange={() => toggle(item.quality)}
                   className="rounded border-slate-300 dark:border-zinc-700"
                 />
-                <span className={item.allowed ? 'text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500'}>
+                <span className={item.allowed ? 'text-slate-800 dark:text-zinc-200' : 'text-fg-muted'}>
                   {item.quality}
                 </span>
               </label>
@@ -98,7 +98,7 @@ export default function FormatList({
       <SummaryLine kind={kind} items={items} />
       {missing.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mt-2">
-          <span className="text-[11px] text-slate-500 dark:text-zinc-500 self-center">
+          <span className="text-[11px] text-fg-muted self-center">
             {t('settings.quality.formAddFormat')}
           </span>
           {missing.map(f => (
