@@ -171,7 +171,7 @@ function ProfileRow({
           <button
             type="button"
             onClick={onEdit}
-            className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+            className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white"
           >
             {t('common.edit')}
           </button>
@@ -295,7 +295,7 @@ function QualityProfileForm({
           type="button"
           onClick={onClose}
           disabled={saving}
-          className="px-3 py-1.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
+          className="px-3 py-1.5 text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
         >
           {t('common.cancel')}
         </button>

@@ -84,7 +84,7 @@ function SettingsNavLink({ tab, active, onSelect, label, badge }: { tab: Tab; ac
       className={`w-full text-left px-3 py-1.5 rounded-md text-sm transition-colors ${badge ? 'flex items-center gap-2 ' : ''}${
         active === tab
           ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white font-medium'
-          : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'
+          : 'text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800/50'
       }`}
     >
       {badge ? (

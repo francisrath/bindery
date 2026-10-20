@@ -341,7 +341,7 @@ export default function AdvancedTab() {
           {renderBadges(d)}
         </div>
 
-        <p className="text-xs text-slate-600 dark:text-zinc-400 mb-2">{d.description}</p>
+        <p className="text-xs text-fg-muted mb-2">{d.description}</p>
 
         {editable ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -389,7 +389,7 @@ export default function AdvancedTab() {
         )}
 
         {!d.secret && !editable && stored[d.key] !== undefined && (
-          <pre className="mt-2 max-h-24 overflow-auto text-[11px] font-mono text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-900 rounded p-2 whitespace-pre-wrap break-all">
+          <pre className="mt-2 max-h-24 overflow-auto text-[11px] font-mono text-fg-muted bg-slate-100 dark:bg-zinc-900 rounded p-2 whitespace-pre-wrap break-all">
             {stored[d.key]}
           </pre>
         )}
@@ -430,13 +430,13 @@ export default function AdvancedTab() {
             {t('settings.advanced.unknown', 'Unrecognised')}
           </span>
         </div>
-        <p className="text-xs text-slate-600 dark:text-zinc-400 mb-2">
+        <p className="text-xs text-fg-muted mb-2">
           {t(
             'settings.advanced.unknownNote',
             'Bindery does not recognise this key, so nothing reads it. It was probably written by another version. Saving it is refused; removing it is safe.',
           )}
         </p>
-        <pre className="text-[11px] font-mono text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-900 rounded p-2 max-h-24 overflow-auto whitespace-pre-wrap break-all">
+        <pre className="text-[11px] font-mono text-fg-muted bg-slate-100 dark:bg-zinc-900 rounded p-2 max-h-24 overflow-auto whitespace-pre-wrap break-all">
           {r.value}
         </pre>
         <button
@@ -468,7 +468,7 @@ export default function AdvancedTab() {
     <div className="space-y-4">
       <div className="bg-slate-100 dark:bg-zinc-900 rounded-lg p-4">
         <h3 className="font-semibold mb-1">{t('settings.advanced.title', 'Advanced')}</h3>
-        <p className="text-xs text-slate-600 dark:text-zinc-400">
+        <p className="text-xs text-fg-muted">
           {t(
             'settings.advanced.intro',
             'Every setting Bindery stores, straight from its key/value store. The settings most people need have their own tab; this screen is for the rare ones, and for seeing what a key holds. Descriptions come from the server and are not translated.',
@@ -486,14 +486,14 @@ export default function AdvancedTab() {
         </div>
       </div>
 
-      {loading && <p className="text-sm text-slate-600 dark:text-zinc-400">{t('common.loading')}</p>}
+      {loading && <p className="text-sm text-fg-muted">{t('common.loading')}</p>}
       {loadError && (
         <p className="text-sm text-red-600 dark:text-red-400">
           {t('settings.advanced.loadError', 'Could not load the settings registry: {{error}}', { error: loadError })}
         </p>
       )}
       {nothingVisible && (
-        <p className="text-sm text-slate-600 dark:text-zinc-400">{t('common.noResults')}</p>
+        <p className="text-sm text-fg-muted">{t('common.noResults')}</p>
       )}
 
       {namespaces.map(([ns, rows]) => section(ns, <div>{rows.map(renderRow)}</div>))}

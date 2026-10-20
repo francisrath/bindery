@@ -238,7 +238,7 @@ export default function GrimmoryTab() {
         )}
         {syncError && <p className="mt-2 text-red-500 text-xs">{syncError}</p>}
         {sync && (sync.running || sync.finishedAt) && (
-          <div className="mt-3 text-xs text-slate-600 dark:text-zinc-400 space-y-1">
+          <div className="mt-3 text-xs text-fg-muted space-y-1">
             <p>
               {sync.message}
               {' — '}

@@ -115,9 +115,9 @@ export default function BlocklistTab() {
                         onChange={toggleAll}
                       />
                     </th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('blocklist.colTitle')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('blocklist.colReason')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('blocklist.colDate')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('blocklist.colTitle')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('blocklist.colReason')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('blocklist.colDate')}</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -142,7 +142,7 @@ export default function BlocklistTab() {
                           {entry.reason || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-zinc-400 whitespace-nowrap text-xs">
+                      <td className="px-4 py-3 text-fg-muted whitespace-nowrap text-xs">
                         {formatBlocklistDate(entry.createdAt)}
                       </td>
                       <td className="px-4 py-3 text-right">

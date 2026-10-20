@@ -132,11 +132,11 @@ export default function ClientsTab({ clients, setClients }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">
-                  <button onClick={() => setEditingClient(editingClient === c.id ? null : c.id)} className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">{t('common.edit')}</button>
+                  <button onClick={() => setEditingClient(editingClient === c.id ? null : c.id)} className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white">{t('common.edit')}</button>
                   <button
                     id={`client-test-${c.id}`}
                     onClick={() => { void runTest(c) }}
-                    className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                    className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white"
                   >
                     {t('common.test')}
                   </button>
@@ -144,7 +144,7 @@ export default function ClientsTab({ clients, setClients }: Props) {
                     onClick={() => { void runDiagnose(c.id) }}
                     disabled={diagnosing === c.id}
                     aria-expanded={!!diagnosis[c.id]?.result}
-                    className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
+                    className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
                   >
                     {diagnosing === c.id ? t('settings.clients.diagnose.running') : t('settings.clients.diagnose.button')}
                   </button>
@@ -258,7 +258,7 @@ function EditClientForm({ client, onClose, onSaved }: { client: DownloadClient; 
   const [removeOnImport, setRemoveOnImport] = useState(client.removeOnImport || false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string; warn?: string } | null>(null)
-  const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
+  const labelCls = 'block text-xs text-fg-muted mb-1'
 
   const handleTypeChange = (newType: string) => {
     setType(newType)
@@ -471,8 +471,8 @@ function EditClientForm({ client, onClose, onSaved }: { client: DownloadClient; 
         </div>
       )}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
-        <button onClick={handleTest} disabled={testing || !host} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
+        <button onClick={handleTest} disabled={testing || !host} className="px-3 py-1.5 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
         <button onClick={submit} disabled={saving} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>{t('common.save')}</button>
       </div>
     </div>
@@ -506,7 +506,7 @@ function AddClientForm({ onClose, onAdded }: { onClose: () => void; onAdded: (c:
   const [removeOnImport, setRemoveOnImport] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string; warn?: string } | null>(null)
-  const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
+  const labelCls = 'block text-xs text-fg-muted mb-1'
 
   const isPasswordClient = (t: string) => t === 'qbittorrent' || t === 'transmission' || t === 'nzbget' || t === 'deluge' || t === 'rtorrent'
   // rTorrent authenticates with HTTP basic auth on the RPC endpoint, so it takes
@@ -702,8 +702,8 @@ function AddClientForm({ onClose, onAdded }: { onClose: () => void; onAdded: (c:
         </div>
       )}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
-        <button onClick={handleTest} disabled={testing || !host} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
+        <button onClick={handleTest} disabled={testing || !host} className="px-3 py-1.5 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
         <button onClick={submit} disabled={saving} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>{t('common.save')}</button>
       </div>
     </div>

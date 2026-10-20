@@ -431,19 +431,19 @@ export default function MetadataTab() {
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
                       <h4 className="font-medium text-sm">{p.name}</h4>
-                      <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-600 dark:text-zinc-400">
+                      <div className="flex flex-wrap gap-3 mt-2 text-xs text-fg-muted">
                         <span>{t('settings.metadata.minPages')} <span className="text-slate-800 dark:text-zinc-200">{p.minPages === 0 ? 'none' : p.minPages}</span></span>
                         <span>{t('settings.metadata.minEditionCount')} <span className="text-slate-800 dark:text-zinc-200">{p.minEditionCount === 0 ? 'none' : p.minEditionCount}</span></span>
                         <span>{t('settings.metadata.languages')} <span className="text-slate-800 dark:text-zinc-200">{formatLanguageList(p.allowedLanguages)}</span></span>
                       </div>
                       <div className="flex flex-wrap gap-1.5 mt-2">
-                        {p.skipMissingDate && <span className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">{t('settings.metadata.skipMissingDate')}</span>}
-                        {p.skipMissingIsbn && <span className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">{t('settings.metadata.skipMissingIsbn')}</span>}
-                        {p.skipPartBooks && <span className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">{t('settings.metadata.skipPartBooks')}</span>}
+                        {p.skipMissingDate && <span className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.metadata.skipMissingDate')}</span>}
+                        {p.skipMissingIsbn && <span className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.metadata.skipMissingIsbn')}</span>}
+                        {p.skipPartBooks && <span className="text-[10px] px-2 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.metadata.skipPartBooks')}</span>}
                       </div>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <button onClick={() => setEditing(p)} className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">{t('common.edit')}</button>
+                      <button onClick={() => setEditing(p)} className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white">{t('common.edit')}</button>
                       <button
                         onClick={async () => {
                           if (!await confirm({
@@ -536,11 +536,11 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
   return (
     <form onSubmit={submit} className="p-4 border border-slate-300 dark:border-zinc-700 rounded-lg bg-slate-50 dark:bg-zinc-900/50 space-y-4">
       <div>
-        <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formName')}</label>
+        <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{t('settings.metadata.formName')}</label>
         <input id={`${fid}-1`} value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder={t('settings.metadata.formNamePlaceholder')} />
       </div>
       <div>
-        <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-2">{t('settings.metadata.formLanguages')}</label>
+        <label className="block text-xs text-fg-muted mb-2">{t('settings.metadata.formLanguages')}</label>
         <div className="flex flex-wrap gap-2">
           {KNOWN_LANGUAGES.map(l => {
             const on = languages.includes(l.code)
@@ -552,7 +552,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
                 onClick={() => toggleLang(l.code)}
                 className={`text-xs px-2.5 py-1 rounded border transition-colors ${on
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                  : 'bg-slate-200 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-slate-600 dark:text-zinc-400 hover:border-slate-400 dark:hover:border-zinc-600'}`}
+                  : 'bg-slate-200 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700 text-fg-muted hover:border-slate-400 dark:hover:border-zinc-600'}`}
               >
                 {l.label}
               </button>
@@ -564,7 +564,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
         </p>
       </div>
       <div>
-        <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formUnknownLanguage')}</label>
+        <label htmlFor={`${fid}-2`} className="block text-xs text-fg-muted mb-1">{t('settings.metadata.formUnknownLanguage')}</label>
         <select id={`${fid}-2`}
           value={unknownLanguageBehavior}
           onChange={e => setUnknownLanguageBehavior(e.target.value as 'pass' | 'fail')}
@@ -579,11 +579,11 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formMinPages')}</label>
+          <label htmlFor={`${fid}-3`} className="block text-xs text-fg-muted mb-1">{t('settings.metadata.formMinPages')}</label>
           <input id={`${fid}-3`} type="number" min={0} value={minPages} onChange={e => setMinPages(Number(e.target.value))} className={inputCls} />
         </div>
         <div>
-          <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.metadata.formMinEditionCount')}</label>
+          <label htmlFor={`${fid}-4`} className="block text-xs text-fg-muted mb-1">{t('settings.metadata.formMinEditionCount')}</label>
           <input id={`${fid}-4`} type="number" min={0} value={minEditionCount} onChange={e => setMinEditionCount(Number(e.target.value))} className={inputCls} />
         </div>
       </div>
@@ -608,7 +608,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
       </div>
       {err && <div className="text-xs text-red-400">{err}</div>}
       <div className="flex justify-end gap-2">
-        <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
+        <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white">
           {t('common.cancel')}
         </button>
         <button type="submit" disabled={saving} className={`px-3 py-1.5 ${primaryFill} disabled:opacity-50 rounded text-xs font-medium`}>

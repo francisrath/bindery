@@ -128,11 +128,11 @@ export default function ABSConflictPanel({
                   <div className="grid min-w-0 gap-2 md:grid-cols-2 text-xs">
                     <div className="min-w-0 rounded border border-slate-200 dark:border-zinc-800 px-2 py-2 bg-slate-50 dark:bg-zinc-950 overflow-hidden">
                       <div className="font-medium text-slate-700 dark:text-zinc-300 mb-1">ABS</div>
-                      <div className="text-slate-600 dark:text-zinc-400 whitespace-pre-wrap break-all min-w-0">{conflict.absValue || 'Empty'}</div>
+                      <div className="text-fg-muted whitespace-pre-wrap break-all min-w-0">{conflict.absValue || 'Empty'}</div>
                     </div>
                     <div className="min-w-0 rounded border border-slate-200 dark:border-zinc-800 px-2 py-2 bg-slate-50 dark:bg-zinc-950 overflow-hidden">
                       <div className="font-medium text-slate-700 dark:text-zinc-300 mb-1">Upstream</div>
-                      <div className="text-slate-600 dark:text-zinc-400 whitespace-pre-wrap break-all min-w-0">{conflict.upstreamValue || 'Empty'}</div>
+                      <div className="text-fg-muted whitespace-pre-wrap break-all min-w-0">{conflict.upstreamValue || 'Empty'}</div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -166,7 +166,7 @@ export default function ABSConflictPanel({
                     <RelinkButton conflict={group[0]} relinkAction={relinkAction} />
                   </div>
                   {group.map(conflict => (
-                    <div key={conflict.id} className="flex items-center justify-between gap-3 text-xs text-slate-600 dark:text-zinc-400">
+                    <div key={conflict.id} className="flex items-center justify-between gap-3 text-xs text-fg-muted">
                       <span>{conflict.fieldLabel}</span>
                       <span>Prefers {conflict.preferredSource || conflict.appliedSource}</span>
                     </div>

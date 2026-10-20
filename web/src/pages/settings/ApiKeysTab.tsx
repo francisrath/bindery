@@ -143,7 +143,7 @@ export default function ApiKeysTab() {
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.apiKeys')}</h3>
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
           <div>
-            <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.googleBooksKey')}</label>
+            <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{t('settings.general.googleBooksKey')}</label>
             <div className="flex flex-wrap gap-2">
               <input id={`${fid}-1`}
                 {...secretInputAttrs}
@@ -176,7 +176,7 @@ export default function ApiKeysTab() {
             )}
             <div>
               <div className="flex items-center justify-between gap-3 mb-1">
-                <label className="block text-xs text-slate-600 dark:text-zinc-400">
+                <label className="block text-xs text-fg-muted">
                   {t('settings.general.hardcoverApiToken', 'Hardcover API Token')}
                 </label>
                 <span className={`text-[11px] font-medium ${hardcoverTokenConfigured ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-500'}`}>
@@ -268,7 +268,7 @@ export default function ApiKeysTab() {
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.opds')}</h3>
         <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
           <div>
-            <span className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{t('settings.general.opdsFeedUrl')}</span>
+            <span className="block text-xs font-medium text-fg-muted mb-1">{t('settings.general.opdsFeedUrl')}</span>
             <div className="flex items-center gap-2">
               <code className="flex-1 text-xs bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 px-2 py-1.5 rounded font-mono break-all">
                 {window.location.origin}{BINDERY_BASE}/opds

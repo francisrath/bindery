@@ -116,7 +116,7 @@ export default function NamingTemplateField({
       </div>
       {tappedTokenMeaning && (
         // Touch screens only: on a desktop the tooltip already says this.
-        <p data-testid={`naming-token-meaning-${kind}`} aria-live="polite" className="hidden pointer-coarse:block text-xs text-slate-600 dark:text-zinc-400 -mt-1 mb-2">
+        <p data-testid={`naming-token-meaning-${kind}`} aria-live="polite" className="hidden pointer-coarse:block text-xs text-fg-muted -mt-1 mb-2">
           {tappedTokenMeaning}
         </p>
       )}
@@ -141,7 +141,7 @@ export default function NamingTemplateField({
 
       {/* Live preview */}
       {!validation.empty && (
-        <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1.5">
+        <p className="text-xs text-fg-muted mt-1.5">
           <span className="text-slate-500 dark:text-zinc-500">
             {t('settings.general.naming.previewLabel')}
           </span>{' '}

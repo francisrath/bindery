@@ -69,7 +69,7 @@ function SeedRatioField({ value, onChange, source }: { value: number | null | un
 
   return (
     <div>
-      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.seedRatio')}</label>
+      <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{t('settings.indexers.form.seedRatio')}</label>
       <div className="flex items-center gap-3">
         <input id={`${fid}-1`}
           type="number"
@@ -81,7 +81,7 @@ function SeedRatioField({ value, onChange, source }: { value: number | null | un
           placeholder={t('settings.indexers.form.seedRatioPlaceholder')}
           className={`${inputCls} flex-1 disabled:opacity-50`}
         />
-        <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+        <label className="flex items-center gap-1.5 text-xs text-fg-muted whitespace-nowrap">
           <input type="checkbox" checked={unlimited} onChange={toggleUnlimited} />
           {t('settings.indexers.form.seedRatioUnlimited')}
         </label>
@@ -121,7 +121,7 @@ function MinutesField({ label, placeholder, value, onChange }: { label: string; 
 
   return (
     <div className="flex-1">
-      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{label}</label>
+      <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{label}</label>
       <input id={`${fid}-1`}
         type="number"
         min="1"
@@ -207,7 +207,7 @@ function DailyQueryLimitField({ value, onChange }: { value: number | null | unde
 
   return (
     <div>
-      <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.dailyQueryLimit')}</label>
+      <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{t('settings.indexers.form.dailyQueryLimit')}</label>
       <input id={`${fid}-1`}
         type="number"
         min="0"
@@ -255,7 +255,7 @@ function DownloadClientField({ value, onChange, indexerType, clients }: {
   }
   return (
     <div>
-      <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('settings.indexers.form.downloadClient')}</label>
+      <label className="block text-xs text-fg-muted mb-1">{t('settings.indexers.form.downloadClient')}</label>
       <select
         aria-label={t('settings.indexers.form.downloadClient')}
         value={value ?? ''}
@@ -289,7 +289,7 @@ function FreeleechOnlyField({ value, onChange }: { value: boolean; onChange: (v:
   const { t } = useTranslation()
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
+      <label className="flex items-center gap-1.5 text-xs text-fg-muted">
         <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)} />
         {t('settings.indexers.form.freeleechOnly')}
       </label>
@@ -305,7 +305,7 @@ function ParentCategoriesField({ value, onChange }: { value: boolean; onChange: 
   const { t } = useTranslation()
   return (
     <div>
-      <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
+      <label className="flex items-center gap-1.5 text-xs text-fg-muted">
         <input type="checkbox" checked={value} onChange={e => onChange(e.target.checked)} />
         {t('settings.indexers.form.includeParentCategories')}
       </label>
@@ -378,7 +378,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pointer-coarse:gap-6 flex-shrink-0 flex-wrap">
-                  <button onClick={() => setEditingIndexer(editingIndexer === idx.id ? null : idx.id)} className="touch-target text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">{t('common.edit')}</button>
+                  <button onClick={() => setEditingIndexer(editingIndexer === idx.id ? null : idx.id)} className="touch-target text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white">{t('common.edit')}</button>
                   <button
                     disabled={indexerTestResults[idx.id]?.testing}
                     onClick={async () => {
@@ -390,7 +390,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                         setIndexerTestResults(prev => ({ ...prev, [idx.id]: { ok: false, status: 0, categories: 0, bookSearch: false, latencyMs: 0, searchResults: 0, error: err instanceof Error ? err.message : 'Request failed', testing: false } }))
                       }
                     }}
-                    className="touch-target text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
+                    className="touch-target text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
                   >
                     {indexerTestResults[idx.id]?.testing ? t('common.testing') : t('common.test')}
                   </button>
@@ -583,7 +583,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                   )}
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
-                  <button onClick={() => setEditingProwlarr(editingProwlarr === p.id ? null : p.id)} className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
+                  <button onClick={() => setEditingProwlarr(editingProwlarr === p.id ? null : p.id)} className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white">
                     {t('settings.prowlarr.edit')}
                   </button>
                   <button
@@ -595,7 +595,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                         setProwlarrTestResult(prev => ({ ...prev, [p.id]: { ok: false, msg: err instanceof Error ? err.message : t('settings.prowlarr.connFailedGeneric') } }))
                       }
                     }}
-                    className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                    className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white"
                   >
                     {t('settings.prowlarr.test')}
                   </button>
@@ -610,7 +610,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                         setProwlarrSyncResult(prev => ({ ...prev, [p.id]: t('settings.prowlarr.syncFailed', { error: err instanceof Error ? err.message : t('settings.prowlarr.unknownError') }) }))
                       }
                     }}
-                    className="text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+                    className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white"
                   >
                     {t('settings.prowlarr.syncNow')}
                   </button>
@@ -680,7 +680,7 @@ function EditIndexerForm({ indexer, clients, onClose, onSaved }: { indexer: Inde
   const [downloadClientId, setDownloadClientId] = useState<number | null>(indexer.downloadClientId ?? null)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<IndexerTestResult | null>(null)
-  const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
+  const labelCls = 'block text-xs text-fg-muted mb-1'
 
   const submit = async () => {
     const payload: Partial<Indexer> = { ...indexer, name, type, url, categories: parseCats(categories), includeParentCategories, priority: parsePriority(priority), seedRatio, seedTimeMinutes, inactiveSeedTimeMinutes, freeleechOnly, dailyQueryLimit, downloadClientId }
@@ -753,8 +753,8 @@ function EditIndexerForm({ indexer, clients, onClose, onSaved }: { indexer: Inde
       <DownloadClientField value={downloadClientId} onChange={setDownloadClientId} indexerType={type} clients={clients} />
       {testResult && <IndexerTestResultBanner r={testResult} />}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
-        <button onClick={handleTest} disabled={testing || !url} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
+        <button onClick={handleTest} disabled={testing || !url} className="px-3 py-1.5 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
         <button onClick={submit} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium`}>{t('common.save')}</button>
       </div>
     </div>
@@ -779,7 +779,7 @@ function AddIndexerForm({ clients, onClose, onAdded }: { clients: DownloadClient
   const [downloadClientId, setDownloadClientId] = useState<number | null>(null)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<IndexerTestResult | null>(null)
-  const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
+  const labelCls = 'block text-xs text-fg-muted mb-1'
 
   const submit = async () => {
     const idx = await api.addIndexer({ name, url, apiKey, type, categories: parseCats(categories), includeParentCategories, priority: parsePriority(priority), enabled: true, seedRatio, seedTimeMinutes, inactiveSeedTimeMinutes, freeleechOnly, dailyQueryLimit, downloadClientId })
@@ -841,8 +841,8 @@ function AddIndexerForm({ clients, onClose, onAdded }: { clients: DownloadClient
       <DownloadClientField value={downloadClientId} onChange={setDownloadClientId} indexerType={type} clients={clients} />
       {testResult && <IndexerTestResultBanner r={testResult} />}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
-        <button onClick={handleTest} disabled={testing || !url} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
+        <button onClick={handleTest} disabled={testing || !url} className="px-3 py-1.5 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50">{testing ? t('common.testing') : t('common.test')}</button>
         <button onClick={submit} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium`}>{t('common.save')}</button>
       </div>
     </div>
@@ -861,7 +861,7 @@ function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrIn
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const urlChanged = url.trim() !== instance.url.trim()
-  const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
+  const labelCls = 'block text-xs text-fg-muted mb-1'
 
   const submit = async () => {
     setSaving(true)
@@ -898,13 +898,13 @@ function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrIn
       </div>
       <div className="flex items-center gap-2">
         <Toggle checked={syncOnStartup} onChange={() => setSyncOnStartup(!syncOnStartup)} />
-        <span className="text-xs text-slate-600 dark:text-zinc-400">{t('settings.prowlarr.syncOnStartup')}</span>
+        <span className="text-xs text-fg-muted">{t('settings.prowlarr.syncOnStartup')}</span>
       </div>
       {error && (
         <div className="text-xs text-red-600 dark:text-red-400 break-words">{error}</div>
       )}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
         <button onClick={submit} disabled={!url || saving} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>
           {saving ? t('common.saving') : t('common.save')}
         </button>
@@ -922,7 +922,7 @@ function AddProwlarrForm({ onClose, onAdded }: { onClose: () => void; onAdded: (
   const [syncOnStartup, setSyncOnStartup] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const labelCls = 'block text-xs text-slate-600 dark:text-zinc-400 mb-1'
+  const labelCls = 'block text-xs text-fg-muted mb-1'
 
   const submit = async () => {
     setSyncing(true)
@@ -967,13 +967,13 @@ function AddProwlarrForm({ onClose, onAdded }: { onClose: () => void; onAdded: (
       </div>
       <div className="flex items-center gap-2">
         <Toggle checked={syncOnStartup} onChange={() => setSyncOnStartup(!syncOnStartup)} />
-        <span className="text-xs text-slate-600 dark:text-zinc-400">{t('settings.prowlarr.syncOnStartup')}</span>
+        <span className="text-xs text-fg-muted">{t('settings.prowlarr.syncOnStartup')}</span>
       </div>
       {error && (
         <div className="text-xs text-red-600 dark:text-red-400 break-words">{error}</div>
       )}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1.5 text-sm text-slate-600 dark:text-zinc-400">{t('common.cancel')}</button>
+        <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
         <button onClick={submit} disabled={!url || !apiKey || syncing} className={`px-3 py-1.5 ${primaryFill} rounded text-sm font-medium disabled:opacity-50`}>
           {syncing ? t('settings.prowlarr.savingAndSyncing') : t('settings.prowlarr.saveAndSync')}
         </button>

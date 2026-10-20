@@ -127,7 +127,7 @@ export default function GoodreadsImportSection() {
       </p>
 
       <div className="mb-3">
-        <span className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+        <span className="block text-xs text-fg-muted mb-1">
           {t('settings.import.goodreadsShelfLabel')}
         </span>
         <div className="flex flex-col gap-1">

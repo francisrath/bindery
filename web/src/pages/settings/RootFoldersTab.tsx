@@ -59,7 +59,7 @@ export default function RootFoldersTab() {
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">{t('settings.rootfolders.heading')}</h3>
       </div>
-      <p className="text-sm text-slate-600 dark:text-zinc-400 mb-4">
+      <p className="text-sm text-fg-muted mb-4">
         {t('settings.rootfolders.description')} (<code className="font-mono bg-slate-200 dark:bg-zinc-800 px-1 rounded text-xs">BINDERY_LIBRARY_DIR</code>).
       </p>
 

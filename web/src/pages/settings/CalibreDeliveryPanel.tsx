@@ -199,7 +199,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
                   <thead className="bg-slate-100 dark:bg-zinc-800 sticky top-0">
                     <tr>
                       {(['colTitle', 'colAuthor', 'colCode', 'colError', 'colAttempts', 'colLastTry'] as const).map(k => (
-                        <th key={k} className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">
+                        <th key={k} className="text-left px-2 py-1 text-fg-muted font-medium">
                           {t(`settings.calibre.deliveries.${k}`)}
                         </th>
                       ))}
@@ -209,11 +209,11 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
                     {items.map(d => (
                       <tr key={d.id} className="border-t border-slate-200 dark:border-zinc-800 align-top">
                         <td className="px-2 py-1 text-slate-800 dark:text-zinc-200">{d.bookTitle || `#${d.bookId}`}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400">{d.authorName}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400 font-mono">{d.lastErrorCode}</td>
+                        <td className="px-2 py-1 text-fg-muted">{d.authorName}</td>
+                        <td className="px-2 py-1 text-fg-muted font-mono">{d.lastErrorCode}</td>
                         <td className="px-2 py-1 text-red-600 dark:text-red-400 break-all">{d.lastError}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400">{d.attempts}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400 whitespace-nowrap">{when(d.updatedAt)}</td>
+                        <td className="px-2 py-1 text-fg-muted">{d.attempts}</td>
+                        <td className="px-2 py-1 text-fg-muted whitespace-nowrap">{when(d.updatedAt)}</td>
                       </tr>
                     ))}
                   </tbody>

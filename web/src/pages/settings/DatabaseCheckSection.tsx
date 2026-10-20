@@ -129,7 +129,7 @@ export default function DatabaseCheckSection() {
               {t('settings.general.dbCheckFound', { count: report.total })}
             </p>
             <table className="w-full text-xs text-left">
-              <thead className="text-slate-600 dark:text-zinc-400">
+              <thead className="text-fg-muted">
                 <tr>
                   <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRelationship')}</th>
                   <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRows')}</th>
@@ -176,7 +176,7 @@ export default function DatabaseCheckSection() {
             <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200">{t('settings.general.dbCleanupPreviewTitle')}</p>
             {preview.relationships.length > 0 && (
               <table className="w-full text-xs text-left">
-                <thead className="text-slate-600 dark:text-zinc-400">
+                <thead className="text-fg-muted">
                   <tr>
                     <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRelationship')}</th>
                     <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRows')}</th>

@@ -669,10 +669,10 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium">{row.name}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">{row.slug}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{row.slug}</span>
                       {(row.local?.account || (!row.local && hcAccount)) && <span className="text-[10px] px-1.5 py-0.5 bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-400 rounded">@{row.local?.account || hcAccount}</span>}
                       {row.stale && <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 rounded">{t('settings.import.hardcoverSavedOnly', 'Saved only')}</span>}
-                      {il && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 rounded">{il.apiKeyConfigured ? t('settings.import.hardcoverOverrideConfigured', 'Override token') : t('settings.import.hardcoverGlobalToken', 'Global token')}</span>}
+                      {il && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{il.apiKeyConfigured ? t('settings.import.hardcoverOverrideConfigured', 'Override token') : t('settings.import.hardcoverGlobalToken', 'Global token')}</span>}
                     </span>
                     <span className="block text-xs text-slate-500 dark:text-zinc-600 mt-0.5">
                       {il?.lastSyncAt

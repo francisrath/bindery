@@ -170,7 +170,7 @@ export default function LogsTab() {
                 ? f === 'error' ? 'bg-red-600 text-white'
                   : f === 'warn' ? 'bg-amber-500 text-white'
                   : 'bg-slate-700 dark:bg-zinc-600 text-white'
-                : 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+                : 'bg-slate-200 dark:bg-zinc-800 text-fg-muted hover:text-slate-900 dark:hover:text-white'}`}
             >
               {f.toUpperCase()}
             </button>
@@ -209,7 +209,7 @@ export default function LogsTab() {
 
         <button
           onClick={() => fetchLogs(0)}
-          className="text-xs px-2.5 py-1 rounded border border-slate-300 dark:border-zinc-700 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+          className="text-xs px-2.5 py-1 rounded border border-slate-300 dark:border-zinc-700 text-fg-muted hover:text-slate-900 dark:hover:text-white"
         >
           {t('common.refresh')}
         </button>
@@ -358,7 +358,7 @@ export default function LogsTab() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center gap-3 mt-2 text-xs text-slate-600 dark:text-zinc-400">
+      <div className="flex items-center gap-3 mt-2 text-xs text-fg-muted">
         <button
           disabled={logPage === 0}
           onClick={() => fetchLogs(logPage - 1)}
@@ -399,7 +399,7 @@ export default function LogsTab() {
                 onChange={e => setSettings(s => ({ ...s, 'log.retention_days': e.target.value }))}
                 className="w-20 bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-2 py-1 text-sm text-right"
               />
-              <span className="text-sm text-slate-600 dark:text-zinc-400">{t('settings.general.days')}</span>
+              <span className="text-sm text-fg-muted">{t('settings.general.days')}</span>
               <SaveButton
                 result={retentionResult}
                 saving={saving === 'log.retention_days'}
@@ -457,7 +457,7 @@ export default function LogsTab() {
               <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{t('settings.general.existingBackups')}</p>
               <ul className="space-y-1">
                 {backups.map(b => (
-                  <li key={b.name} className="flex items-center justify-between text-xs text-slate-600 dark:text-zinc-400">
+                  <li key={b.name} className="flex items-center justify-between text-xs text-fg-muted">
                     <span>
                       <span className="font-mono">{b.name}</span>
                       <span className="ml-2 text-slate-500 dark:text-zinc-500">{formatBytesZero(b.size)} · {formatRelativeTime(b.modTime)}</span>

@@ -70,7 +70,7 @@ export default function FormatList({
                 onClick={() => move(i, -1)}
                 disabled={i === 0}
                 aria-label={t('settings.quality.moveUp')}
-                className="text-xs px-1.5 py-0.5 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                className="text-xs px-1.5 py-0.5 text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
               >
                 {'↑'}
               </button>
@@ -79,7 +79,7 @@ export default function FormatList({
                 onClick={() => move(i, 1)}
                 disabled={i === items.length - 1}
                 aria-label={t('settings.quality.moveDown')}
-                className="text-xs px-1.5 py-0.5 text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
+                className="text-xs px-1.5 py-0.5 text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-30"
               >
                 {'↓'}
               </button>
@@ -120,7 +120,7 @@ export default function FormatList({
 function SummaryLine({ kind, items }: { kind: 'ebook' | 'audio'; items: EditorItem[] }) {
   const { t } = useTranslation()
   const summary = summarise(items)
-  const cls = 'text-[11px] text-slate-600 dark:text-zinc-400 mt-1.5'
+  const cls = 'text-[11px] text-fg-muted mt-1.5'
   switch (summary.kind) {
     case 'noOpinion':
       return (
