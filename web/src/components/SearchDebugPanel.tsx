@@ -42,7 +42,7 @@ export default function SearchDebugPanel({ debug, resultCount, defaultOpen }: Pr
             {indexers.length} indexer{indexers.length === 1 ? '' : 's'}
             {' · '}
             {rawCount} raw → {resultCount} shown
-            {anyIndexerErr && <span className="ml-2 text-red-600 dark:text-red-400">· indexer error</span>}
+            {anyIndexerErr && <span className="ml-2 text-red-700 dark:text-red-400">· indexer error</span>}
           </span>
         </span>
         <span className="text-xs text-slate-500 dark:text-zinc-500 font-normal">

@@ -468,7 +468,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                     onClick={() => dropSave(saveDropFolder)}
                   />
                 </div>
-                {dropErr && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{dropErr}</p>}
+                {dropErr && <p className="text-xs text-red-700 dark:text-red-400 mt-1">{dropErr}</p>}
               </div>
               )}
               {audiobookMode === 'external' && (
@@ -492,7 +492,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                     onClick={() => audiobookDropSave(saveAudiobookDropFolder)}
                   />
                 </div>
-                {audiobookDropErr && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{audiobookDropErr}</p>}
+                {audiobookDropErr && <p className="text-xs text-red-700 dark:text-red-400 mt-1">{audiobookDropErr}</p>}
               </div>
               )}
               <div className="flex gap-6 flex-wrap">
@@ -620,7 +620,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                 onClick={() => langSave(savePreferredLanguage)}
               />
             </div>
-            {langErr && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{langErr}</p>}
+            {langErr && <p className="text-xs text-red-700 dark:text-red-400 mt-1">{langErr}</p>}
           </div>
         </div>
       </section>
@@ -1181,7 +1181,7 @@ function ChangePasswordForm({ username }: { username: string }) {
       <input id={`${fid}-1`} type="password" autoComplete="current-password" placeholder="Current password" value={current} onChange={e => setCurrent(e.target.value)} className={inputCls} />
       <input type="password" autoComplete="new-password" placeholder="New password" value={next} onChange={e => setNext(e.target.value)} className={inputCls} />
       <input type="password" autoComplete="new-password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={inputCls} />
-      {error && <div className="text-xs text-red-600 dark:text-red-400">{error}</div>}
+      {error && <div className="text-xs text-red-700 dark:text-red-400">{error}</div>}
       {success && <div className="text-xs text-emerald-600 dark:text-emerald-400">Password updated</div>}
       <button type="submit" disabled={submitting || !current || !next} className={`px-3 py-2 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}>
         {submitting ? 'Updating…' : 'Change password'}

@@ -465,7 +465,7 @@ export default function LogsTab() {
                     <button
                       onClick={() => handleDeleteBackup(b.name)}
                       disabled={deletingBackup === b.name}
-                      className="ml-4 text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+                      className="ml-4 text-red-700 dark:text-red-400 hover:underline disabled:opacity-50"
                     >
                       {deletingBackup === b.name ? '…' : t('common.delete')}
                     </button>

@@ -100,7 +100,7 @@ export default function RootFoldersTab() {
                       await setAudiobookDefault('')
                     }
                   }}
-                  className="ml-4 px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 flex-shrink-0"
+                  className="ml-4 px-3 py-1 text-xs text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded border border-red-200 dark:border-red-800 flex-shrink-0"
                 >
                   {t('common.remove')}
                 </button>

@@ -25,8 +25,8 @@ const statusStyles: Record<string, string> = {
   noop: 'text-slate-400 dark:text-zinc-500',
   collision: 'text-amber-600 dark:text-amber-400',
   missing: 'text-amber-600 dark:text-amber-400',
-  error: 'text-red-600 dark:text-red-400',
-  failed: 'text-red-600 dark:text-red-400',
+  error: 'text-red-700 dark:text-red-400',
+  failed: 'text-red-700 dark:text-red-400',
 }
 
 const statusLabel: Record<string, string> = {
@@ -104,7 +104,7 @@ export default function RenameFilesModal({ scope, id, label, onClose, onApplied 
         {loading ? (
           <p className="text-sm text-slate-500 dark:text-zinc-400">Computing changes…</p>
         ) : error && !moves.length ? (
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
         ) : moves.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-zinc-400">No tracked files to rename.</p>
         ) : (
@@ -118,7 +118,7 @@ export default function RenameFilesModal({ scope, id, label, onClose, onApplied 
         )}
 
         {error && moves.length > 0 && (
-          <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-3 text-sm text-red-700 dark:text-red-400">{error}</p>
         )}
 
         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-2">

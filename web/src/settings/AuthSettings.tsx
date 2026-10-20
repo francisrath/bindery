@@ -105,7 +105,7 @@ export default function AuthSettings() {
                 ) : null}
               </div>
               {p.status?.state === 'failed' && p.status.last_error && (
-                <p className="text-xs text-red-600 dark:text-red-400 mt-1 break-all">
+                <p className="text-xs text-red-700 dark:text-red-400 mt-1 break-all">
                   {p.status.last_error}
                 </p>
               )}
@@ -113,7 +113,7 @@ export default function AuthSettings() {
             <button
               onClick={() => remove(p.id)}
               disabled={saving}
-              className="text-xs text-red-600 dark:text-red-400 hover:underline disabled:opacity-50 shrink-0"
+              className="text-xs text-red-700 dark:text-red-400 hover:underline disabled:opacity-50 shrink-0"
             >
               {t('common.remove')}
             </button>
@@ -363,7 +363,7 @@ function DiscoveryResultView({ result, entered }: { result: DiscoveryResult; ent
   if (result.state === 'idle' || result.state === 'probing') return null
   if (result.state === 'error') {
     return (
-      <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 break-all">
+      <p className="text-xs text-red-700 dark:text-red-400 mt-1.5 break-all">
         {t('settings.oidc.testDiscoveryFail')}: {result.message}
       </p>
     )

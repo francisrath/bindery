@@ -411,7 +411,7 @@ export default function AdvancedTab() {
         )}
 
         {errors[d.key] && (
-          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors[d.key]}</p>
+          <p className="mt-1 text-xs text-red-700 dark:text-red-400">{errors[d.key]}</p>
         )}
       </div>
     )
@@ -447,7 +447,7 @@ export default function AdvancedTab() {
         >
           {t('settings.advanced.remove', 'Remove row')}
         </button>
-        {errors[r.key] && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{errors[r.key]}</p>}
+        {errors[r.key] && <p className="mt-1 text-xs text-red-700 dark:text-red-400">{errors[r.key]}</p>}
       </div>
     )
   }
@@ -488,7 +488,7 @@ export default function AdvancedTab() {
 
       {loading && <p className="text-sm text-slate-600 dark:text-zinc-400">{t('common.loading')}</p>}
       {loadError && (
-        <p className="text-sm text-red-600 dark:text-red-400">
+        <p className="text-sm text-red-700 dark:text-red-400">
           {t('settings.advanced.loadError', 'Could not load the settings registry: {{error}}', { error: loadError })}
         </p>
       )}

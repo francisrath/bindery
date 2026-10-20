@@ -178,7 +178,7 @@ export default function ABSConflictPanel({
         </>
       )}
 
-      {conflictError && <div className="text-sm text-red-600 dark:text-red-400">{conflictError}</div>}
+      {conflictError && <div className="text-sm text-red-700 dark:text-red-400">{conflictError}</div>}
     </div>
   )
 }

@@ -242,7 +242,7 @@ export default function MetadataTab() {
             ))}
           </div>
           {sourcesError && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-2" role="alert">
+            <p className="text-xs text-red-700 dark:text-red-400 mt-2" role="alert">
               {t('settings.general.sourcesSaveFailed', 'Could not save that change, so it was put back. Try again.')}
             </p>
           )}

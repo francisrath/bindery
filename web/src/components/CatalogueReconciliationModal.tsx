@@ -122,7 +122,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
             {t('catalogueReconciliation.loading', 'Checking the current provider catalogue…')}
           </p>
         ) : error && !result ? (
-          <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="mt-4 text-sm text-red-700 dark:text-red-400">{error}</p>
         ) : result ? (
           <>
             <div className="mt-4 grid grid-cols-3 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 dark:border-zinc-800 dark:bg-zinc-800">
@@ -233,7 +233,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
           </>
         ) : null}
 
-        {error && result && <p className="mt-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && result && <p className="mt-3 text-sm text-red-700 dark:text-red-400">{error}</p>}
 
         <div className="mt-4 flex justify-end gap-2 border-t border-slate-200 pt-4 dark:border-zinc-800">
           <button type="button" onClick={onClose} className={`${btn.secondary} ${btnSize.md}`}>

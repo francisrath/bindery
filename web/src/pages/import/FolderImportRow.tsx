@@ -168,7 +168,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
       </div>
 
       {result && (
-        <p className={`mt-2 text-xs ${accepted ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+        <p className={`mt-2 text-xs ${accepted ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
           {accepted
             ? t('manualImport.queued', 'Queued — importing in the background; watch the Queue for progress.')
             : t('manualImport.failed', { error: result.error || 'failed', defaultValue: `Failed: ${result.error || 'failed'}` })}

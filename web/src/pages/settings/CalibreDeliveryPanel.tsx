@@ -118,7 +118,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
       </div>
 
       {loadError && (
-        <p className="text-xs text-red-600 dark:text-red-400">
+        <p className="text-xs text-red-700 dark:text-red-400">
           {t('settings.calibre.deliveries.loadFailed', { error: loadError })}
         </p>
       )}
@@ -132,7 +132,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
           <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
           <span>{t('settings.calibre.deliveries.delivered', { count: summary.delivered })}</span>
           <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
-          <span className={summary.failed > 0 ? 'text-red-600 dark:text-red-400' : ''}>
+          <span className={summary.failed > 0 ? 'text-red-700 dark:text-red-400' : ''}>
             {t('settings.calibre.deliveries.failed', { count: summary.failed })}
           </span>
           <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
@@ -180,7 +180,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
       )}
 
       {notice && <p className="text-xs text-emerald-600 dark:text-emerald-400">{notice}</p>}
-      {actionError && <p className="text-xs text-red-600 dark:text-red-400">{actionError}</p>}
+      {actionError && <p className="text-xs text-red-700 dark:text-red-400">{actionError}</p>}
 
       {summary && (
         <div>
@@ -211,7 +211,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
                         <td className="px-2 py-1 text-slate-800 dark:text-zinc-200">{d.bookTitle || `#${d.bookId}`}</td>
                         <td className="px-2 py-1 text-slate-600 dark:text-zinc-400">{d.authorName}</td>
                         <td className="px-2 py-1 text-slate-600 dark:text-zinc-400 font-mono">{d.lastErrorCode}</td>
-                        <td className="px-2 py-1 text-red-600 dark:text-red-400 break-all">{d.lastError}</td>
+                        <td className="px-2 py-1 text-red-700 dark:text-red-400 break-all">{d.lastError}</td>
                         <td className="px-2 py-1 text-slate-600 dark:text-zinc-400">{d.attempts}</td>
                         <td className="px-2 py-1 text-slate-600 dark:text-zinc-400 whitespace-nowrap">{when(d.updatedAt)}</td>
                       </tr>
