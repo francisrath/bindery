@@ -86,7 +86,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
   const target = summary?.target
   let reach: { text: string; tone: string }
   if (target?.reachable === true) {
-    reach = { text: t('settings.calibre.deliveries.reachable'), tone: 'text-emerald-600 dark:text-emerald-400' }
+    reach = { text: t('settings.calibre.deliveries.reachable'), tone: 'text-accent-text' }
   } else if (target?.reachable === false) {
     reach = {
       text: target.lastError
@@ -101,7 +101,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
   const pulling = summary?.mode === 'plugin' && summary?.transport === 'pull'
   if (pulling) {
     reach = summary?.pull?.lastSeen
-      ? { text: t('settings.calibre.deliveries.lastCheckIn', { time: when(summary.pull.lastSeen) }), tone: 'text-emerald-600 dark:text-emerald-400' }
+      ? { text: t('settings.calibre.deliveries.lastCheckIn', { time: when(summary.pull.lastSeen) }), tone: 'text-accent-text' }
       : { text: t('settings.calibre.deliveries.neverCheckedIn'), tone: 'text-amber-600 dark:text-amber-400' }
   }
 
@@ -179,7 +179,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
         </div>
       )}
 
-      {notice && <p className="text-xs text-emerald-600 dark:text-emerald-400">{notice}</p>}
+      {notice && <p className="text-xs text-accent-text">{notice}</p>}
       {actionError && <p className="text-xs text-red-600 dark:text-red-400">{actionError}</p>}
 
       {summary && (

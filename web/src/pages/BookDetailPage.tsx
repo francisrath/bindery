@@ -843,7 +843,7 @@ function BookDetailPageInner() {
           short. */}
       <button
         onClick={() => navigate(-backSteps)}
-        className="text-emerald-600 dark:text-emerald-400 hover:underline"
+        className="text-accent-text hover:underline"
       >
         {t('bookDetail.back')}
       </button>
@@ -1024,7 +1024,7 @@ function BookDetailPageInner() {
               {book.author?.authorName && (
                 <Link
                   to={`/author/${book.authorId}`}
-                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+                  className="text-sm text-accent-text hover:underline"
                 >
                   {book.author.authorName}
                 </Link>
@@ -1553,7 +1553,7 @@ function BookDetailPageInner() {
                     href={row.link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                    className="text-xs text-accent-text hover:underline"
                   >
                     {t('common.viewOnSource', { source: row.link.label, defaultValue: 'View on {{source}} ↗' })}
                   </a>

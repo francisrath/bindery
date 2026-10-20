@@ -926,7 +926,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           </p>
           <button
             onClick={() => onNavigate ? onNavigate('rootfolders') : window.location.assign('/settings?tab=rootfolders')}
-            className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+            className="text-sm text-accent-text hover:underline"
           >
             {t('settings.general.defaultLibraryLocationLink')}
           </button>
@@ -1182,7 +1182,7 @@ function ChangePasswordForm({ username }: { username: string }) {
       <input type="password" autoComplete="new-password" placeholder="New password" value={next} onChange={e => setNext(e.target.value)} className={inputCls} />
       <input type="password" autoComplete="new-password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={inputCls} />
       {error && <div className="text-xs text-red-600 dark:text-red-400">{error}</div>}
-      {success && <div className="text-xs text-emerald-600 dark:text-emerald-400">Password updated</div>}
+      {success && <div className="text-xs text-accent-text">Password updated</div>}
       <button type="submit" disabled={submitting || !current || !next} className={`px-3 py-2 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}>
         {submitting ? 'Updating…' : 'Change password'}
       </button>

@@ -641,7 +641,7 @@ export default function SeriesPage() {
                     </button>
                   )}
                   {fillResult[series.id] && (
-                    <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">{fillResult[series.id]}</span>
+                    <span className="ml-auto text-xs text-accent-text">{fillResult[series.id]}</span>
                   )}
                   {!fillResult[series.id] && linkResult[series.id] && (
                     <span className="ml-auto text-xs text-slate-600 dark:text-zinc-400">{linkResult[series.id]}</span>

@@ -576,10 +576,10 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                     </p>
                   )}
                   {prowlarrSyncResult[p.id] && (
-                    <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">{prowlarrSyncResult[p.id]}</p>
+                    <p className="text-xs text-accent-text mt-0.5">{prowlarrSyncResult[p.id]}</p>
                   )}
                   {prowlarrTestResult[p.id] && (
-                    <p className={`text-xs mt-0.5 ${prowlarrTestResult[p.id].ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>{prowlarrTestResult[p.id].msg}</p>
+                    <p className={`text-xs mt-0.5 ${prowlarrTestResult[p.id].ok ? 'text-accent-text' : 'text-red-600 dark:text-red-400'}`}>{prowlarrTestResult[p.id].msg}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">

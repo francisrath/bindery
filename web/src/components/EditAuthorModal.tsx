@@ -356,7 +356,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                   </button>
                 </div>
                 {genreApplied !== null && (
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
+                  <p className="text-xs text-accent-text mt-1">
                     {t('editAuthorModal.genreOverrideDone', 'Updated {{count}} book(s).', { count: genreApplied })}
                   </p>
                 )}

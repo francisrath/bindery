@@ -546,7 +546,7 @@ function CalibreSection({
           <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-zinc-800">
             <div className="text-xs">
               {testResult && (
-                <span className={testResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}>
+                <span className={testResult.ok ? 'text-accent-text' : 'text-red-600 dark:text-red-400'}>
                   {testResult.msg}
                 </span>
               )}
@@ -1088,7 +1088,7 @@ export function CalibreSyncModal({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
                   <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.pushed')}</div>
-                  <div className="font-semibold text-emerald-600 dark:text-emerald-400">{stats?.pushed ?? 0}</div>
+                  <div className="font-semibold text-accent-text">{stats?.pushed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
                   <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.alreadyInCalibre')}</div>
@@ -1112,7 +1112,7 @@ export function CalibreSyncModal({
                 <p className="text-xs text-red-600 dark:text-red-400">{t('settings.calibre.pushAll.syncFailed', { error: progress.error })}</p>
               )}
               {!running && progress.finishedAt && !progress.error && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                <p className="text-xs text-accent-text">
                   {t('settings.calibre.pushAll.done', {
                     pushed: stats?.pushed ?? 0,
                     already: stats?.alreadyInCalibre ?? 0,

@@ -179,7 +179,7 @@ export default function ApiKeysTab() {
                 <label className="block text-xs text-slate-600 dark:text-zinc-400">
                   {t('settings.general.hardcoverApiToken', 'Hardcover API Token')}
                 </label>
-                <span className={`text-[11px] font-medium ${hardcoverTokenConfigured ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-zinc-500'}`}>
+                <span className={`text-[11px] font-medium ${hardcoverTokenConfigured ? 'text-accent-text' : 'text-slate-500 dark:text-zinc-500'}`}>
                   {hardcoverTokenConfigured
                     ? t('settings.general.hardcoverTokenConfigured', 'Token configured')
                     : t('settings.general.hardcoverTokenNotConfigured', 'No token configured')}
@@ -227,12 +227,12 @@ export default function ApiKeysTab() {
                 href="https://hardcover.app/account/api"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block mt-1 text-xs text-emerald-600 dark:text-emerald-400 hover:underline"
+                className="inline-block mt-1 text-xs text-accent-text hover:underline"
               >
                 {t('settings.general.hardcoverApiTokenLink', 'Create or copy a Hardcover API token')}
               </a>
               {hardcoverTestResult && !hardcoverTestResult.testing && (
-                <p className={`mt-1 text-xs ${hardcoverTestResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                <p className={`mt-1 text-xs ${hardcoverTestResult.ok ? 'text-accent-text' : 'text-rose-600 dark:text-rose-400'}`}>
                   {hardcoverTestResult.ok
                     ? (hardcoverTestResult.message || t('settings.general.hardcoverTestOk', 'Hardcover API connected.'))
                     : (hardcoverTestResult.error || t('settings.general.hardcoverTestFailed', 'Hardcover API test failed.'))}
@@ -248,7 +248,7 @@ export default function ApiKeysTab() {
                 <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
                   {t('settings.general.enhancedHardcoverSeriesHint', 'Use Hardcover-backed series matching, catalog diffs, and missing-book fill.')}
                 </p>
-                <p className={`text-xs mt-1 ${enhancedHardcoverEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-zinc-500'}`}>
+                <p className={`text-xs mt-1 ${enhancedHardcoverEnabled ? 'text-accent-text' : 'text-slate-600 dark:text-zinc-500'}`}>
                   {enhancedHardcoverStatus}
                 </p>
               </div>
