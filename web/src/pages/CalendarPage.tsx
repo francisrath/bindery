@@ -177,7 +177,7 @@ export default function CalendarPage() {
                             <div
                               key={book.id}
                               title={book.title}
-                              className="text-[10px] leading-tight px-1.5 py-1 bg-emerald-500/20 text-emerald-300 rounded truncate cursor-default"
+                              className="text-[10px] leading-tight px-1.5 py-1 bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 rounded truncate cursor-default"
                             >
                               {book.title}
                             </div>

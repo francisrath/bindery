@@ -680,9 +680,9 @@ export default function SeriesPage() {
                           {entry.book?.status && (
                             <span className={`text-xs px-2 py-0.5 rounded ${
                               entry.book.status === 'imported'
-                                ? 'bg-emerald-500/20 text-emerald-400'
+                                ? 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-400'
                                 : entry.book.status === 'wanted'
-                                ? 'bg-amber-500/20 text-amber-400'
+                                ? 'bg-amber-500/20 text-amber-800 dark:text-amber-400'
                                 : 'bg-slate-300 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400'
                             }`}>
                               {t(`bookStatus.${entry.book.status}`, { defaultValue: entry.book.status })}
