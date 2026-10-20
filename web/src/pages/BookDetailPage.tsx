@@ -169,7 +169,7 @@ function ReleaseRow({
           {fmt && <MediaBadge type={fmt} />}
           <span className="truncate text-slate-800 dark:text-zinc-200">{r.title}</span>
         </div>
-        <span className="text-slate-500 dark:text-zinc-500 truncate block">
+        <span className="text-fg-muted truncate block">
           {r.indexerName} · {formatBytes(r.size)} · {r.grabs} grabs
           {safeHref(r.infoUrl) && (
             <>
@@ -277,7 +277,7 @@ export function FilteredResultsSection({
       </button>
       {open && (
         <div className="mt-2">
-          <p className="text-xs text-slate-500 dark:text-zinc-500 mb-2">
+          <p className="text-xs text-fg-muted mb-2">
             {t('bookDetail.filteredHint')}
             {total !== undefined && total > filtered.length && (
               <> {t('bookDetail.filteredCapped', { shown: filtered.length, total })}</>
@@ -1145,7 +1145,7 @@ function BookDetailPageInner() {
               with the search action — not in the File card, which is about the
               file(s) actually on disk. */}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <label htmlFor="book-media-type" className="text-xs text-slate-500 dark:text-zinc-500">
+            <label htmlFor="book-media-type" className="text-xs text-fg-muted">
               {t('bookDetail.mediaTypeLabel')}
             </label>
             <select
@@ -1211,7 +1211,7 @@ function BookDetailPageInner() {
       {(series.length > 1 || restorable.length > 0) && (
         <Section title={t('bookDetail.series.heading')}>
           {series.length > 1 && (<>
-          <p className="text-xs text-slate-500 dark:text-zinc-500">{t('bookDetail.series.explainer')}</p>
+          <p className="text-xs text-fg-muted">{t('bookDetail.series.explainer')}</p>
           <ul className="mt-3 space-y-2">
             {series.map(s => (
               <li key={s.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -1225,7 +1225,7 @@ function BookDetailPageInner() {
                     : s.title}
                 </span>
                 {s.primary ? (
-                  <span className="text-xs text-slate-500 dark:text-zinc-500">{t('bookDetail.series.namesFiles')}</span>
+                  <span className="text-xs text-fg-muted">{t('bookDetail.series.namesFiles')}</span>
                 ) : isAdmin && (
                   <button
                     type="button"
@@ -1252,7 +1252,7 @@ function BookDetailPageInner() {
           </>)}
           {restorable.length > 0 && (
             <div className={series.length > 1 ? 'mt-4' : ''}>
-              <p className="text-xs text-slate-500 dark:text-zinc-500">{t('bookDetail.series.keptOutExplainer')}</p>
+              <p className="text-xs text-fg-muted">{t('bookDetail.series.keptOutExplainer')}</p>
               <ul className="mt-2 space-y-2" aria-label={t('bookDetail.series.keptOutHeading')}>
                 {restorable.map(e => (
                   <li key={e.seriesForeignId} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
@@ -1279,7 +1279,7 @@ function BookDetailPageInner() {
             {/* The declared media type is what search and monitoring hunt for.
                 It is labelled as intent because the files below may disagree
                 with it, and when they do the files are the truth. */}
-            <span className="text-xs text-slate-500 dark:text-zinc-500">{t('bookDetail.wantedFormatLabel')}</span>
+            <span className="text-xs text-fg-muted">{t('bookDetail.wantedFormatLabel')}</span>
             <span className="w-fit">
               <MediaBadge type={mt} />
             </span>
@@ -1300,7 +1300,7 @@ function BookDetailPageInner() {
                     // dual-format book simply vanishes.
                     <div className="px-3 py-2 flex flex-wrap items-center gap-2">
                       <MediaBadge type={group.format} />
-                      <span className="text-xs text-slate-500 dark:text-zinc-500">
+                      <span className="text-xs text-fg-muted">
                         {t('bookDetail.formatNotOnDisk')}
                       </span>
                     </div>
@@ -1308,7 +1308,7 @@ function BookDetailPageInner() {
                     <>
                       <div className="px-3 py-2 flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-zinc-800">
                         <MediaBadge type={group.format} />
-                        <span className="text-xs text-slate-500 dark:text-zinc-500">
+                        <span className="text-xs text-fg-muted">
                           {t('bookDetail.fileCount', { count: group.rows.length })}
                         </span>
                         {/* No Download here any more: a group of three epubs
@@ -1346,7 +1346,7 @@ function BookDetailPageInner() {
                             className="px-3 py-2 flex items-center gap-2 min-w-0 border-t first:border-t-0 border-slate-100 dark:border-zinc-900"
                           >
                             <code
-                              className="min-w-0 font-mono text-xs text-slate-500 dark:text-zinc-500 break-all sm:truncate"
+                              className="min-w-0 font-mono text-xs text-fg-muted break-all sm:truncate"
                               title={row.path}
                             >
                               {row.path}
@@ -1422,7 +1422,7 @@ function BookDetailPageInner() {
               ))}
             </div>
           ) : (
-            <p className="mt-4 text-xs text-slate-500 dark:text-zinc-500">{t('bookDetail.noFile')}</p>
+            <p className="mt-4 text-xs text-fg-muted">{t('bookDetail.noFile')}</p>
           )}
 
           {pathClipboard.status === 'manual' && (
@@ -1573,7 +1573,7 @@ function BookDetailPageInner() {
               <ClipboardManualFallback text={idClipboard.manualText} />
             </div>
           )}
-          <p className="mt-3 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="mt-3 text-xs text-fg-muted">
             {t('bookDetail.metadataSource.hint', 'Re-bind this book if the record above is the wrong one.')}
           </p>
         </Section>
@@ -1696,10 +1696,10 @@ function BookDetailPageInner() {
                 <span className="font-medium text-slate-700 dark:text-zinc-300 flex-shrink-0">
                   {t(`bookDetail.event.${ev.eventType}`, ev.eventType)}
                 </span>
-                <span className="font-mono text-xs text-slate-500 dark:text-zinc-500 truncate min-w-0">
+                <span className="font-mono text-xs text-fg-muted truncate min-w-0">
                   {ev.sourceTitle || '—'}
                 </span>
-                <span className="ml-auto text-xs text-slate-500 dark:text-zinc-500 whitespace-nowrap flex-shrink-0">
+                <span className="ml-auto text-xs text-fg-muted whitespace-nowrap flex-shrink-0">
                   {new Date(ev.createdAt).toLocaleString()}
                 </span>
               </div>

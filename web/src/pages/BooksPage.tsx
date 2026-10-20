@@ -543,7 +543,7 @@ export default function BooksPage() {
               <div className="p-2">
                 <h3 className="text-xs font-medium truncate" title={book.title}>{book.title}</h3>
                 {book.author && (
-                  <p className="text-[10px] text-slate-500 dark:text-zinc-500 truncate mt-0.5">{book.author.authorName}</p>
+                  <p className="text-[10px] text-fg-muted truncate mt-0.5">{book.author.authorName}</p>
                 )}
                 <div className="flex items-center gap-1 mt-1 flex-wrap">
                   {(() => {

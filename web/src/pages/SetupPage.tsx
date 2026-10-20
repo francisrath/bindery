@@ -49,7 +49,7 @@ export default function SetupPage() {
 
   return (
     <CardShell title={t('setup.title')} subtitle={t('setup.subtitle')}>
-      <p className="text-xs text-slate-500 dark:text-zinc-500 mb-4 leading-relaxed">
+      <p className="text-xs text-fg-muted mb-4 leading-relaxed">
         {t('setup.description')}
       </p>
       <form onSubmit={submit} className="space-y-4">

@@ -86,7 +86,7 @@ export default function DeleteUserDialog({ user, counts, users, busy, onCancel, 
             />
             <span>
               <span className="font-medium">{t('users.deleteKeep')}</span>
-              <span className="block text-xs text-slate-500 dark:text-zinc-500">{t('users.deleteKeepHint')}</span>
+              <span className="block text-xs text-fg-muted">{t('users.deleteKeepHint')}</span>
             </span>
           </label>
 
@@ -113,7 +113,7 @@ export default function DeleteUserDialog({ user, counts, users, busy, onCancel, 
             />
             <span>
               <span className="font-medium">{t('users.deletePurge')}</span>
-              <span className="block text-xs text-slate-500 dark:text-zinc-500">{t('users.deletePurgeHint')}</span>
+              <span className="block text-xs text-fg-muted">{t('users.deletePurgeHint')}</span>
             </span>
           </label>
         </div>

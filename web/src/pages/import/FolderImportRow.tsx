@@ -100,7 +100,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
             {/* Ambiguous candidate picker */}
             {item.match === 'ambiguous' && !chosen && item.candidates && item.candidates.length > 0 && (
               <fieldset className="space-y-1">
-                <legend className="text-xs text-slate-500 dark:text-zinc-500">{t('manualImport.pickCandidate', 'Pick the correct book')}</legend>
+                <legend className="text-xs text-fg-muted">{t('manualImport.pickCandidate', 'Pick the correct book')}</legend>
                 {item.candidates.map(c => (
                   <label key={c.id} className="flex items-center gap-2 text-xs cursor-pointer">
                     <input

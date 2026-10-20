@@ -90,7 +90,7 @@ export default function LoginPage() {
           {localAuthEnabled && (
             <div className="relative flex items-center gap-3 py-1">
               <div className="flex-1 border-t border-slate-200 dark:border-zinc-800" />
-              <span className="text-xs text-slate-500 dark:text-zinc-500">{t('login.orLocal')}</span>
+              <span className="text-xs text-fg-muted">{t('login.orLocal')}</span>
               <div className="flex-1 border-t border-slate-200 dark:border-zinc-800" />
             </div>
           )}
@@ -158,7 +158,7 @@ export function CardShell({ title, subtitle, children }: { title: string; subtit
             <Logo alt="" className="w-12 h-12 rounded-full" />
             <h1 className="text-2xl font-bold tracking-tight">Bindery</h1>
           </div>
-          {subtitle && <div className="text-xs text-slate-500 dark:text-zinc-500 mt-2">{subtitle}</div>}
+          {subtitle && <div className="text-xs text-fg-muted mt-2">{subtitle}</div>}
         </div>
         <div className="border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-lg p-6 shadow-sm">
           <h2 className="text-lg font-semibold mb-4">{title}</h2>

@@ -664,12 +664,12 @@ export default function QueuePage() {
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs">
                         <span className="text-amber-600 dark:text-amber-400">{item.reason}</span>
                         {item.size > 0 && (
-                          <span className="text-slate-500 dark:text-zinc-500">{formatBytes(item.size)}</span>
+                          <span className="text-fg-muted">{formatBytes(item.size)}</span>
                         )}
                         {item.quality && (
-                          <span className="text-slate-500 dark:text-zinc-500">{item.quality}</span>
+                          <span className="text-fg-muted">{item.quality}</span>
                         )}
-                        <span className="text-slate-500 dark:text-zinc-500">{item.protocol}</span>
+                        <span className="text-fg-muted">{item.protocol}</span>
                       </div>
                     </div>
                     <div className="ml-4 flex items-center gap-2 flex-shrink-0">
@@ -682,7 +682,7 @@ export default function QueuePage() {
                       </button>
                       <button
                         onClick={() => handleDismissPending(item.id)}
-                        className="px-3 py-1.5 text-xs text-slate-500 dark:text-zinc-500 hover:text-red-400 rounded"
+                        className="px-3 py-1.5 text-xs text-fg-muted hover:text-red-400 rounded"
                       >
                         Dismiss
                       </button>
@@ -720,7 +720,7 @@ export default function QueuePage() {
               />
               <span className="text-sm">
                 <span className="font-medium">{t('queue.removeDeleteFiles')}</span>
-                <span className="block text-xs text-slate-500 dark:text-zinc-500">
+                <span className="block text-xs text-fg-muted">
                   {t('queue.removeDeleteFilesHint')}
                 </span>
               </span>
@@ -851,7 +851,7 @@ export function MatchBookControl({ disabled, onMatch, alreadyMatched = false }: 
           ))}
         </div>
       )}
-      <button onClick={() => setOpen(false)} className="text-[10px] text-slate-500 dark:text-zinc-500 hover:underline">
+      <button onClick={() => setOpen(false)} className="text-[10px] text-fg-muted hover:underline">
         {t('queue.matchBookCancel', 'Cancel')}
       </button>
     </div>

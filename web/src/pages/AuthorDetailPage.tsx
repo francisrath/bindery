@@ -1497,7 +1497,7 @@ export default function AuthorDetailPage() {
               <div key={group.key}>
                 <h4 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 mb-2 flex items-center gap-2">
                   <span>{group.title}</span>
-                  <span className="text-xs font-normal text-slate-500 dark:text-zinc-500 bg-slate-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-normal text-fg-muted bg-slate-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                     {group.books.length} {group.books.length === 1 ? 'book' : 'books'}
                   </span>
                 </h4>

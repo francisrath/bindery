@@ -131,7 +131,7 @@ export default function DiscoverPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="min-w-0">
           <h2 className="text-2xl font-bold">{t('discover.title')}</h2>
-          <p className="text-sm text-slate-500 dark:text-zinc-500">{t('discover.subtitle')}</p>
+          <p className="text-sm text-fg-muted">{t('discover.subtitle')}</p>
         </div>
         {/* Refresh regenerates recommendations, which is meaningless while the
             feature is off: the request would succeed and still produce nothing.
@@ -191,7 +191,7 @@ export default function DiscoverPage() {
           {/* Cold start note */}
           {isColdStart && (
             <div className="mb-6 px-4 py-3 bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg">
-              <p className="text-sm text-slate-500 dark:text-zinc-500">{t('discover.empty.coldStart')}</p>
+              <p className="text-sm text-fg-muted">{t('discover.empty.coldStart')}</p>
             </div>
           )}
 

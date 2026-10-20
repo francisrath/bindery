@@ -156,7 +156,7 @@ export default function AdoptionEditor({ item, onAdopt, onCancel, showFiles = fa
               <summary className="cursor-pointer text-fg-muted">
                 {t('adoption.editor.files', { count: item.fileCount, defaultValue: '{{count}} files' })}
               </summary>
-              <ul className="mt-1 max-h-40 overflow-y-auto font-mono text-[11px] text-slate-500 dark:text-zinc-500">
+              <ul className="mt-1 max-h-40 overflow-y-auto font-mono text-[11px] text-fg-muted">
                 {item.members.map(m => <li key={m} className="truncate">{m}</li>)}
                 {more > 0 && <li>{t('adoption.editor.moreFiles', { count: more, defaultValue: 'and {{count}} more' })}</li>}
               </ul>

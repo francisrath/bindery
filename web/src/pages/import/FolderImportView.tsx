@@ -199,7 +199,7 @@ export default function FolderImportView() {
           already imported", so say that rather than claim the folder is empty
           (#2480). */}
       {items && items.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-zinc-500">
+        <p className="text-sm text-fg-muted">
           {showImported
             ? t('manualImport.empty', 'No book files or folders found here.')
             : t('manualImport.emptyHidesImported', 'Nothing new to import here. Files already in your library are hidden; tick Show already imported to list them.')}

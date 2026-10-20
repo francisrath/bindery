@@ -184,7 +184,7 @@ export default function UsersPage() {
 
   if (!isAdmin) {
     return (
-      <div className="text-center py-20 text-slate-500 dark:text-zinc-500">
+      <div className="text-center py-20 text-fg-muted">
         Admin access required.
       </div>
     )
@@ -206,9 +206,9 @@ export default function UsersPage() {
         />
       )}
 
-      {loading && <p className="text-sm text-slate-500 dark:text-zinc-500">{t('common.loading')}</p>}
+      {loading && <p className="text-sm text-fg-muted">{t('common.loading')}</p>}
       {error && <p className="text-sm text-red-500">{error}</p>}
-      {!loading && <p className="text-xs text-slate-500 dark:text-zinc-500">{t('users.autoApproveHint')}</p>}
+      {!loading && <p className="text-xs text-fg-muted">{t('users.autoApproveHint')}</p>}
 
       {!loading && narrow && (
         // Below sm each user is a card, as on History. The five column table
@@ -221,10 +221,10 @@ export default function UsersPage() {
                 <span className="font-medium min-w-0 [overflow-wrap:anywhere]">
                   {u.username}
                   {u.username === status?.username && (
-                    <span className="ml-2 text-xs text-slate-500 dark:text-zinc-500">({t('users.you')})</span>
+                    <span className="ml-2 text-xs text-fg-muted">({t('users.you')})</span>
                   )}
                 </span>
-                <span className="shrink-0 text-xs text-slate-500 dark:text-zinc-500">
+                <span className="shrink-0 text-xs text-fg-muted">
                   {new Date(u.createdAt).toLocaleDateString()}
                 </span>
               </div>
@@ -258,7 +258,7 @@ export default function UsersPage() {
                   <td className="px-4 py-3 font-medium">
                     {u.username}
                     {u.username === status?.username && (
-                      <span className="ml-2 text-xs text-slate-500 dark:text-zinc-500">({t('users.you')})</span>
+                      <span className="ml-2 text-xs text-fg-muted">({t('users.you')})</span>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -267,7 +267,7 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     {autoApproveToggle(u)}
                   </td>
-                  <td className="px-4 py-3 text-slate-500 dark:text-zinc-500">
+                  <td className="px-4 py-3 text-fg-muted">
                     {new Date(u.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
@@ -323,7 +323,7 @@ export default function UsersPage() {
               <option value="admin">{t('users.roleAdmin')}</option>
               <option value="requester">{t('users.roleRequester')}</option>
             </select>
-            <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">{t('users.roleRequesterHint')}</p>
+            <p className="mt-1 text-xs text-fg-muted">{t('users.roleRequesterHint')}</p>
           </div>
           {createError && <p className="text-sm text-red-500">{createError}</p>}
           <button

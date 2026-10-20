@@ -828,7 +828,7 @@ export default function AuthorsPage() {
                   <option value="all">{t('monitorNewItems.all', 'Follow monitor mode')}</option>
                   <option value="none">{t('monitorNewItems.none', 'Don’t add them')}</option>
                 </select>
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   {t('authors.bulkMonitorNewItemsHint', 'Separate from monitor mode: this decides whether a refresh may add books it discovers at all. Monitor mode “None” on its own still lets the back-catalogue in, unmonitored.')}
                 </p>
               </div>
