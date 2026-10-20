@@ -787,6 +787,7 @@ func (h *AuthorHandler) relinkExistingAuthorToUpstream(ctx context.Context, auth
 	if author == nil || upstream == nil {
 		return errors.New("author relink requires local and upstream authors")
 	}
+	snapshot := author.UpdatedAtRaw
 	oldName := author.Name
 	oldForeignID := strings.TrimSpace(author.ForeignID)
 	if foreignID := strings.TrimSpace(upstream.ForeignID); foreignID != "" {
@@ -826,7 +827,7 @@ func (h *AuthorHandler) relinkExistingAuthorToUpstream(ctx context.Context, auth
 	}
 	now := time.Now().UTC()
 	author.LastMetadataRefreshAt = &now
-	if err := h.authors.Update(ctx, author); err != nil {
+	if err := h.updateAuthorIfUnchanged(ctx, author, snapshot); err != nil {
 		return err
 	}
 	aliasSource := oldForeignID
@@ -1322,6 +1323,10 @@ func (h *AuthorHandler) RelinkUpstream(w http.ResponseWriter, r *http.Request) {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "upstream author already exists locally"})
 			return
 		}
+		if errors.Is(err, errAuthorRowChanged) {
+			writeJSON(w, http.StatusConflict, map[string]string{"error": errAuthorChanged})
+			return
+		}
 		writeServerError(w, r, err)
 		return
 	}
@@ -1572,6 +1577,7 @@ func (h *AuthorHandler) relinkCalibreAuthor(ctx context.Context, author *models.
 	if h.meta == nil {
 		return errNoMetadataAggregator
 	}
+	snapshot := author.UpdatedAtRaw
 	results, outcome, err := h.meta.SearchAuthorsWithOutcome(ctx, author.Name)
 	if err != nil {
 		return err
@@ -1621,7 +1627,7 @@ func (h *AuthorHandler) relinkCalibreAuthor(ctx context.Context, author *models.
 	if full.AverageRating > 0 {
 		author.AverageRating = full.AverageRating
 	}
-	if err := h.authors.Update(ctx, author); err != nil {
+	if err := h.updateAuthorIfUnchanged(ctx, author, snapshot); err != nil {
 		return err
 	}
 	slog.Info("relinked calibre author to metadata provider",
@@ -1643,6 +1649,9 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 	if h.meta == nil || author == nil {
 		return
 	}
+	// The row as read before the provider call. The write below is guarded
+	// on it, so a photo or bio saved while the call is in flight wins.
+	snapshot := author.UpdatedAtRaw
 	upstream, err := h.meta.GetAuthor(ctx, author.ForeignID)
 	if err != nil {
 		slog.Warn("author profile refresh: metadata lookup failed",
@@ -1679,8 +1688,17 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 		return
 	}
 	author.LastMetadataRefreshAt = &now
-	if err := h.authors.Update(ctx, author); err != nil {
-		slog.Warn("author profile refresh: save failed", "author", author.Name, "error", err)
+	// Dropped rather than retried when the row moved, as the scheduler does
+	// (persistRefreshedAuthor): the next Refresh or scheduled pass picks the
+	// profile up again.
+	written, err := h.authors.UpdateIfUnchanged(ctx, author, snapshot)
+	if err != nil || !written {
+		if err != nil {
+			slog.Warn("author profile refresh: save failed", "author", author.Name, "error", err)
+		} else {
+			slog.Info("author profile refresh skipped: the author changed while its profile was being fetched",
+				"author", author.Name, "authorId", author.ID)
+		}
 		enrichAnswered = false
 		return
 	}
@@ -1716,6 +1734,25 @@ func mergeAuthorProfileFields(author, upstream *models.Author) bool {
 		changed = true
 	}
 	return changed
+}
+
+// errAuthorRowChanged reports that a whole-row author write was refused
+// because the row changed after the snapshot it was built from was read.
+var errAuthorRowChanged = errors.New("author changed since it was read")
+
+// updateAuthorIfUnchanged writes the whole author row only if it still matches
+// snapshot, the UpdatedAtRaw read before a provider call. The relinks rebuild
+// the row from that snapshot, so an unguarded write would undo a photo, bio or
+// setting saved during the call (#3287).
+func (h *AuthorHandler) updateAuthorIfUnchanged(ctx context.Context, author *models.Author, snapshot string) error {
+	written, err := h.authors.UpdateIfUnchanged(ctx, author, snapshot)
+	if err != nil {
+		return err
+	}
+	if !written {
+		return errAuthorRowChanged
+	}
+	return nil
 }
 
 // FetchAuthorBooks populates the author's catalogue from the metadata provider.

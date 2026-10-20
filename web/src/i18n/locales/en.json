@@ -566,7 +566,8 @@
       "remove": "Remove photo",
       "removing": "Removing…",
       "removeFailed": "Could not remove the photo"
-    }
+    },
+    "photoNotUploaded": "Only a photo you uploaded can be removed. Reload the page to see the current photo."
   },
   "catalogueReconciliation": {
     "title": "Reconcile catalogue",

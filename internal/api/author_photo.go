@@ -84,7 +84,7 @@ func (h *AuthorHandler) ClearPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if author.ImageSource == nil || author.ImageSource.Provider != models.ProfileSourceUser {
-		writeJSON(w, http.StatusConflict, map[string]string{"error": "only a photo you uploaded can be removed"})
+		writeJSON(w, http.StatusConflict, map[string]string{"error": "only a photo you uploaded can be removed", "code": codePhotoNotUploaded})
 		return
 	}
 	author.ImageURL = ""
@@ -95,6 +95,10 @@ func (h *AuthorHandler) ClearPhoto(w http.ResponseWriter, r *http.Request) {
 	h.refreshAuthorProfile(r.Context(), author, true)
 	writeAuthor(w, http.StatusOK, author)
 }
+
+// codePhotoNotUploaded marks ClearPhoto's 409 for a photo the user did not
+// upload, so the page can tell it apart from errAuthorChanged's 409.
+const codePhotoNotUploaded = "photo_not_uploaded"
 
 // errAuthorChanged is the 409 a manual author save answers when the row
 // changed since it was read, such as a scheduled profile refresh committing in

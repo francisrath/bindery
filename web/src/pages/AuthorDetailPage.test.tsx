@@ -429,6 +429,13 @@ describe('AuthorDetailPage', () => {
     expect(await screen.findByText('This author changed while you were saving. Reload the page and try again.')).toBeInTheDocument()
   })
 
+  it('says why when the photo to remove was not one the user uploaded', async () => {
+    vi.mocked(api.clearAuthorPhoto).mockRejectedValue(new ApiError(409, { error: 'only a photo you uploaded can be removed', code: 'photo_not_uploaded' }, 'Conflict'))
+    renderAuthorDetailPage([], 'grid', { imageUrl: '/api/v1/images?url=bindery-cover%3Aabc', imageSource: { provider: 'user', url: '' } })
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove photo' }))
+    expect(await screen.findByText('Only a photo you uploaded can be removed. Reload the page to see the current photo.')).toBeInTheDocument()
+  })
+
   it('offers no Remove photo for a photo the user did not upload', async () => {
     renderAuthorDetailPage([], 'grid', { imageUrl: 'https://covers.example/a.jpg' })
     await screen.findByRole('heading', { level: 2 })

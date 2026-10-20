@@ -539,7 +539,8 @@
       "remove": "Fjern bildet",
       "removing": "Fjerner…",
       "removeFailed": "Kunne ikke fjerne bildet"
-    }
+    },
+    "photoNotUploaded": "Bare et bilde du har lastet opp, kan fjernes. Last inn siden på nytt for å se det gjeldende bildet."
   },
   "catalogueReconciliation": {
     "title": "Avstem katalogen",

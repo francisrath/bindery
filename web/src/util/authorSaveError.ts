@@ -11,6 +11,11 @@ export function authorSaveError(e: unknown, t: TFunction, fallback: string): str
   // Checked by status rather than instanceof ApiError, so any error carrying
   // an HTTP status (ApiError, or a test double of it) is read the same way.
   if (e instanceof Error && (e as { status?: unknown }).status === 409) {
+    // ClearPhoto's other 409: the photo was not one the user uploaded, so a
+    // reload shows what is there now (internal/api/author_photo.go).
+    if ((e as { body?: { code?: unknown } }).body?.code === 'photo_not_uploaded') {
+      return t('authorDetail.photoNotUploaded', 'Only a photo you uploaded can be removed. Reload the page to see the current photo.')
+    }
     return t('authorDetail.saveConflict', 'This author changed while you were saving. Reload the page and try again.')
   }
   return e instanceof Error ? e.message : fallback
