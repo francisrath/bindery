@@ -739,8 +739,8 @@ export default function AuthorDetailPage() {
 
   const selectAllVisible = () => setSelected(new Set(filteredBooks.map(b => b.id)))
 
-  if (loading) return <div className="text-slate-600 dark:text-zinc-500">Loading…</div>
-  if (!author) return <div className="text-slate-600 dark:text-zinc-500">Author not found</div>
+  if (loading) return <div className="text-fg-muted">Loading…</div>
+  if (!author) return <div className="text-fg-muted">Author not found</div>
 
   const searchableWantedCount = books.filter(b => b.status === 'wanted' && b.monitored && !b.excluded).length
   // Relinking is valid for every author — the backend accepts any record and the
@@ -1009,7 +1009,7 @@ export default function AuthorDetailPage() {
               {/* No `book.releaseDate &&` guard: fmtPublishedYear already
                   returns an em dash for a missing date, so the conditional only
                   made the row appear and disappear between cards. */}
-              <p className="flex items-center justify-between gap-2 text-[10px] text-slate-600 dark:text-zinc-500 mt-auto">
+              <p className="flex items-center justify-between gap-2 text-[10px] text-fg-muted mt-auto">
                 <span>{fmtPublishedYear(book.releaseDate)}</span>
                 <BookRating book={book} />
               </p>
@@ -1074,9 +1074,9 @@ export default function AuthorDetailPage() {
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold mb-1 [overflow-wrap:anywhere]">{author.authorName}</h2>
           {author.disambiguation && (
-            <p className="text-xs text-slate-600 dark:text-zinc-500">{author.disambiguation}</p>
+            <p className="text-xs text-fg-muted">{author.disambiguation}</p>
           )}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-600 dark:text-zinc-500">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-fg-muted">
             {author.averageRating > 0 && (
               <span>★ {author.averageRating.toFixed(2)} ({author.ratingsCount.toLocaleString()} ratings)</span>
             )}
@@ -1148,7 +1148,7 @@ export default function AuthorDetailPage() {
               { key: 'audiobooks', label: t('authorDetail.stats.audiobooks', 'Audiobooks'), value: counts.audiobook },
             ].map(cell => (
               <div key={cell.key} className="bg-slate-100 dark:bg-zinc-900 px-3 py-2">
-                <dt className="text-[11px] text-slate-600 dark:text-zinc-500">{cell.label}</dt>
+                <dt className="text-[11px] text-fg-muted">{cell.label}</dt>
                 <dd className="text-lg font-semibold tabular-nums text-slate-900 dark:text-white">
                   {cell.value}
                 </dd>
@@ -1242,7 +1242,7 @@ export default function AuthorDetailPage() {
           </div>
           {author.aliases && author.aliases.length > 0 && (
             <div className="mt-4 text-xs">
-              <div className="text-slate-600 dark:text-zinc-500 mb-1">Also known as</div>
+              <div className="text-fg-muted mb-1">Also known as</div>
               <div className="flex flex-wrap gap-1.5">
                 {author.aliases.map(a => (
                   <span
@@ -1347,7 +1347,7 @@ export default function AuthorDetailPage() {
           <>
             {t('authorDetail.booksHeading', 'Books')}
             {filteredBooks.length !== books.length && (
-              <span className="ml-2 text-sm font-normal text-slate-600 dark:text-zinc-500">
+              <span className="ml-2 text-sm font-normal text-fg-muted">
                 {t('authorDetail.filteredCount', {
                   shown: filteredBooks.length,
                   total: books.length,
@@ -1377,7 +1377,7 @@ export default function AuthorDetailPage() {
             along but was never offered. */}
         {books.length > 0 && (
           <div className="flex flex-wrap items-center gap-3 mb-4">
-            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-500">
+            <label className="flex items-center gap-1.5 text-xs text-fg-muted">
               {t('authorDetail.filters.type', 'Type')}
               <select
                 value={typeFilter}
@@ -1390,7 +1390,7 @@ export default function AuthorDetailPage() {
               </select>
             </label>
 
-            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-500">
+            <label className="flex items-center gap-1.5 text-xs text-fg-muted">
               {t('authorDetail.filters.status', 'Status')}
               <select
                 value={statusFilter}
@@ -1407,7 +1407,7 @@ export default function AuthorDetailPage() {
               </select>
             </label>
 
-            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-500">
+            <label className="flex items-center gap-1.5 text-xs text-fg-muted">
               {t('authorDetail.filters.published', 'Published')}
               <select
                 value={publishedFilter}
@@ -1420,7 +1420,7 @@ export default function AuthorDetailPage() {
               </select>
             </label>
 
-            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-500">
+            <label className="flex items-center gap-1.5 text-xs text-fg-muted">
               {t('authorDetail.filters.monitored', 'Monitored')}
               <select
                 value={monitoredFilter}
@@ -1434,7 +1434,7 @@ export default function AuthorDetailPage() {
             </label>
 
             {languages.length > 1 && (
-              <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-500">
+              <label className="flex items-center gap-1.5 text-xs text-fg-muted">
                 {t('authorDetail.filters.language', 'Language')}
                 <select
                   value={activeLanguage}
@@ -1447,7 +1447,7 @@ export default function AuthorDetailPage() {
               </label>
             )}
 
-            <label className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-500">
+            <label className="flex items-center gap-1.5 text-xs text-fg-muted">
               {t('authorDetail.filters.sort', 'Sort')}
               <select
                 value={sort}
@@ -1488,9 +1488,9 @@ export default function AuthorDetailPage() {
           </p>
         )}
         {books.length === 0 ? (
-          !syncing && <p className="text-sm text-slate-600 dark:text-zinc-500">No books tracked for this author yet.</p>
+          !syncing && <p className="text-sm text-fg-muted">No books tracked for this author yet.</p>
         ) : filteredBooks.length === 0 ? (
-          <p className="text-sm text-slate-600 dark:text-zinc-500">No books match the current filters.</p>
+          <p className="text-sm text-fg-muted">No books match the current filters.</p>
         ) : groupBySeries ? (
           <div className="space-y-6">
             {seriesGroups.map(group => (

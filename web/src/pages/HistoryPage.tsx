@@ -248,9 +248,9 @@ export default function HistoryPage() {
       </div>
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p>{t('history.empty')}</p>
           <p className="mt-1 text-sm">{t('history.emptyHint')}</p>
         </div>
@@ -290,7 +290,7 @@ export default function HistoryPage() {
                           </div>
                           <BookAuthorLink book={event.book} />
                           {detail && (
-                            <div className={`mt-1 text-xs break-words ${isError ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-zinc-500'}`}>
+                            <div className={`mt-1 text-xs break-words ${isError ? 'text-red-600 dark:text-red-400' : 'text-fg-muted'}`}>
                               {detail}
                             </div>
                           )}
@@ -357,17 +357,17 @@ export default function HistoryPage() {
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-medium">📖</span>
                       )}
                       {size > 0 && (
-                        <span className="text-[10px] text-slate-600 dark:text-zinc-500 font-mono">{formatBytes(size)}</span>
+                        <span className="text-[10px] text-fg-muted font-mono">{formatBytes(size)}</span>
                       )}
                     </div>
-                    <span className="text-[10px] text-slate-600 dark:text-zinc-500">{formatDate(event.createdAt)}</span>
+                    <span className="text-[10px] text-fg-muted">{formatDate(event.createdAt)}</span>
                   </div>
                   <p className="text-sm text-slate-800 dark:text-zinc-200 [overflow-wrap:anywhere] mb-1">
                     {event.sourceTitle || <span className="text-slate-500 dark:text-zinc-600">—</span>}
                   </p>
                   <BookAuthorLink book={event.book} />
                   {detail && (
-                    <p className={`text-xs break-words mb-2 ${isError ? 'text-red-600 dark:text-red-400' : 'text-slate-600 dark:text-zinc-500'}`}>
+                    <p className={`text-xs break-words mb-2 ${isError ? 'text-red-600 dark:text-red-400' : 'text-fg-muted'}`}>
                       {detail}
                     </p>
                   )}

@@ -294,14 +294,14 @@ export default function WantedPage() {
       />
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : total === 0 && !searchQuery ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p>{t('wanted.empty')}</p>
           <ImportHints />
         </div>
       ) : total === 0 ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p>{t('wanted.noMatch')}</p>
         </div>
       ) : (
@@ -442,7 +442,7 @@ export default function WantedPage() {
                 </div>
 
                 {showResults === book.id && results.length === 0 && (
-                  <div className="px-3 pb-2 text-xs text-slate-600 dark:text-zinc-500">
+                  <div className="px-3 pb-2 text-xs text-fg-muted">
                     {t('wanted.noIndexerResults')}
                   </div>
                 )}
@@ -453,7 +453,7 @@ export default function WantedPage() {
                       <div key={r.guid} className="flex items-center justify-between p-2 bg-slate-200/50 dark:bg-zinc-800/50 rounded text-xs">
                         <div className="min-w-0 mr-3">
                           <span className="truncate block">{r.title}</span>
-                          <span className="text-slate-600 dark:text-zinc-500 truncate block">
+                          <span className="text-fg-muted truncate block">
                             {r.indexerName} &middot; {formatBytes(r.size)} &middot; {r.grabs} grabs
                             {safeHref(r.infoUrl) && (
                               <>

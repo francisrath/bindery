@@ -158,7 +158,7 @@ export default function DiscoverPage() {
       )}
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : !hasAnyRecs && enabled === false ? (
         /* Disabled state */
         <div className="text-center py-20">

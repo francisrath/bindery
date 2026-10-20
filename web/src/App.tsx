@@ -83,7 +83,7 @@ function PageLoadingFallback() {
   const { t } = useTranslation()
 
   return (
-    <div className="py-10 text-center text-sm text-slate-600 dark:text-zinc-500">
+    <div className="py-10 text-center text-sm text-fg-muted">
       {t('common.loading')}
     </div>
   )

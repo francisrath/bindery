@@ -559,14 +559,14 @@ export default function AuthorsPage() {
       <SetupChecklist />
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : total === 0 && !debouncedSearch && !monitoredFilter ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p className="text-lg mb-2">{t('authors.empty')}</p>
           <p className="text-sm">{t('authors.emptyHint')}</p>
         </div>
       ) : total === 0 ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p>{t('authors.noMatch', { query: search })}</p>
         </div>
       ) : view === 'table' ? (
@@ -682,7 +682,7 @@ export default function AuthorsPage() {
                   />
                   <div className="min-w-0">
                     <h3 className="font-semibold truncate">{author.authorName}</h3>
-                    <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1 line-clamp-2">
+                    <p className="text-xs text-fg-muted mt-1 line-clamp-2">
                       {author.description || t('authors.noDescription')}
                     </p>
                     {author.statistics && author.statistics.bookCount > 0 && (

@@ -390,9 +390,9 @@ export default function QueuePage() {
       )}
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : queue.length === 0 && pending.length === 0 ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p>{t('queue.empty')}</p>
           <ImportHints />
         </div>
@@ -509,12 +509,12 @@ export default function QueuePage() {
                         the author link above and the hints below. */}
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs pointer-coarse:my-3.5 pointer-coarse:gap-y-5">
                       <DownloadStatusChip status={item.status} />
-                      <span className="text-slate-600 dark:text-zinc-500">{formatBytes(item.size)}</span>
+                      <span className="text-fg-muted">{formatBytes(item.size)}</span>
                       {item.percentage && (
                         <span className="text-blue-400">{item.percentage}%</span>
                       )}
                       {item.timeLeft && (
-                        <span className="text-slate-600 dark:text-zinc-500">{t('queue.remaining', { time: item.timeLeft })}</span>
+                        <span className="text-fg-muted">{t('queue.remaining', { time: item.timeLeft })}</span>
                       )}
                       {item.protocol && (
                         <span className="text-slate-500 dark:text-zinc-600">{item.protocol}</span>

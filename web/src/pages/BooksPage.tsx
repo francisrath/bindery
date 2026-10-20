@@ -393,9 +393,9 @@ export default function BooksPage() {
       <BookStatusLegend />
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : total === 0 ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           {!debouncedSearch && !statusFilter && !mediaFilter && !monitoredFilter ? (
             <>
               {needsAny && <GettingStartedGuidance reasonKey="gettingStarted.reasonBooks" needsIndexer={needsIndexer} needsClient={needsClient} />}
@@ -571,9 +571,9 @@ export default function BooksPage() {
                 </div>
                 <div className="flex items-center justify-between mt-0.5">
                   {book.releaseDate && (
-                    <p className="text-[10px] text-slate-600 dark:text-zinc-500">{new Date(book.releaseDate).getFullYear()}</p>
+                    <p className="text-[10px] text-fg-muted">{new Date(book.releaseDate).getFullYear()}</p>
                   )}
-                  <BookRating book={book} className="text-[10px] text-slate-600 dark:text-zinc-500" />
+                  <BookRating book={book} className="text-[10px] text-fg-muted" />
                   {book.filePath && (
                     <a
                       href={`${BINDERY_BASE}/api/v1/book/${book.id}/file`}

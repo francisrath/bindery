@@ -139,7 +139,7 @@ export default function CalendarPage() {
       </div>
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : (
         <>
           {/* Grid calendar — hidden on mobile, shown sm+ */}
@@ -147,7 +147,7 @@ export default function CalendarPage() {
             {/* Day headers */}
             <div className="grid grid-cols-7 bg-slate-100 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
               {dayNames.map((d, i) => (
-                <div key={i} className="py-2 text-center text-xs font-medium text-slate-600 dark:text-zinc-500 uppercase tracking-wider">
+                <div key={i} className="py-2 text-center text-xs font-medium text-fg-muted uppercase tracking-wider">
                   {d}
                 </div>
               ))}
@@ -195,7 +195,7 @@ export default function CalendarPage() {
           <div className="sm:hidden border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden mb-4">
             <div className="grid grid-cols-7 bg-slate-100 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
               {dayNamesNarrow.map((d, i) => (
-                <div key={i} className="py-2 text-center text-xs font-medium text-slate-600 dark:text-zinc-500">
+                <div key={i} className="py-2 text-center text-xs font-medium text-fg-muted">
                   {d}
                 </div>
               ))}
@@ -276,13 +276,13 @@ export default function CalendarPage() {
                   .flatMap(([day, dayBooks]) =>
                     dayBooks.map(book => (
                       <div key={book.id} className="flex items-center gap-3 px-4 py-3">
-                        <span className="text-xs text-slate-600 dark:text-zinc-500 w-12 flex-shrink-0">
+                        <span className="text-xs text-fg-muted w-12 flex-shrink-0">
                           {dayOfMonthLabel(lang, viewYear, viewMonth, Number(day))}
                         </span>
                         <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-10 object-cover rounded flex-shrink-0" />
                         <span className="text-sm text-slate-800 dark:text-zinc-200 min-w-0 truncate">{book.title}</span>
                         {book.author && (
-                          <span className="text-xs text-slate-600 dark:text-zinc-500 flex-shrink-0 hidden sm:block">
+                          <span className="text-xs text-fg-muted flex-shrink-0 hidden sm:block">
                             {book.author.authorName}
                           </span>
                         )}

@@ -878,7 +878,7 @@ function BookDetailPageInner() {
     return (
       <div className="max-w-7xl">
         {navRow}
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       </div>
     )
   }
@@ -886,7 +886,7 @@ function BookDetailPageInner() {
     return (
       <div className="max-w-7xl">
         {navRow}
-        <div className="text-slate-600 dark:text-zinc-500">{t('bookDetail.notFound')}</div>
+        <div className="text-fg-muted">{t('bookDetail.notFound')}</div>
       </div>
     )
   }
@@ -1561,7 +1561,7 @@ function BookDetailPageInner() {
                 {/* BnF's Licence Ouverte asks for the source and the date
                     wherever its data is shown (#3144). */}
                 {row.primary && row.provider === 'bnf' && bnfRetrieved && (
-                  <span className="text-xs text-slate-600 dark:text-zinc-500 basis-full" data-testid="bnf-source-credit">
+                  <span className="text-xs text-fg-muted basis-full" data-testid="bnf-source-credit">
                     {t('common.bnfSourceCredit', { date: bnfRetrieved, defaultValue: 'Data from the BnF, Licence Ouverte / Open Licence 2.0, retrieved {{date}}' })}
                   </span>
                 )}
@@ -1635,7 +1635,7 @@ function BookDetailPageInner() {
           scroll-mt clears the sticky header. */}
       <div ref={searchResultsRef} data-testid="search-results-region" className="scroll-mt-20">
         {results !== null && results.length === 0 && (
-          <div className="mt-6 text-center py-6 text-sm text-slate-600 dark:text-zinc-500 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
+          <div className="mt-6 text-center py-6 text-sm text-fg-muted border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900">
             {hasIndexers === false ? (
               <>
                 {t('bookDetail.noIndexers')}{' '}
