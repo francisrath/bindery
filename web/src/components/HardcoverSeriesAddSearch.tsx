@@ -126,7 +126,7 @@ export default function HardcoverSeriesAddSearch({ onCreated, onExisting }: Prop
                 <div className="flex items-start gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold truncate">{result.title}</div>
-                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-zinc-400">
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-fg-muted">
                       {result.authorName && <span>{result.authorName}</span>}
                       <span>{t('series.addFromHardcover.bookCount', { count: result.bookCount })}</span>
                     </div>

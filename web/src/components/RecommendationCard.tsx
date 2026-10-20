@@ -67,7 +67,7 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
         {rec.genres.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
             {rec.genres.slice(0, 2).map(genre => (
-              <span key={genre} className="px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 rounded text-[10px] text-slate-600 dark:text-zinc-400 truncate max-w-[90px]">
+              <span key={genre} className="px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 rounded text-[10px] text-fg-muted truncate max-w-[90px]">
                 {genre}
               </span>
             ))}
@@ -87,7 +87,7 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
           </button>
           <button
             onClick={() => onDismiss(rec.id)}
-            className="px-2 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded text-xs text-slate-600 dark:text-zinc-400 transition-colors"
+            className="px-2 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded text-xs text-fg-muted transition-colors"
             aria-label={t('discover.dismiss')}
             title={t('discover.dismiss')}
           >
@@ -96,7 +96,7 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
           <MoreMenu
             label={t('common.moreActions', 'More')}
             ariaLabel={t('discover.moreActionsFor', 'More actions for {{title}}', { title: rec.title })}
-            buttonClassName="px-1.5 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded text-xs text-slate-600 dark:text-zinc-400 transition-colors"
+            buttonClassName="px-1.5 py-1.5 bg-slate-200 dark:bg-zinc-800 hover:bg-slate-300 dark:hover:bg-zinc-700 rounded text-xs text-fg-muted transition-colors"
             items={[
               {
                 label: t('discover.dontSuggestAuthor', { author: rec.authorName }),

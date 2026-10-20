@@ -189,7 +189,7 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+              className="px-4 py-2 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white"
             >
               Cancel
             </button>

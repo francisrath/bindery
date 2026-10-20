@@ -99,7 +99,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
 
         <div className="p-4 space-y-3">
           <div>
-            <label htmlFor={`${fid}-remove`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('mergeAuthorsModal.removeLabel')}</label>
+            <label htmlFor={`${fid}-remove`} className="block text-xs text-fg-muted mb-1">{t('mergeAuthorsModal.removeLabel')}</label>
             <select
               id={`${fid}-remove`}
               value={sourceId}
@@ -114,7 +114,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
           </div>
 
           <div>
-            <label htmlFor={`${fid}-keep`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('mergeAuthorsModal.keepLabel')}</label>
+            <label htmlFor={`${fid}-keep`} className="block text-xs text-fg-muted mb-1">{t('mergeAuthorsModal.keepLabel')}</label>
             <select
               id={`${fid}-keep`}
               value={targetId}
@@ -151,7 +151,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white"
+            className="px-4 py-2 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white"
           >
             {t('mergeAuthorsModal.cancel')}
           </button>

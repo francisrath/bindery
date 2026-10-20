@@ -66,7 +66,7 @@ export default function DuplicateCandidatesModal({ authorId, authorName, onClose
             <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>
           ) : result ? (
             result.count === 0 ? (
-              <p className="mt-4 text-sm text-slate-600 dark:text-zinc-400">
+              <p className="mt-4 text-sm text-fg-muted">
                 {t('duplicateCandidates.empty', 'No duplicate titles found.')}
               </p>
             ) : (

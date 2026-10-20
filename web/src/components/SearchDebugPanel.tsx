@@ -68,7 +68,7 @@ export default function SearchDebugPanel({ debug, resultCount, defaultOpen }: Pr
 
           <div>
             <h4 className="font-semibold text-slate-700 dark:text-zinc-300 mb-1">Query</h4>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-slate-600 dark:text-zinc-400">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-fg-muted">
               {debug.query?.title && <><span>title</span><span className="font-mono">{debug.query.title}</span></>}
               {debug.query?.author && <><span>author</span><span className="font-mono">{debug.query.author}</span></>}
               {debug.query?.mediaType && <><span>mediaType</span><span className="font-mono">{debug.query.mediaType}</span></>}
@@ -93,7 +93,7 @@ export default function SearchDebugPanel({ debug, resultCount, defaultOpen }: Pr
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-800 dark:text-zinc-200">{ix.indexerName}</span>
                       {ix.skipped && (
-                        <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-fg-muted">
                           skipped: {ix.skipReason}
                         </span>
                       )}
@@ -112,7 +112,7 @@ export default function SearchDebugPanel({ debug, resultCount, defaultOpen }: Pr
                       </div>
                     )}
                   </div>
-                  <div className="flex-shrink-0 text-right text-slate-600 dark:text-zinc-400">
+                  <div className="flex-shrink-0 text-right text-fg-muted">
                     <div>{ix.resultCount} result{ix.resultCount === 1 ? '' : 's'}</div>
                     <div className="text-slate-500 dark:text-zinc-500">{ix.durationMs} ms</div>
                   </div>
@@ -124,7 +124,7 @@ export default function SearchDebugPanel({ debug, resultCount, defaultOpen }: Pr
           {debug.pipeline && (
             <div>
               <h4 className="font-semibold text-slate-700 dark:text-zinc-300 mb-1">Pipeline</h4>
-              <div className="font-mono text-slate-600 dark:text-zinc-400 space-y-0.5">
+              <div className="font-mono text-fg-muted space-y-0.5">
                 <div>raw from indexers: {debug.pipeline.rawCount}</div>
                 <div>after dedupe: {debug.pipeline.afterDedupe}{' '}
                   {debug.pipeline.rawCount !== debug.pipeline.afterDedupe && (
@@ -164,7 +164,7 @@ export default function SearchDebugPanel({ debug, resultCount, defaultOpen }: Pr
                       </span>
                       <span className="text-slate-500 dark:text-zinc-500">{f.reason}</span>
                     </div>
-                    <div className="font-mono text-slate-600 dark:text-zinc-400 break-all mt-0.5">
+                    <div className="font-mono text-fg-muted break-all mt-0.5">
                       {f.title}
                       {f.indexerName && <span className="text-slate-500 dark:text-zinc-500"> · {f.indexerName}</span>}
                     </div>

@@ -107,7 +107,7 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
           </ul>
 
           <div>
-            <label htmlFor="merge-series-title" className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('series.merge.renameLabel')}</label>
+            <label htmlFor="merge-series-title" className="block text-xs text-fg-muted mb-1">{t('series.merge.renameLabel')}</label>
             <input
               id="merge-series-title"
               value={title}

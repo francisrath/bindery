@@ -131,14 +131,14 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
               <SummaryCell label={t('catalogueReconciliation.kept', 'Still accepted')} value={result.summary.kept} />
             </div>
 
-            <p className="mt-3 text-xs text-slate-600 dark:text-zinc-400">
+            <p className="mt-3 text-xs text-fg-muted">
               {t('catalogueReconciliation.context', {
                 provider: result.provider,
                 profile: result.profileName,
                 defaultValue: 'Provider: {{provider}} · Profile: {{profile}}',
               })}
             </p>
-            <p className="mt-3 text-xs text-slate-600 dark:text-zinc-400">
+            <p className="mt-3 text-xs text-fg-muted">
               {t('catalogueReconciliation.safeguards', {
                 files: result.summary.protectedFiles,
                 imported: result.summary.protectedImported,
@@ -149,7 +149,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
             </p>
 
             {result.summary.indeterminate > 0 && (
-              <p className="mt-2 text-xs text-slate-600 dark:text-zinc-400">
+              <p className="mt-2 text-xs text-fg-muted">
                 {t('catalogueReconciliation.indeterminate', {
                   count: result.summary.indeterminate,
                   defaultValue: '{{count}} row(s) were kept because provider or profile evidence was incomplete.',
@@ -173,7 +173,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
                   })}
                 </div>
               ) : candidates.length === 0 ? (
-                <p className="text-sm text-slate-600 dark:text-zinc-400">
+                <p className="text-sm text-fg-muted">
                   {t('catalogueReconciliation.noSafeCandidates', 'No metadata-only Wanted rows are safe to remove.')}
                 </p>
               ) : (

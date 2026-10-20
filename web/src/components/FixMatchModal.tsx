@@ -151,7 +151,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             {/* Said up front, before a book is even picked, so nobody discovers
                 it from the list of candidates alone. */}
-            <p className="mb-3 text-xs text-slate-600 dark:text-zinc-400">
+            <p className="mb-3 text-xs text-fg-muted">
               {t(
                 'bookDetail.fixMatch.moveNotice',
                 'By default this only corrects which book the file belongs to and leaves the file where it is. You can also have Bindery move and rename it into the chosen book’s folder.',
@@ -282,7 +282,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
             )}
 
             {relocate && !movesOnDisk && (
-              <p className="mt-3 text-xs text-slate-600 dark:text-zinc-400">
+              <p className="mt-3 text-xs text-fg-muted">
                 {t(
                   'bookDetail.fixMatch.noopNotice',
                   'This file is already where your naming template puts it for that book, so only the metadata link changes.',

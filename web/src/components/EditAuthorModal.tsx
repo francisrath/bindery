@@ -181,7 +181,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
             <>
               {qualityProfiles.length > 0 && (
                 <div className="mb-3">
-                  <label htmlFor={`${fid}-1`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.qualityProfile', 'Quality profile')}</label>
+                  <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.qualityProfile', 'Quality profile')}</label>
                   <select id={`${fid}-1`}
                     value={qualityProfileId ?? ''}
                     onChange={e => setQualityProfileId(e.target.value ? Number(e.target.value) : null)}
@@ -195,7 +195,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {metadataProfiles.length > 0 && (
                 <div className="mb-3">
-                  <label htmlFor={`${fid}-2`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.metadataProfile', 'Metadata profile')}</label>
+                  <label htmlFor={`${fid}-2`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.metadataProfile', 'Metadata profile')}</label>
                   <select id={`${fid}-2`}
                     value={metadataProfileId ?? ''}
                     onChange={e => setMetadataProfileId(e.target.value ? Number(e.target.value) : null)}
@@ -209,7 +209,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {rootFolders.length > 0 && (
                 <div className="mb-3">
-                  <label htmlFor={`${fid}-3`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.rootFolder', 'Root folder')}</label>
+                  <label htmlFor={`${fid}-3`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.rootFolder', 'Root folder')}</label>
                   <select id={`${fid}-3`}
                     value={rootFolderId ?? ''}
                     onChange={e => setRootFolderId(e.target.value ? Number(e.target.value) : null)}
@@ -223,7 +223,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {rootFolders.length > 0 && (
                 <div className="mb-3">
-                  <label htmlFor={`${fid}-4`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.audiobookRootFolder', 'Audiobook root folder')}</label>
+                  <label htmlFor={`${fid}-4`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.audiobookRootFolder', 'Audiobook root folder')}</label>
                   <select id={`${fid}-4`}
                     value={audiobookRootFolderId ?? ''}
                     onChange={e => setAudiobookRootFolderId(e.target.value ? Number(e.target.value) : null)}
@@ -238,7 +238,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                 </div>
               )}
               <div className="mb-3">
-                <label htmlFor={`${fid}-5`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorMode', 'Monitor mode')}</label>
+                <label htmlFor={`${fid}-5`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.monitorMode', 'Monitor mode')}</label>
                 <select id={`${fid}-5`}
                   value={monitorMode}
                   onChange={e => setMonitorMode(e.target.value as AuthorMonitorMode)}
@@ -252,7 +252,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                 </select>
               </div>
               <div className="mb-3">
-                <label htmlFor={`${fid}-6`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorNewItems', 'Monitor newly discovered books')}</label>
+                <label htmlFor={`${fid}-6`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.monitorNewItems', 'Monitor newly discovered books')}</label>
                 <select id={`${fid}-6`}
                   value={monitorNewItems}
                   onChange={e => setMonitorNewItems(e.target.value as MonitorNewItems)}
@@ -265,7 +265,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               </div>
               {monitorMode === 'series' && (
                 <div className="mb-3">
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitoredSeries', 'Monitored series')}</label>
+                  <label className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.monitoredSeries', 'Monitored series')}</label>
                   {!seriesLoaded ? (
                     <p className="text-xs text-slate-500 dark:text-zinc-500">{t('common.loading', 'Loading…')}</p>
                   ) : authorSeries.length === 0 ? (
@@ -308,7 +308,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
               )}
               {monitorMode === 'latest' && (
                 <div className="mb-3">
-                  <label htmlFor={`${fid}-7`} className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">{t('editAuthorModal.monitorLatestCount', 'Latest book count')}</label>
+                  <label htmlFor={`${fid}-7`} className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.monitorLatestCount', 'Latest book count')}</label>
                   <input id={`${fid}-7`}
                     type="number"
                     min={1}
@@ -327,14 +327,14 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                 />
                 <span>
                   <span className="font-medium">{t('editAuthorModal.applyMonitorModeToExisting', 'Apply monitor mode to existing books')}</span>
-                  <span className="block text-xs text-slate-600 dark:text-zinc-400 mt-0.5">{t('editAuthorModal.applyMonitorModeToExistingHint', 'Otherwise this only affects books discovered in future refreshes.')}</span>
+                  <span className="block text-xs text-fg-muted mt-0.5">{t('editAuthorModal.applyMonitorModeToExistingHint', 'Otherwise this only affects books discovered in future refreshes.')}</span>
                 </span>
               </label>
               <div className="mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800">
                 <label className="block text-sm font-medium mb-1" htmlFor="author-genre-override">
                   {t('editAuthorModal.genreOverride', 'Genre override')}
                 </label>
-                <p className="text-xs text-slate-600 dark:text-zinc-400 mb-2">
+                <p className="text-xs text-fg-muted mb-2">
                   {t('editAuthorModal.genreOverrideHint', 'Set the same genres on every book by this author and lock them so metadata refresh keeps your values. Comma-separated.')}
                 </p>
                 <div className="flex gap-2">
@@ -372,7 +372,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
           <button
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
+            className="px-4 py-2 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
           >
             {t('common.cancel', 'Cancel')}
           </button>
