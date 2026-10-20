@@ -457,7 +457,7 @@ function EditClientForm({ client, onClose, onSaved }: { client: DownloadClient; 
           <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.clients.removeOnImportHelp')}</p>
         </div>
       )}
-      {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+      {saveError && <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>}
       {testResult && (
         <div role="status" className={`px-3 py-1.5 rounded text-xs flex items-center gap-2 ${testResult.ok ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
           <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${testResult.ok ? 'bg-emerald-500' : 'bg-red-500'}`} />
@@ -688,7 +688,7 @@ function AddClientForm({ onClose, onAdded }: { onClose: () => void; onAdded: (c:
           <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('settings.clients.removeOnImportHelp')}</p>
         </div>
       )}
-      {saveError && <p className="text-sm text-red-500">{saveError}</p>}
+      {saveError && <p className="text-sm text-red-700 dark:text-red-400">{saveError}</p>}
       {testResult && (
         <div role="status" className={`px-3 py-1.5 rounded text-xs flex items-center gap-2 ${testResult.ok ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
           <span className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${testResult.ok ? 'bg-emerald-500' : 'bg-red-500'}`} />

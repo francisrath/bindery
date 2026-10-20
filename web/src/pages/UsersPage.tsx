@@ -207,7 +207,7 @@ export default function UsersPage() {
       )}
 
       {loading && <p className="text-sm text-slate-500 dark:text-zinc-500">{t('common.loading')}</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-700 dark:text-red-400">{error}</p>}
       {!loading && <p className="text-xs text-slate-500 dark:text-zinc-500">{t('users.autoApproveHint')}</p>}
 
       {!loading && narrow && (
@@ -325,7 +325,7 @@ export default function UsersPage() {
             </select>
             <p className="mt-1 text-xs text-slate-500 dark:text-zinc-500">{t('users.roleRequesterHint')}</p>
           </div>
-          {createError && <p className="text-sm text-red-500">{createError}</p>}
+          {createError && <p className="text-sm text-red-700 dark:text-red-400">{createError}</p>}
           <button
             type="submit"
             disabled={creating || !newUsername || !newPassword}

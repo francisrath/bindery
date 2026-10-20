@@ -171,7 +171,7 @@ export default function RootFoldersTab() {
             placeholder={t('settings.rootfolders.addPlaceholder')}
             className={inputCls}
           />
-          {folderError && <p className="text-xs text-red-500 mt-1">{folderError}</p>}
+          {folderError && <p className="text-xs text-red-700 dark:text-red-400 mt-1">{folderError}</p>}
         </div>
         <button
           type="submit"

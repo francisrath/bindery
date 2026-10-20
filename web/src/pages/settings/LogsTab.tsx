@@ -294,7 +294,7 @@ export default function LogsTab() {
           }
           const rows = logEntries.map((e, i) => {
             const levelCls =
-              e.level === 'ERROR' ? 'text-red-500 dark:text-red-400' :
+              e.level === 'ERROR' ? 'text-red-700 dark:text-red-400' :
               e.level === 'WARN'  ? 'text-amber-600 dark:text-amber-400' :
               e.level === 'DEBUG' ? 'text-slate-400 dark:text-zinc-500' :
               'text-emerald-600 dark:text-emerald-400'

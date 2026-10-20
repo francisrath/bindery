@@ -212,10 +212,10 @@ export default function GrimmoryTab() {
         </button>
       </div>
 
-      {saveError && <p className="text-red-500 text-xs">{saveError}</p>}
-      {testError && <p className="text-red-500 text-xs">{testError}</p>}
+      {saveError && <p className="text-red-700 dark:text-red-400 text-xs">{saveError}</p>}
+      {testError && <p className="text-red-700 dark:text-red-400 text-xs">{testError}</p>}
       {testResult && (
-        <p className={`text-xs ${testResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+        <p className={`text-xs ${testResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
           {testResult.message}
         </p>
       )}
@@ -236,7 +236,7 @@ export default function GrimmoryTab() {
         {!config?.enabled && (
           <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-500">Enable and save the integration first.</p>
         )}
-        {syncError && <p className="mt-2 text-red-500 text-xs">{syncError}</p>}
+        {syncError && <p className="mt-2 text-red-700 dark:text-red-400 text-xs">{syncError}</p>}
         {sync && (sync.running || sync.finishedAt) && (
           <div className="mt-3 text-xs text-slate-600 dark:text-zinc-400 space-y-1">
             <p>
@@ -245,9 +245,9 @@ export default function GrimmoryTab() {
               {sync.stats.processed}/{sync.stats.total} processed, {sync.stats.pushed} pushed,{' '}
               {sync.stats.alreadyPushed} already pushed, {sync.stats.failed} failed
             </p>
-            {sync.error && <p className="text-red-500">{sync.error}</p>}
+            {sync.error && <p className="text-red-700 dark:text-red-400">{sync.error}</p>}
             {sync.errors.length > 0 && (
-              <ul className="list-disc ml-4 text-red-500">
+              <ul className="list-disc ml-4 text-red-700 dark:text-red-400">
                 {sync.errors.slice(0, 5).map(e => (
                   <li key={`${e.bookId}-${e.path}`}>{e.title}: {e.reason}</li>
                 ))}
