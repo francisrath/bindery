@@ -684,7 +684,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           </div>
           {storage && (
             storage.hardlinkable ? (
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 border-t border-slate-200 dark:border-zinc-800 pt-3">
+              <p className="text-xs text-accent-text border-t border-slate-200 dark:border-zinc-800 pt-3">
                 {t('settings.general.storageHardlinkOk')}
               </p>
             ) : (
@@ -727,7 +727,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               <p className="font-medium text-slate-700 dark:text-zinc-300 mb-1">{t('settings.general.lastScan')}</p>
               <div className="flex gap-4">
                 <span>{t('settings.general.filesFound')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.files_found}</span></span>
-                <span>{t('settings.general.reconciled')} <span className="font-mono text-emerald-700 dark:text-emerald-400">{lastScan.reconciled}</span></span>
+                <span>{t('settings.general.reconciled')} <span className="font-mono text-accent-text">{lastScan.reconciled}</span></span>
                 <span>{t('settings.general.unmatched')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.unmatched}</span></span>
                 {(lastScan.already_tracked ?? 0) > 0 && (
                   <span>{t('settings.general.alreadyTracked')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.already_tracked}</span></span>
@@ -769,7 +769,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               {(lastScan.unmatched_units ?? 0) > 0 && (
                 <p className="mt-2 flex flex-wrap items-center gap-x-2 text-slate-700 dark:text-zinc-300">
                   <span>{t('settings.general.unmatchedUnits', { count: lastScan.unmatched_units, defaultValue: '{{count}} books need a decision.' })}</span>
-                  <a href={`${BINDERY_BASE}/import`} className="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+                  <a href={`${BINDERY_BASE}/import`} className="font-medium text-accent-text hover:underline">
                     {t('settings.general.reviewUnmatched', { count: lastScan.unmatched_units, defaultValue: 'Review {{count}} unmatched books' })}
                   </a>
                 </p>

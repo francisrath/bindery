@@ -575,7 +575,7 @@ export default function QueuePage() {
                         already has a book was matched — survives reload so the
                         user isn't left wondering whether the match took (#1589). */}
                     {isMatchable(item.status) && item.book && (
-                      <div className="mt-1 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-400/10 rounded px-2 py-1 break-words">
+                      <div className="mt-1 text-xs text-accent-text bg-emerald-400/10 rounded px-2 py-1 break-words">
                         {t('queue.matchedTo', { title: item.book.title, defaultValue: `Matched to ${item.book.title} — use Retry import to import it.` })}
                       </div>
                     )}
@@ -585,7 +585,7 @@ export default function QueuePage() {
                       </div>
                     )}
                     {matchMessages[item.id] && (
-                      <div className="mt-1 text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-400/10 rounded px-2 py-1 break-words">
+                      <div className="mt-1 text-xs text-accent-text bg-emerald-400/10 rounded px-2 py-1 break-words">
                         {matchMessages[item.id]}
                       </div>
                     )}
@@ -844,7 +844,7 @@ export function MatchBookControl({ disabled, onMatch, alreadyMatched = false }: 
             <button
               key={b.id}
               onClick={() => { setOpen(false); onMatch(b.id) }}
-              className="block w-full text-left text-xs px-1 py-0.5 rounded text-emerald-700 dark:text-emerald-400 hover:bg-slate-200 dark:hover:bg-zinc-800"
+              className="block w-full text-left text-xs px-1 py-0.5 rounded text-accent-text hover:bg-slate-200 dark:hover:bg-zinc-800"
             >
               {b.title}{b.author ? ` (${b.author.authorName})` : ''}
             </button>

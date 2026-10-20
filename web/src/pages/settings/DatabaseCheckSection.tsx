@@ -120,7 +120,7 @@ export default function DatabaseCheckSection() {
         )}
 
         {report && report.total === 0 && (
-          <p role="status" className="text-xs text-emerald-700 dark:text-emerald-400">{t('settings.general.dbCheckClean')}</p>
+          <p role="status" className="text-xs text-accent-text">{t('settings.general.dbCheckClean')}</p>
         )}
 
         {report && report.total > 0 && (
@@ -239,7 +239,7 @@ export default function DatabaseCheckSection() {
 
         {result && (
           <div className="space-y-2 border-t border-slate-200 dark:border-zinc-800 pt-3" data-testid="db-cleanup-result">
-            <p role="status" className="text-xs text-emerald-700 dark:text-emerald-400">
+            <p role="status" className="text-xs text-accent-text">
               {t('settings.general.dbCleanupDone', { deleted: result.deleted, cleared: result.cleared, skipped: result.skipped })}
             </p>
             <p className="text-xs text-slate-700 dark:text-zinc-300 break-all">
@@ -249,7 +249,7 @@ export default function DatabaseCheckSection() {
               <p role="alert" className="text-xs text-amber-600 dark:text-amber-400">{t('settings.general.dbCleanupNotVerified')}</p>
             )}
             {result.verified && result.remainingTotal === 0 && (
-              <p className="text-xs text-emerald-700 dark:text-emerald-400">{t('settings.general.dbCleanupRemainingNone')}</p>
+              <p className="text-xs text-accent-text">{t('settings.general.dbCleanupRemainingNone')}</p>
             )}
             {result.verified && result.remainingTotal > 0 && (
               <>
@@ -277,7 +277,7 @@ export default function DatabaseCheckSection() {
 
         <p className="text-xs text-slate-600 dark:text-zinc-500 border-t border-slate-200 dark:border-zinc-800 pt-3">
           {t('settings.general.dbCheckRepairNote')}{' '}
-          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">
+          <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-accent-text underline">
             {t('settings.general.dbCheckDocsLink')}
           </a>
         </p>

@@ -193,7 +193,7 @@ export default function DuplicateGroupCard({ group, busyBooks, onToggle, onExclu
                   {renderRules(book.rules)}
                 </span>
                 <span className="mt-1 block text-[11px] text-slate-600 dark:text-zinc-400" data-testid={`duplicate-evidence-${book.id}`}>
-                  <span className={book.hasFiles ? 'font-medium text-emerald-700 dark:text-emerald-400' : ''}>{fileText(book)}</span>
+                  <span className={book.hasFiles ? 'font-medium text-accent-text' : ''}>{fileText(book)}</span>
                   {evidenceItems(book).map((item, i) => (
                     <span key={i}>
                       <span className="mx-1 text-slate-400 dark:text-zinc-600">·</span>

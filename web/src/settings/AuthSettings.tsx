@@ -376,7 +376,7 @@ function DiscoveryResultView({ result, entered }: { result: DiscoveryResult; ent
           {t('settings.oidc.testDiscoveryMismatch', { entered, discovered: discovered.issuer })}
         </p>
       ) : (
-        <p className="text-emerald-700 dark:text-emerald-400">{t('settings.oidc.testDiscoveryOk')}</p>
+        <p className="text-accent-text">{t('settings.oidc.testDiscoveryOk')}</p>
       )}
       <p className="break-all">
         <span className="text-slate-500 dark:text-zinc-500">authorize:</span>{' '}
