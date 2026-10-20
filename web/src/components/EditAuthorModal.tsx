@@ -234,7 +234,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                       <option key={rf.id} value={rf.id}>{rf.path}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('editAuthorModal.audiobookRootFolderHint', "Where this author's audiobooks are stored. Separate from the ebook root folder.")}</p>
+                  <p className="text-xs text-fg-muted mt-1">{t('editAuthorModal.audiobookRootFolderHint', "Where this author's audiobooks are stored. Separate from the ebook root folder.")}</p>
                 </div>
               )}
               <div className="mb-3">
@@ -261,15 +261,15 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                   <option value="all">{t('monitorNewItems.all', 'Follow monitor mode')}</option>
                   <option value="none">{t('monitorNewItems.none', 'Don’t add them')}</option>
                 </select>
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">{t('editAuthorModal.monitorNewItemsHint', 'Applies to books a metadata refresh finds after the author was added. “Don’t add them” keeps a refresh to the books you already have, instead of pulling in the back-catalogue. An unmonitored author never takes new books either way.')}</p>
+                <p className="text-xs text-fg-muted mt-1">{t('editAuthorModal.monitorNewItemsHint', 'Applies to books a metadata refresh finds after the author was added. “Don’t add them” keeps a refresh to the books you already have, instead of pulling in the back-catalogue. An unmonitored author never takes new books either way.')}</p>
               </div>
               {monitorMode === 'series' && (
                 <div className="mb-3">
                   <label className="block text-xs text-fg-muted mb-1">{t('editAuthorModal.monitoredSeries', 'Monitored series')}</label>
                   {!seriesLoaded ? (
-                    <p className="text-xs text-slate-500 dark:text-zinc-500">{t('common.loading', 'Loading…')}</p>
+                    <p className="text-xs text-fg-muted">{t('common.loading', 'Loading…')}</p>
                   ) : authorSeries.length === 0 ? (
-                    <p className="text-xs text-slate-500 dark:text-zinc-500">
+                    <p className="text-xs text-fg-muted">
                       {t('editAuthorModal.monitoredSeriesEmpty', 'No series found for this author yet. Refresh the author to pull series data first.')}
                     </p>
                   ) : (
@@ -290,7 +290,7 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
                                 warning below is where the consequence lives
                                 and it stays amber. */}
                             {!s.hardcoverLink && (
-                              <span className="ml-2 text-xs text-slate-500 dark:text-zinc-500">
+                              <span className="ml-2 text-xs text-fg-muted">
                                 {t('editAuthorModal.seriesNoHardcoverLink', '(no Hardcover link)')}
                               </span>
                             )}

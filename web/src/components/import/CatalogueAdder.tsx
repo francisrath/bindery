@@ -104,13 +104,13 @@ export default function CatalogueAdder({ initialQuery, onChoose, hint, actionLab
           {t('common.cancel', 'Cancel')}
         </button>
       </form>
-      <p className="mt-1 text-[11px] text-slate-500 dark:text-zinc-500">
+      <p className="mt-1 text-[11px] text-fg-muted">
         {hint ?? t('manualImport.metadataHint', 'Adds the book to your library and links this file to it. No indexer search is started.')}
       </p>
       {error && <p role="alert" className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
       <div className="mt-2 max-h-48 overflow-y-auto divide-y divide-slate-100 dark:divide-zinc-800">
         {!searching && searched && results.length === 0 && !error && (
-          <p className="py-2 text-xs text-slate-500 dark:text-zinc-500">
+          <p className="py-2 text-xs text-fg-muted">
             {t('manualImport.metadataNoResults', 'No metadata results for that search.')}
           </p>
         )}
@@ -123,7 +123,7 @@ export default function CatalogueAdder({ initialQuery, onChoose, hint, actionLab
               <div className="min-w-0 flex-1">
                 <span className="text-xs font-medium text-slate-900 dark:text-white">{b.title}</span>
                 {b.author?.authorName && (
-                  <span className="text-[11px] text-slate-500 dark:text-zinc-500"> · {b.author.authorName}</span>
+                  <span className="text-[11px] text-fg-muted"> · {b.author.authorName}</span>
                 )}
               </div>
               <button

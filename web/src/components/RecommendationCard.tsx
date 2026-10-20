@@ -40,7 +40,7 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
       <div className="p-3 flex flex-col flex-1">
         {/* Title and author */}
         <h4 className="font-medium text-sm leading-snug line-clamp-2" title={rec.title}>{rec.title}</h4>
-        <p className="text-xs text-slate-500 dark:text-zinc-500 truncate mt-0.5">{rec.authorName}</p>
+        <p className="text-xs text-fg-muted truncate mt-0.5">{rec.authorName}</p>
 
         {/* Star rating */}
         {rec.rating > 0 && (

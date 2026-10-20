@@ -129,7 +129,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
           <button
             type="button"
             onClick={onClose}
-            className="text-2xl leading-none text-slate-500 dark:text-zinc-500 hover:text-slate-900 dark:hover:text-white"
+            className="text-2xl leading-none text-fg-muted hover:text-slate-900 dark:hover:text-white"
             aria-label="Close"
           >
             ×
@@ -235,7 +235,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
                         View on Hardcover ↗
                       </a>
                     ) : (
-                      <span className="text-xs text-slate-500 dark:text-zinc-500">No Hardcover page for this result</span>
+                      <span className="text-xs text-fg-muted">No Hardcover page for this result</span>
                     )}
                   </div>
                 </div>

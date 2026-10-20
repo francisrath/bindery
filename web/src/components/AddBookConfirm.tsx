@@ -171,7 +171,7 @@ function AddBookForm({ book, searchedISBN, onBack, onClose, onAdded }: Props) {
         </div>
 
         {searchedISBN && (
-          <div className="mt-3 text-[11px] leading-5 text-slate-500 dark:text-zinc-500">
+          <div className="mt-3 text-[11px] leading-5 text-fg-muted">
             <div className="font-medium">{t('addToLibrary.book.searchedIsbn')}</div>
             <div className="font-mono">{searchedISBN}</div>
           </div>
@@ -179,7 +179,7 @@ function AddBookForm({ book, searchedISBN, onBack, onClose, onAdded }: Props) {
 
         {visibleISBNs.length > 0 && (
           <div
-            className="mt-3 text-[11px] leading-5 text-slate-500 dark:text-zinc-500"
+            className="mt-3 text-[11px] leading-5 text-fg-muted"
             title={t('addToLibrary.book.identifiersHint')}
           >
             <div className="font-medium">{t('addToLibrary.book.isbns')}</div>

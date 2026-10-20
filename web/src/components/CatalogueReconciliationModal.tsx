@@ -195,7 +195,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
                           />
                           <span>
                             <span className="block font-medium text-slate-800 dark:text-zinc-200">{candidate.title}</span>
-                            <span className="mt-0.5 flex flex-wrap gap-x-2 text-slate-500 dark:text-zinc-500">
+                            <span className="mt-0.5 flex flex-wrap gap-x-2 text-fg-muted">
                               <span>{t(`catalogueReconciliation.reasons.${candidate.reason}`, reasonDefaults[candidate.reason])}</span>
                               <span aria-hidden="true">·</span>
                               <span>{candidate.metadataProvider}</span>
@@ -218,7 +218,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
                       {indeterminateRows.map(row => (
                         <li key={row.bookId} className="px-3 py-2 text-xs">
                           <span className="block font-medium text-slate-800 dark:text-zinc-200">{row.title}</span>
-                          <span className="mt-0.5 flex flex-wrap gap-x-2 text-slate-500 dark:text-zinc-500">
+                          <span className="mt-0.5 flex flex-wrap gap-x-2 text-fg-muted">
                             <span>{t(`catalogueReconciliation.indeterminateReasons.${row.reason}`, indeterminateReasonDefaults[row.reason])}</span>
                             <span aria-hidden="true">·</span>
                             <span>{row.metadataProvider}</span>
@@ -263,7 +263,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
 function SummaryCell({ label, value, tone }: { label: string; value: number; tone?: 'danger' }) {
   return (
     <div className="bg-white px-3 py-2 dark:bg-zinc-900">
-      <div className="text-[11px] text-slate-500 dark:text-zinc-500">{label}</div>
+      <div className="text-[11px] text-fg-muted">{label}</div>
       <div className={`text-lg font-semibold tabular-nums ${tone === 'danger' ? 'text-red-700 dark:text-red-300' : 'text-slate-900 dark:text-white'}`}>
         {value}
       </div>

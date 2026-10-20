@@ -97,12 +97,12 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
                 <label className="flex items-center gap-2 text-sm cursor-pointer">
                   <input type="checkbox" checked={selected.includes(s.id)} onChange={() => toggle(s.id)} />
                   <span>{s.title}</span>
-                  <span className="text-xs text-slate-500 dark:text-zinc-500">{t('series.merge.bookCount', { count: s.books?.length ?? 0 })}</span>
+                  <span className="text-xs text-fg-muted">{t('series.merge.bookCount', { count: s.books?.length ?? 0 })}</span>
                 </label>
               </li>
             ))}
             {candidates.length === 0 && (
-              <li className="text-xs text-slate-500 dark:text-zinc-500">{t('series.merge.noCandidates')}</li>
+              <li className="text-xs text-fg-muted">{t('series.merge.noCandidates')}</li>
             )}
           </ul>
 

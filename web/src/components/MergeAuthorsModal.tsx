@@ -134,7 +134,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
                 <span className="font-medium">{source.authorName}</span> → <span className="font-medium">{target.authorName}</span>
               </div>
               <div>{sourceBookCount === null ? 'Counting books…' : `${sourceBookCount} book(s) will move to the target.`}</div>
-              <div className="text-slate-500 dark:text-zinc-500">
+              <div className="text-fg-muted">
                 Alias preserved: <span className="font-mono">{source.authorName}</span>
                 {source.foreignAuthorId ? ` (${source.foreignAuthorId})` : ''}
               </div>

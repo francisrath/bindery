@@ -165,7 +165,7 @@ function MoveRow({ move }: { move: ReorganizeMove }) {
           {move.format}
         </span>
       </div>
-      <div className="font-mono text-slate-500 dark:text-zinc-500 break-all">
+      <div className="font-mono text-fg-muted break-all">
         <div>
           <span className="text-slate-400 dark:text-zinc-600">from </span>
           {move.current}
