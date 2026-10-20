@@ -80,7 +80,7 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
       >
         <div className="p-4 border-b border-slate-200 dark:border-zinc-800">
           <h3 id={titleId} className="text-lg font-semibold">{t('series.merge.title', { title: target.title })}</h3>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1">{t('series.merge.description')}</p>
+          <p className="text-xs text-fg-muted mt-1">{t('series.merge.description')}</p>
         </div>
 
         <div className="p-4 space-y-3 overflow-y-auto">

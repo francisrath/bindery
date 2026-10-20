@@ -214,7 +214,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
                           {result.confidence && <span>{formatConfidence(result.confidence)} match</span>}
                         </div>
                         {previewBooks.length > 0 && (
-                          <p className="mt-2 text-xs text-slate-600 dark:text-zinc-500 line-clamp-2 italic">
+                          <p className="mt-2 text-xs text-fg-muted line-clamp-2 italic">
                             {previewBooks.slice(0, 4).join(', ')}
                           </p>
                         )}
@@ -241,9 +241,9 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
                 </div>
               )
             })}
-            {searching && <p className="text-sm text-slate-600 dark:text-zinc-500 text-center py-4">Searching...</p>}
+            {searching && <p className="text-sm text-fg-muted text-center py-4">Searching...</p>}
             {!searching && results.length === 0 && !error && (
-              <p className="text-sm text-slate-600 dark:text-zinc-500 text-center py-4">No Hardcover series found.</p>
+              <p className="text-sm text-fg-muted text-center py-4">No Hardcover series found.</p>
             )}
           </div>
         </div>

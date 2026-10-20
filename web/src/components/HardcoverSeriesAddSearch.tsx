@@ -110,7 +110,7 @@ export default function HardcoverSeriesAddSearch({ onCreated, onExisting }: Prop
       {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
       {results && results.length === 0 && !error && (
-        <p className="text-sm text-slate-600 dark:text-zinc-500">{t('series.addFromHardcover.noResults')}</p>
+        <p className="text-sm text-fg-muted">{t('series.addFromHardcover.noResults')}</p>
       )}
 
       {results && results.length > 0 && (
@@ -131,7 +131,7 @@ export default function HardcoverSeriesAddSearch({ onCreated, onExisting }: Prop
                       <span>{t('series.addFromHardcover.bookCount', { count: result.bookCount })}</span>
                     </div>
                     {preview.length > 0 && (
-                      <p className="mt-2 text-xs text-slate-600 dark:text-zinc-500 line-clamp-2 italic">
+                      <p className="mt-2 text-xs text-fg-muted line-clamp-2 italic">
                         {preview.join(', ')}
                       </p>
                     )}

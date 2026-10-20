@@ -92,7 +92,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
       >
         <div className="p-4 border-b border-slate-200 dark:border-zinc-800">
           <h3 id={titleId} className="text-lg font-semibold">{t('mergeAuthorsModal.title')}</h3>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1">
+          <p className="text-xs text-fg-muted mt-1">
             {t('mergeAuthorsModal.description')}
           </p>
         </div>

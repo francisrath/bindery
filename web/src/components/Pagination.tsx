@@ -51,7 +51,7 @@ export default function Pagination({
 
   return (
     <div className="flex flex-col items-center gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800 sm:flex-row sm:justify-between">
-      <div className="text-xs text-slate-600 dark:text-zinc-500">
+      <div className="text-xs text-fg-muted">
         {start}–{end} of {totalItems}
       </div>
       <div className="flex flex-wrap justify-center items-center gap-1 pointer-coarse:gap-y-5">
@@ -84,7 +84,7 @@ export default function Pagination({
         <button onClick={() => onPageChange(totalPages)} disabled={page === totalPages} className={btn}>»</button>
       </div>
       <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-600 dark:text-zinc-500">{t('pagination.perPage')}:</span>
+        <span className="text-xs text-fg-muted">{t('pagination.perPage')}:</span>
         <select
           aria-label={t('pagination.perPage')}
           value={pageSize}

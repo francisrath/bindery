@@ -171,12 +171,12 @@ export default function EditAuthorModal({ author, onClose, onSaved }: Props) {
       <div {...panelProps} className="bg-slate-100 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded-lg w-full max-w-lg shadow-2xl modal-max-h flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b border-slate-200 dark:border-zinc-800">
           <h3 id={titleId} className="text-lg font-semibold">{t('editAuthorModal.title', 'Edit Author')}</h3>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1">{author.authorName}</p>
+          <p className="text-xs text-fg-muted mt-1">{author.authorName}</p>
         </div>
 
         <div className="p-4 flex-1 overflow-y-auto">
           {loading ? (
-            <p className="text-sm text-slate-600 dark:text-zinc-500">{t('common.loading', 'Loading…')}</p>
+            <p className="text-sm text-fg-muted">{t('common.loading', 'Loading…')}</p>
           ) : (
             <>
               {qualityProfiles.length > 0 && (

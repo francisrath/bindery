@@ -178,7 +178,7 @@ export default function AuthorMetadataLinkModal({ author, onClose, onLinked }: P
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-600 dark:text-zinc-500 flex flex-wrap gap-x-3">
+                    <div className="text-xs text-fg-muted flex flex-wrap gap-x-3">
                       {candidate.disambiguation && <span>{candidate.disambiguation}</span>}
                       {candidate.statistics?.bookCount ? <span>{t('authorMetadataLink.books', { count: candidate.statistics.bookCount, defaultValue: '{{count}} books' })}</span> : null}
                       {candidate.ratingsCount ? <span>{t('authorMetadataLink.ratings', { count: candidate.ratingsCount, defaultValue: '{{count}} ratings' })}</span> : null}
@@ -217,7 +217,7 @@ export default function AuthorMetadataLinkModal({ author, onClose, onLinked }: P
               </div>
             ))}
             {!searching && visibleResults.length === 0 && !error && (
-              <p className="text-sm text-slate-600 dark:text-zinc-500 text-center py-6">
+              <p className="text-sm text-fg-muted text-center py-6">
                 {t('authorMetadataLink.noResults', 'No alternate metadata candidates found')}
               </p>
             )}

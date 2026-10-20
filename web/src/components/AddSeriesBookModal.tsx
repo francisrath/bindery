@@ -124,9 +124,9 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
 
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {loading ? (
-                <p className="text-sm text-slate-600 dark:text-zinc-500 text-center py-4">Loading...</p>
+                <p className="text-sm text-fg-muted text-center py-4">Loading...</p>
               ) : availableBooks.length === 0 ? (
-                <p className="text-sm text-slate-600 dark:text-zinc-500 text-center py-4">No matching books found.</p>
+                <p className="text-sm text-fg-muted text-center py-4">No matching books found.</p>
               ) : (
                 availableBooks.map(book => {
                   const authorName = book.author?.authorName || authorNames.get(book.authorId) || ''
@@ -154,7 +154,7 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
                       />
                       <span className="min-w-0">
                         <span className="block text-sm font-medium truncate">{book.title}</span>
-                        {authorName && <span className="block text-xs text-slate-600 dark:text-zinc-500 truncate">{authorName}</span>}
+                        {authorName && <span className="block text-xs text-fg-muted truncate">{authorName}</span>}
                       </span>
                     </label>
                   )

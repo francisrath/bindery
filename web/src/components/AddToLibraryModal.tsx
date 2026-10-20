@@ -216,7 +216,7 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
       >
         <div className="min-w-0">
           <div className="font-medium text-sm">{author.authorName}</div>
-          <div className="text-xs text-slate-600 dark:text-zinc-500 flex flex-wrap gap-x-3">
+          <div className="text-xs text-fg-muted flex flex-wrap gap-x-3">
             {author.disambiguation && <span>{t('addToLibrary.topWork')} {author.disambiguation}</span>}
             {author.statistics?.bookCount ? <span title={t('addToLibrary.booksTooltip')}>{t('addToLibrary.books', { count: author.statistics.bookCount })}</span> : null}
             {author.ratingsCount ? <span>{t('addToLibrary.ratings', { count: author.ratingsCount })}</span> : null}
@@ -264,7 +264,7 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
         <div className="flex-1 min-w-0">
           <div className="font-medium text-sm truncate">{book.title}</div>
           {book.author?.authorName && (
-            <div className="text-xs text-slate-600 dark:text-zinc-500">{book.author.authorName}</div>
+            <div className="text-xs text-fg-muted">{book.author.authorName}</div>
           )}
           {book.releaseDate && (
             <div className="text-xs text-slate-500 dark:text-zinc-600">{new Date(book.releaseDate).getFullYear()}</div>
