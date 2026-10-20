@@ -1256,7 +1256,7 @@ function BookDetailPageInner() {
               <ul className="mt-2 space-y-2" aria-label={t('bookDetail.series.keptOutHeading')}>
                 {restorable.map(e => (
                   <li key={e.seriesForeignId} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                    <span className="text-slate-500 dark:text-zinc-400 line-through decoration-slate-400">
+                    <span className="text-fg-muted line-through decoration-slate-400">
                       {e.position
                         ? t('bookDetail.seriesPosition', { series: e.seriesTitle, position: e.position, defaultValue: '{{series}} #{{position}}' })
                         : e.seriesTitle}
@@ -1371,7 +1371,7 @@ function BookDetailPageInner() {
                             <button
                               type="button"
                               onClick={() => copyPath(row.path)}
-                              className="shrink-0 text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 text-xs border border-slate-300 dark:border-zinc-700 rounded px-1.5 py-0.5"
+                              className="shrink-0 text-fg-muted hover:text-slate-700 dark:hover:text-zinc-200 text-xs border border-slate-300 dark:border-zinc-700 rounded px-1.5 py-0.5"
                               aria-label={t('bookDetail.copyPath')}
                             >
                               <span aria-hidden>⧉</span>{' '}
@@ -1385,7 +1385,7 @@ function BookDetailPageInner() {
                               // as "More" are indistinguishable to a screen
                               // reader.
                               ariaLabel={t('bookDetail.rowMore', { name: baseName(row.path) })}
-                              buttonClassName="shrink-0 text-xs border border-slate-300 dark:border-zinc-700 rounded px-1.5 py-0.5 text-slate-500 dark:text-zinc-400"
+                              buttonClassName="shrink-0 text-xs border border-slate-300 dark:border-zinc-700 rounded px-1.5 py-0.5 text-fg-muted"
                               items={[
                                 {
                                   label: t('bookDetail.fixMatch.button', 'Fix match'),
@@ -1540,7 +1540,7 @@ function BookDetailPageInner() {
                 <button
                   type="button"
                   onClick={() => copyId(row.foreignId)}
-                  className="shrink-0 text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 text-xs border border-slate-300 dark:border-zinc-700 rounded px-1.5 py-0.5"
+                  className="shrink-0 text-fg-muted hover:text-slate-700 dark:hover:text-zinc-200 text-xs border border-slate-300 dark:border-zinc-700 rounded px-1.5 py-0.5"
                   aria-label={t('bookDetail.metadataSource.copyId', { id: row.foreignId, defaultValue: 'Copy {{id}}' })}
                 >
                   <span aria-hidden>⧉</span>{' '}

@@ -52,7 +52,7 @@ export default function DuplicatesPage() {
       {confirmDialog}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link to="/books" className="text-xs text-slate-500 hover:underline dark:text-zinc-400">
+          <Link to="/books" className="text-xs text-fg-muted hover:underline">
             {t('duplicateReview.backToBooks', '← Books')}
           </Link>
           <h2 className="text-2xl font-bold">{t('duplicateReview.pageTitle', 'Duplicates')}</h2>
@@ -73,7 +73,7 @@ export default function DuplicatesPage() {
       </p>
 
       {loading && !result ? (
-        <p className="text-sm text-slate-500 dark:text-zinc-400">{t('duplicateCandidates.loading', 'Scanning the catalogue…')}</p>
+        <p className="text-sm text-fg-muted">{t('duplicateCandidates.loading', 'Scanning the catalogue…')}</p>
       ) : error && !result ? (
         <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
       ) : result && result.total === 0 ? (

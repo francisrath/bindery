@@ -80,7 +80,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
                   <button
                     type="button"
                     onClick={() => setOverriding(true)}
-                    className="text-slate-500 dark:text-zinc-400 hover:underline"
+                    className="text-fg-muted hover:underline"
                   >
                     {t('manualImport.change', 'Change')}
                   </button>
