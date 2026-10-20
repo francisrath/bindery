@@ -144,7 +144,7 @@ export default function MetadataTab() {
           <label htmlFor={`${fid}-5`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
             {t('settings.general.metadataProviderLabel', 'Primary metadata provider')}
           </label>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+          <p className="text-xs text-fg-muted mb-2">
             {t('settings.general.metadataProviderHint', 'Selects the source used for author and book search, and decides what an author\'s catalogue looks like. DNB (Deutsche Nationalbibliothek) is recommended for German, Austrian, and Swiss catalogues — it covers German-language publications since 1913 where OpenLibrary coverage is thin. Nasjonalbiblioteket (the National Library of Norway) is recommended for Norwegian catalogues — it holds every Norwegian publication by legal deposit, under its original Norwegian title where OpenLibrary often has only the English translation. BnF (Bibliothèque nationale de France) is recommended for French-language libraries: legal deposit puts nearly every book published in France in its catalogue, under the French edition title, translator included, where OpenLibrary often has only the original English title. Contains data from the Bibliothèque nationale de France under the Licence Ouverte / Open Licence 2.0, with the date each record was retrieved shown on its book and author pages; BnF does not endorse Bindery. Hardcover is a curated catalogue: fewer translation editions, omnibus bundles, and non-book entries than OpenLibrary, at the cost of a thinner long tail. OpenLibrary remains the default. Whichever you pick, the other providers are still used as enrichers, except Nasjonalbiblioteket and BnF, which are only queried when chosen as the primary.')}
           </p>
           <select id={`${fid}-5`}
@@ -169,7 +169,7 @@ export default function MetadataTab() {
           {/* The Licence Ouverte asks for credit to the source and the date of
               retrieval wherever the data is shown with its provider (#3144). */}
           {settings['metadata.primary_provider'] === 'bnf' && (
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mt-2" data-testid="bnf-credit">
+            <p className="text-xs text-fg-muted mt-2" data-testid="bnf-credit">
               {t('settings.general.metadataProviderBnfCredit', 'Contains data from the Bibliothèque nationale de France (BnF) under the Licence Ouverte / Open Licence 2.0, with the date each record was retrieved shown on its book and author pages. BnF does not endorse Bindery. Only BnF\'s catalogue records are used: no cover images are fetched, and BnF is contacted only while it is the primary provider.')}
             </p>
           )}
@@ -191,7 +191,7 @@ export default function MetadataTab() {
           <h4 className="text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
             {t('settings.general.enrichersHeading', 'Enrichers')}
           </h4>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+          <p className="text-xs text-fg-muted mb-2">
             {t('settings.general.enrichersHint', 'These providers fill in what the primary leaves empty. Untick one and Bindery stops using it as an enricher, which means fewer requests but less fill in: DNB also supplies covers through its cover service, and Hardcover also supplies curated genres, series and edition language evidence. Takes effect from the next lookup, with no restart.')}
           </p>
           <div className="space-y-2">
@@ -209,7 +209,7 @@ export default function MetadataTab() {
                   />
                   <span>
                     {t(row.labelKey, row.label)}
-                    <span className="block text-xs text-slate-600 dark:text-zinc-500">
+                    <span className="block text-xs text-fg-muted">
                       {isPrimary
                         ? t('settings.general.enricherPrimaryNote', 'This is the primary provider, so it cannot be turned off.')
                         : t(row.hintKey, row.hint)}
@@ -236,7 +236,7 @@ export default function MetadataTab() {
                 />
                 <span>
                   {t(row.labelKey, row.label)}
-                  <span className="block text-xs text-slate-600 dark:text-zinc-500">{t(row.hintKey, row.hint)}</span>
+                  <span className="block text-xs text-fg-muted">{t(row.hintKey, row.hint)}</span>
                 </span>
               </label>
             ))}
@@ -254,7 +254,7 @@ export default function MetadataTab() {
             <label htmlFor={`${fid}-6`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
               {t('settings.general.defaultMediaTypeLabel', 'Default media type')}
             </label>
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+            <p className="text-xs text-fg-muted mb-2">
               {t('settings.general.defaultMediaTypeHint', 'Applied to new authors, and to books you add on their own, when no explicit choice is made. Existing rows are unaffected: change authors with the Authors page bulk action, and books from the Books page with Set ebook, Set audiobook or Set both, which also covers your wanted list once Books is filtered to Wanted.')}
             </p>
             <select id={`${fid}-6`}
@@ -284,7 +284,7 @@ export default function MetadataTab() {
                 />
                 <span>
                   {t('settings.general.strictMediaTypeLabel', 'Restrict new books to this media type')}
-                  <span className="block text-xs text-slate-600 dark:text-zinc-500">
+                  <span className="block text-xs text-fg-muted">
                     {t('settings.general.strictMediaTypeHint', 'Skip catalogue books available only in the other format, and narrow dual-format books to this one. Prevents monitoring books you can never grab. Governs catalogue population only: a book you add yourself is always created in the format you picked.')}
                   </span>
                 </span>
@@ -295,7 +295,7 @@ export default function MetadataTab() {
             <label htmlFor={`${fid}-7`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
               {t('settings.general.defaultMonitorModeLabel', 'Default monitor mode')}
             </label>
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+            <p className="text-xs text-fg-muted mb-2">
               {t('settings.general.defaultMonitorModeHint', 'Applied to newly added authors. Existing authors keep their current mode unless edited.')}
             </p>
             <select id={`${fid}-7`}
@@ -340,7 +340,7 @@ export default function MetadataTab() {
           <div className="flex items-center justify-between">
             <div>
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.autoGrabLabel')}</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.autoGrabHint')}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('settings.general.autoGrabHint')}</p>
             </div>
             <Toggle
               checked={(settings['autoGrab.enabled'] ?? 'true') !== 'false'}
@@ -360,7 +360,7 @@ export default function MetadataTab() {
           <div className="flex items-center justify-between">
             <div>
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.recommendationsLabel')}</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.recommendationsHint')}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('settings.general.recommendationsHint')}</p>
             </div>
             <Toggle
               checked={(settings['recommendations.enabled'] ?? 'false') === 'true'}
@@ -381,7 +381,7 @@ export default function MetadataTab() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.authorWikidataLabel', 'Author photos and bios from Wikidata')}</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.authorWikidataHint', 'Fills an author\'s missing photo and bio from Wikimedia Commons and Wikipedia, found on Wikidata by the author\'s library authority ID (NORAF, GND, BnF or OpenLibrary), never by name. Lookups ride on the daily author refresh, and each photo and bio is credited on the author\'s page. While this is off, Wikimedia is sent no request.')}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('settings.general.authorWikidataHint', 'Fills an author\'s missing photo and bio from Wikimedia Commons and Wikipedia, found on Wikidata by the author\'s library authority ID (NORAF, GND, BnF or OpenLibrary), never by name. Lookups ride on the daily author refresh, and each photo and bio is credited on the author\'s page. While this is off, Wikimedia is sent no request.')}</p>
             </div>
             <Toggle
               checked={(settings['metadata.author_enrichment.wikidata'] ?? 'false') === 'true'}
@@ -405,7 +405,7 @@ export default function MetadataTab() {
             {t('settings.metadata.newProfile')}
           </button>
         </div>
-        <p className="text-xs text-slate-600 dark:text-zinc-500 mb-4">
+        <p className="text-xs text-fg-muted mb-4">
           {t('settings.metadata.description')}
         </p>
         {creating && (
@@ -415,7 +415,7 @@ export default function MetadataTab() {
           />
         )}
         {profiles.length === 0 && !creating ? (
-          <p className="text-slate-600 dark:text-zinc-500 text-sm">{t('settings.metadata.empty')}</p>
+          <p className="text-fg-muted text-sm">{t('settings.metadata.empty')}</p>
         ) : (
           <div className="space-y-3">
             {profiles.map(p => (

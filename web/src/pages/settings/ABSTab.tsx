@@ -532,7 +532,7 @@ function AudiobookshelfSection() {
       <div className="flex items-center justify-between mb-2 gap-4">
         <div>
           <h3 className="text-base font-semibold text-slate-800 dark:text-zinc-200">Audiobookshelf</h3>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mt-1">
+          <p className="text-xs text-fg-muted mt-1">
             Configure one ABS source, test API-key auth, pick book libraries, then import ABS metadata into the Bindery catalog.
           </p>
           {draft.enabled && (
@@ -555,7 +555,7 @@ function AudiobookshelfSection() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h4 className="text-sm font-medium text-slate-800 dark:text-zinc-200">Libraries</h4>
-            <p className="text-[11px] text-slate-600 dark:text-zinc-500 mt-0.5">
+            <p className="text-[11px] text-fg-muted mt-0.5">
               Select each ABS book library to import from this source.
             </p>
           </div>
@@ -695,7 +695,7 @@ function AudiobookshelfSection() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="min-w-0">
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">Catalog import</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 Import authors, books, series, and editions from the selected ABS libraries. Shared filesystem paths are reconciled into Bindery ownership automatically; when ABS and Bindery use different mount prefixes, add a path translation above. Non-visible paths stay metadata-only and are counted for manual follow-up.
               </p>
             </div>
@@ -844,7 +844,7 @@ function AudiobookshelfSection() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-medium text-slate-800 dark:text-zinc-200">Recent runs</p>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">Use a dry-run before a live import, then preview rollback against the exact batch if you need to unwind it safely.</p>
+                <p className="text-xs text-fg-muted">Use a dry-run before a live import, then preview rollback against the exact batch if you need to unwind it safely.</p>
               </div>
               <button
                 onClick={() => refreshRuns().catch(() => {})}
@@ -993,7 +993,7 @@ function AudiobookshelfSection() {
                 </span>
                 <div>
                   <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 cursor-pointer">No-match books</label>
-                  <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
+                  <p className="text-xs text-fg-muted mt-0.5">
                     Low-confidence ABS items stay here until you explicitly import or dismiss them, which keeps bad metadata out of the main catalog.
                   </p>
                 </div>

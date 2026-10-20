@@ -387,7 +387,7 @@ export default function LogsTab() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="min-w-0">
               <label htmlFor={`${fid}-retention`} className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.logRetentionLabel')}</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.logRetentionHint')}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('settings.general.logRetentionHint')}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <input
@@ -421,7 +421,7 @@ export default function LogsTab() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-0" data-testid="backup-create-row">
             <div className="min-w-0">
               <p className="text-sm text-slate-700 dark:text-zinc-300">{t('settings.general.backupCreate')}</p>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.backupHint')}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('settings.general.backupHint')}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:flex-shrink-0">
               <input
@@ -454,7 +454,7 @@ export default function LogsTab() {
           </p>
           {backups.length > 0 && (
             <div className="mt-3 border-t border-slate-200 dark:border-zinc-800 pt-3">
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{t('settings.general.existingBackups')}</p>
+              <p className="text-xs text-fg-muted mb-2">{t('settings.general.existingBackups')}</p>
               <ul className="space-y-1">
                 {backups.map(b => (
                   <li key={b.name} className="flex items-center justify-between text-xs text-fg-muted">
@@ -484,7 +484,7 @@ export default function LogsTab() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.general.telemetryLabel')}</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.general.telemetryHint')}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{t('settings.general.telemetryHint')}</p>
             </div>
             <Toggle
               checked={(settings['telemetry.enabled'] ?? 'true') !== 'false'}

@@ -60,7 +60,7 @@ export default function CalibreTab() {
     }
   }
 
-  if (loading) return <div className="text-slate-600 dark:text-zinc-500">Loading…</div>
+  if (loading) return <div className="text-fg-muted">Loading…</div>
 
   return (
     <div className="space-y-8">
@@ -332,7 +332,7 @@ function CalibreSection({
   return (
     <section>
       <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">Calibre</h3>
-      <p className="text-xs text-slate-600 dark:text-zinc-500 mb-3">
+      <p className="text-xs text-fg-muted mb-3">
         Calibre only knows about books recorded in its <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">metadata.db</code>;
         a file placed in its library folder is invisible to Calibre and to CWA. There are three ways to hand a book over:
         register it with Calibre after import (Write integration below), copy it into a CWA ingest folder (the CWA section below),
@@ -345,7 +345,7 @@ function CalibreSection({
         {/* Shared library path — used by both write integration and library import */}
         <div>
           <label htmlFor={`${fid}-1`} className="block text-xs text-fg-muted mb-1">Library path</label>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+          <p className="text-xs text-fg-muted mb-2">
             Directory containing <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">metadata.db</code>.
             Used by both the write integration and library import.
           </p>
@@ -386,7 +386,7 @@ function CalibreSection({
                 />
                 <div>
                   <div className="text-sm text-slate-800 dark:text-zinc-200">{opt.label}</div>
-                  <div className="text-xs text-slate-600 dark:text-zinc-500">{opt.desc}</div>
+                  <div className="text-xs text-fg-muted">{opt.desc}</div>
                 </div>
               </label>
             ))}
@@ -410,7 +410,7 @@ function CalibreSection({
         {mode === 'calibredb' && (
           <div>
             <label htmlFor={`${fid}-2`} className="block text-xs text-fg-muted mb-1">Binary path (optional)</label>
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Leave blank to resolve <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">calibredb</code> on PATH. Set explicitly when running in a container that bundles Calibre at a pinned location.</p>
+            <p className="text-xs text-fg-muted mb-2">Leave blank to resolve <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">calibredb</code> on PATH. Set explicitly when running in a container that bundles Calibre at a pinned location.</p>
             <div className="flex flex-wrap gap-2">
               <input id={`${fid}-2`}
                 value={settings['calibre.binary_path'] ?? ''}
@@ -449,7 +449,7 @@ function CalibreSection({
                   />
                   <div>
                     <div className="text-sm text-slate-800 dark:text-zinc-200">{opt.label}</div>
-                    <div className="text-xs text-slate-600 dark:text-zinc-500">{opt.desc}</div>
+                    <div className="text-xs text-fg-muted">{opt.desc}</div>
                   </div>
                 </label>
               ))}
@@ -460,7 +460,7 @@ function CalibreSection({
         {mode === 'plugin' && !pulling && (
           <div>
             <label htmlFor={`${fid}-3`} className="block text-xs text-fg-muted mb-1">Plugin URL</label>
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+            <p className="text-xs text-fg-muted mb-2">
               Base URL of the Bindery Bridge plugin&rsquo;s HTTP server running inside Calibre.
             </p>
             <div className="flex flex-wrap gap-2">
@@ -486,7 +486,7 @@ function CalibreSection({
         {mode === 'plugin' && (
           <div>
             <label htmlFor={`${fid}-4`} className="block text-xs text-fg-muted mb-1">API key</label>
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+            <p className="text-xs text-fg-muted mb-2">
               {pulling
                 ? t('settings.calibre.transport.apiKeyPullHelp')
                 : <>Bearer token configured in the plugin&rsquo;s Calibre Preferences dialog.</>}
@@ -515,7 +515,7 @@ function CalibreSection({
         {mode === 'plugin' && !pulling && (
           <div>
             <label htmlFor={`${fid}-5`} className="block text-xs text-fg-muted mb-1">Push path remap</label>
-            <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+            <p className="text-xs text-fg-muted mb-2">
               Optional. If the Calibre container mounts your library at a different path than Bindery,
               map Bindery&rsquo;s prefix to Calibre&rsquo;s as <code className="font-mono">from:to</code> pairs
               (comma separated), e.g. <code className="font-mono">/books:/mnt/user/media/books</code>.
@@ -579,7 +579,7 @@ function CalibreSection({
             <div className="flex items-center justify-between gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">{t('settings.calibre.pushAll.label')}</label>
-                <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
+                <p className="text-xs text-fg-muted mt-0.5">
                   {t('settings.calibre.pushAll.description')}
                 </p>
                 {bridgeReachable === false && (
@@ -607,7 +607,7 @@ function CalibreSection({
           <div className="flex items-center justify-between">
             <div>
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">Library import</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
+              <p className="text-xs text-fg-muted mt-0.5">
                 Read your existing Calibre library and import books, authors, and editions into Bindery.
                 Works independently of the write mode above.
               </p>
@@ -628,7 +628,7 @@ function CalibreSection({
               <div className="flex items-center justify-between">
                 <div>
                   <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">Sync on startup</label>
-                  <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">Re-import each time Bindery starts. Safe to leave on — imports are incremental and idempotent.</p>
+                  <p className="text-xs text-fg-muted mt-0.5">Re-import each time Bindery starts. Safe to leave on — imports are incremental and idempotent.</p>
                 </div>
                 <Toggle
                   checked={syncOnStartup}
@@ -642,7 +642,7 @@ function CalibreSection({
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="text-xs text-slate-600 dark:text-zinc-500">
+                <div className="text-xs text-fg-muted">
                   {lastImportAt ? (
                     <>Last import: <span className="text-slate-800 dark:text-zinc-200">{new Date(lastImportAt).toLocaleString()}</span></>
                   ) : (
@@ -710,7 +710,7 @@ function CalibreSection({
 
       <div className="bg-slate-100 dark:bg-zinc-900 rounded-lg p-5 border border-slate-300 dark:border-zinc-800">
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">Calibre-Web-Automated (CWA)</h3>
-        <p className="text-xs text-slate-600 dark:text-zinc-500 mb-4">
+        <p className="text-xs text-fg-muted mb-4">
           When set, every successful ebook import is also copied into this directory so a sibling{' '}
           <a href="https://github.com/crocodilestick/Calibre-Web-Automated" target="_blank" rel="noopener noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">CWA</a>{' '}
           container can ingest it. Bindery keeps its own copy. Audiobooks are not mirrored. This mirror is independent of the
@@ -719,7 +719,7 @@ function CalibreSection({
         </p>
         <div>
           <label htmlFor={`${fid}-6`} className="block text-xs text-fg-muted mb-1">Ingest folder path</label>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">Mount the same path into both containers. CWA's docs use <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">/cwa-book-ingest</code>.</p>
+          <p className="text-xs text-fg-muted mb-2">Mount the same path into both containers. CWA's docs use <code className="text-[11px] bg-slate-200 dark:bg-zinc-800 px-1 rounded">/cwa-book-ingest</code>.</p>
           <div className="flex flex-wrap gap-2">
             <input id={`${fid}-6`}
               value={settings['cwa.ingest_path'] ?? ''}
@@ -796,7 +796,7 @@ function CalibreRunsList({
           <p className="text-sm font-medium text-slate-800 dark:text-zinc-200">
             {t('settings.calibre.runs.heading')}
           </p>
-          <p className="text-xs text-slate-600 dark:text-zinc-500">
+          <p className="text-xs text-fg-muted">
             {t('settings.calibre.runs.description')}
           </p>
         </div>
@@ -940,16 +940,16 @@ export function CalibreRollbackModal({
             <>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.runs.actionsPlanned', { count: display.stats.actionsPlanned })}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.runs.actionsPlanned', { count: display.stats.actionsPlanned })}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.runs.entitiesDeleted', { count: display.stats.entitiesDeleted })}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.runs.entitiesDeleted', { count: display.stats.entitiesDeleted })}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.runs.provenanceUnlinked', { count: display.stats.provenanceUnlinked })}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.runs.provenanceUnlinked', { count: display.stats.provenanceUnlinked })}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.runs.skipped', { count: display.stats.skipped })}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.runs.skipped', { count: display.stats.skipped })}</div>
                 </div>
               </div>
 
@@ -1087,19 +1087,19 @@ export function CalibreSyncModal({
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.pushed')}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.pushAll.pushed')}</div>
                   <div className="font-semibold text-emerald-600 dark:text-emerald-400">{stats?.pushed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.alreadyInCalibre')}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.pushAll.alreadyInCalibre')}</div>
                   <div className="font-semibold text-slate-700 dark:text-zinc-300">{stats?.alreadyInCalibre ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.failed')}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.pushAll.failed')}</div>
                   <div className="font-semibold text-red-600 dark:text-red-400">{stats?.failed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
-                  <div className="text-slate-600 dark:text-zinc-500">{t('settings.calibre.pushAll.skipped')}</div>
+                  <div className="text-fg-muted">{t('settings.calibre.pushAll.skipped')}</div>
                   <div
                     data-testid="calibre-sync-skipped"
                     className="font-semibold text-amber-600 dark:text-amber-400"

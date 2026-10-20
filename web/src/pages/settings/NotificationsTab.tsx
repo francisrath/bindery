@@ -67,7 +67,7 @@ export default function NotificationsTab() {
         </button>
       </div>
       {notifications.length === 0 ? (
-        <p className="text-slate-600 dark:text-zinc-500 text-sm">{t('settings.notifications.empty')}</p>
+        <p className="text-fg-muted text-sm">{t('settings.notifications.empty')}</p>
       ) : (
         <div className="space-y-2">
           {notifications.map(n => (
@@ -84,8 +84,8 @@ export default function NotificationsTab() {
                       title={n.enabled ? t('common.disable') : t('common.enable')}
                     />
                     <div className="min-w-0">
-                      <h4 className={`font-medium text-sm ${!n.enabled ? 'text-slate-600 dark:text-zinc-500' : ''}`}>{n.name}</h4>
-                      <p className="text-xs text-slate-600 dark:text-zinc-500 truncate mt-0.5">{n.url}</p>
+                      <h4 className={`font-medium text-sm ${!n.enabled ? 'text-fg-muted' : ''}`}>{n.name}</h4>
+                      <p className="text-xs text-fg-muted truncate mt-0.5">{n.url}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         {n.onGrab && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onGrab')}</span>}
                         {n.onImport && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{t('settings.notifications.onImport')}</span>}

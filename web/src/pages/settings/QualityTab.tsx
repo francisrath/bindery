@@ -62,7 +62,7 @@ export default function QualityTab() {
           {t('settings.quality.newProfile')}
         </button>
       </div>
-      <p className="text-xs text-slate-600 dark:text-zinc-500 mb-4">
+      <p className="text-xs text-fg-muted mb-4">
         {t('settings.quality.description')}
       </p>
       {creating && (
@@ -72,7 +72,7 @@ export default function QualityTab() {
         />
       )}
       {profiles.length === 0 && !creating ? (
-        <p className="text-slate-600 dark:text-zinc-500 text-sm">{t('settings.quality.empty')}</p>
+        <p className="text-fg-muted text-sm">{t('settings.quality.empty')}</p>
       ) : (
         <div className="space-y-3">
           {profiles.map(p => (

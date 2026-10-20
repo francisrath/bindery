@@ -122,7 +122,7 @@ export default function GoodreadsImportSection() {
       <h3 className="text-base font-semibold mb-2 text-slate-800 dark:text-zinc-200">
         {t('settings.import.goodreadsHeading')}
       </h3>
-      <p className="text-xs text-slate-600 dark:text-zinc-500 mb-3">
+      <p className="text-xs text-fg-muted mb-3">
         {t('settings.import.goodreadsDescription')}
       </p>
 
@@ -171,7 +171,7 @@ export default function GoodreadsImportSection() {
           <div className="text-sm font-medium text-slate-800 dark:text-zinc-200">
             {t('settings.import.goodreadsPreviewHeading')}
           </div>
-          <div className="text-xs text-slate-600 dark:text-zinc-500">
+          <div className="text-xs text-fg-muted">
             {t('settings.import.goodreadsPreviewSummary', {
               total: preview.totalRows,
               resolved: preview.resolved,

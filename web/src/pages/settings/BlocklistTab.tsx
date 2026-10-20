@@ -89,14 +89,14 @@ export default function BlocklistTab() {
               {deleting ? t('blocklist.deleting') : t('blocklist.deleteSelected', { count: selected.size })}
             </button>
           )}
-          <span className="text-sm text-slate-600 dark:text-zinc-500">{t('blocklist.entries', { count: entries.length })}</span>
+          <span className="text-sm text-fg-muted">{t('blocklist.entries', { count: entries.length })}</span>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+        <div className="text-fg-muted">{t('common.loading')}</div>
       ) : entries.length === 0 ? (
-        <div className="text-center py-16 text-slate-600 dark:text-zinc-500">
+        <div className="text-center py-16 text-fg-muted">
           <p className="text-lg mb-2">{t('blocklist.empty')}</p>
           <p className="text-sm">{t('blocklist.emptyHint')}</p>
         </div>
@@ -168,7 +168,7 @@ export default function BlocklistTab() {
                 checked={allSelected}
                 onChange={toggleAll}
               />
-              <span className="text-xs text-slate-600 dark:text-zinc-500">{t('blocklist.selectAll')}</span>
+              <span className="text-xs text-fg-muted">{t('blocklist.selectAll')}</span>
             </div>
             {pageItems.map(entry => (
               <div
@@ -191,7 +191,7 @@ export default function BlocklistTab() {
                       <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-700 dark:text-red-400">
                         {entry.reason || 'Unknown'}
                       </span>
-                      <span className="text-[10px] text-slate-600 dark:text-zinc-500">{formatBlocklistDate(entry.createdAt)}</span>
+                      <span className="text-[10px] text-fg-muted">{formatBlocklistDate(entry.createdAt)}</span>
                     </div>
                   </div>
                   <button

@@ -102,7 +102,7 @@ export default function DatabaseCheckSection() {
       <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.dbCheck')}</h3>
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-3">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCheckHint')}</p>
+          <p className="text-xs text-fg-muted">{t('settings.general.dbCheckHint')}</p>
           <button
             type="button"
             onClick={run}
@@ -209,9 +209,9 @@ export default function DatabaseCheckSection() {
             </p>
             {preview.previewToken ? (
               <>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupCascadeNote')}</p>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupBackupNote')}</p>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupSlowNote')}</p>
+                <p className="text-xs text-fg-muted">{t('settings.general.dbCleanupCascadeNote')}</p>
+                <p className="text-xs text-fg-muted">{t('settings.general.dbCleanupBackupNote')}</p>
+                <p className="text-xs text-fg-muted">{t('settings.general.dbCleanupSlowNote')}</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -232,7 +232,7 @@ export default function DatabaseCheckSection() {
                 </div>
               </>
             ) : (
-              <p role="status" className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupNothing')}</p>
+              <p role="status" className="text-xs text-fg-muted">{t('settings.general.dbCleanupNothing')}</p>
             )}
           </div>
         )}
@@ -275,7 +275,7 @@ export default function DatabaseCheckSection() {
           </div>
         )}
 
-        <p className="text-xs text-slate-600 dark:text-zinc-500 border-t border-slate-200 dark:border-zinc-800 pt-3">
+        <p className="text-xs text-fg-muted border-t border-slate-200 dark:border-zinc-800 pt-3">
           {t('settings.general.dbCheckRepairNote')}{' '}
           <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">
             {t('settings.general.dbCheckDocsLink')}

@@ -115,7 +115,7 @@ export default function RootFoldersTab() {
           <label htmlFor="default-root-folder" className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
             {t('settings.rootfolders.defaultLabel')}
           </label>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{t('settings.rootfolders.defaultHint')}</p>
+          <p className="text-xs text-fg-muted mb-2">{t('settings.rootfolders.defaultHint')}</p>
           <select
             id="default-root-folder"
             value={defaultRootFolderId}
@@ -135,7 +135,7 @@ export default function RootFoldersTab() {
           <label htmlFor="default-audiobook-root-folder" className="block text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
             {t('settings.rootfolders.audiobookDefaultLabel')}
           </label>
-          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{t('settings.rootfolders.audiobookDefaultHint')}</p>
+          <p className="text-xs text-fg-muted mb-2">{t('settings.rootfolders.audiobookDefaultHint')}</p>
           <select
             id="default-audiobook-root-folder"
             value={defaultAudiobookRootFolderId}

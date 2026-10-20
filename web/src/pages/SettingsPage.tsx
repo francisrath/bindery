@@ -104,7 +104,7 @@ function SettingsNavLink({ tab, active, onSelect, label, badge }: { tab: Tab; ac
 // dark:-aware palette).
 function TabFallback({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 py-8 text-sm text-slate-600 dark:text-zinc-500">
+    <div className="flex items-center gap-2 py-8 text-sm text-fg-muted">
       <span
         className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600 dark:border-zinc-700 dark:border-t-zinc-400"
         aria-hidden="true"

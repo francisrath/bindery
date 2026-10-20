@@ -114,7 +114,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
         <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">
           {t('settings.calibre.deliveries.heading')}
         </label>
-        <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.calibre.deliveries.description')}</p>
+        <p className="text-xs text-fg-muted mt-0.5">{t('settings.calibre.deliveries.description')}</p>
       </div>
 
       {loadError && (

@@ -104,7 +104,7 @@ export default function GrimmoryTab() {
     }
   }
 
-  if (loading) return <div className="text-slate-600 dark:text-zinc-500">Loading…</div>
+  if (loading) return <div className="text-fg-muted">Loading…</div>
 
   const credsConfigured = Boolean(config?.apiKeyConfigured || (config?.username && config?.passwordConfigured))
 
@@ -112,7 +112,7 @@ export default function GrimmoryTab() {
     <div className="space-y-6 max-w-lg">
       <div>
         <h3 className="text-lg font-semibold mb-1">Grimmory</h3>
-        <p className="text-xs text-slate-600 dark:text-zinc-500 mb-4">
+        <p className="text-xs text-fg-muted mb-4">
           Push imported ebooks to a{' '}
           <a href="https://grimmory.org" target="_blank" rel="noopener noreferrer" className="underline">Grimmory</a>{' '}
           self-hosted library. Every successful ebook import is uploaded to Grimmory's <strong>BookDrop</strong> inbox,
@@ -222,7 +222,7 @@ export default function GrimmoryTab() {
 
       <div className="pt-4 border-t border-slate-200 dark:border-zinc-800">
         <h4 className="text-sm font-semibold mb-1">Push library to Grimmory</h4>
-        <p className="text-xs text-slate-600 dark:text-zinc-500 mb-3">
+        <p className="text-xs text-fg-muted mb-3">
           Upload every imported ebook that hasn't been pushed yet. Already-pushed files are skipped, so
           re-running is safe.
         </p>

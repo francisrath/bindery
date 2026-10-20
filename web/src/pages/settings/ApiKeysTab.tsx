@@ -122,7 +122,7 @@ export default function ApiKeysTab() {
     }
   }
 
-  if (loading) return <div className="text-slate-600 dark:text-zinc-500">{t('common.loading')}</div>
+  if (loading) return <div className="text-fg-muted">{t('common.loading')}</div>
 
   const hardcoverTokenConfigured = systemStatus?.hardcoverTokenConfigured ?? false
   const enhancedHardcoverAdminEnabled = (settings['hardcover.enhanced_series_enabled'] ?? 'false').toLowerCase() === 'true'
@@ -245,10 +245,10 @@ export default function ApiKeysTab() {
                 <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">
                   {t('settings.general.enhancedHardcoverSeries', 'Enhanced Hardcover series')}
                 </label>
-                <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">
+                <p className="text-xs text-fg-muted mt-0.5">
                   {t('settings.general.enhancedHardcoverSeriesHint', 'Use Hardcover-backed series matching, catalog diffs, and missing-book fill.')}
                 </p>
-                <p className={`text-xs mt-1 ${enhancedHardcoverEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-600 dark:text-zinc-500'}`}>
+                <p className={`text-xs mt-1 ${enhancedHardcoverEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-fg-muted'}`}>
                   {enhancedHardcoverStatus}
                 </p>
               </div>

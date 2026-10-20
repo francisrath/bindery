@@ -357,7 +357,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
         </button>
       </div>
       {indexers.length === 0 ? (
-        <p className="text-slate-600 dark:text-zinc-500 text-sm">{t('settings.indexers.empty')}</p>
+        <p className="text-fg-muted text-sm">{t('settings.indexers.empty')}</p>
       ) : (
         <div className="space-y-2">
           {indexers.map(idx => (
@@ -373,8 +373,8 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                     title={idx.enabled ? t('common.disable') : t('common.enable')}
                   />
                   <div className="min-w-0">
-                    <h4 className={`font-medium text-sm truncate ${!idx.enabled ? 'text-slate-600 dark:text-zinc-500' : ''}`}>{idx.name}</h4>
-                    <p className="text-xs text-slate-600 dark:text-zinc-500 truncate">{idx.url}</p>
+                    <h4 className={`font-medium text-sm truncate ${!idx.enabled ? 'text-fg-muted' : ''}`}>{idx.name}</h4>
+                    <p className="text-xs text-fg-muted truncate">{idx.url}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 pointer-coarse:gap-6 flex-shrink-0 flex-wrap">

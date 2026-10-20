@@ -89,7 +89,7 @@ export default function ABSConflictPanel({
             </span>
             <div>
               <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200 cursor-pointer">{title}</label>
-              <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{description}</p>
+              <p className="text-xs text-fg-muted mt-0.5">{description}</p>
             </div>
           </div>
         </button>

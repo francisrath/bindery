@@ -85,7 +85,7 @@ export default function NamingTemplateField({
   return (
     <div>
       <label className={labelCls}>{label}</label>
-      {hint && <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">{hint}</p>}
+      {hint && <p className="text-xs text-fg-muted mb-2">{hint}</p>}
 
       {/* Token picker */}
       <div className="flex flex-wrap gap-1.5 mb-2" role="group" aria-label={t('settings.general.naming.tokenPickerLabel')}>

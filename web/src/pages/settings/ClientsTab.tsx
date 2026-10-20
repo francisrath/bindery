@@ -111,7 +111,7 @@ export default function ClientsTab({ clients, setClients }: Props) {
         </button>
       </div>
       {clients.length === 0 ? (
-        <p className="text-slate-600 dark:text-zinc-500 text-sm">{t('settings.clients.empty')}</p>
+        <p className="text-fg-muted text-sm">{t('settings.clients.empty')}</p>
       ) : (
         <div className="space-y-2">
           {clients.map(c => (
@@ -127,8 +127,8 @@ export default function ClientsTab({ clients, setClients }: Props) {
                     title={c.enabled ? t('common.disable') : t('common.enable')}
                   />
                   <div className="min-w-0">
-                    <h4 className={`font-medium text-sm ${!c.enabled ? 'text-slate-600 dark:text-zinc-500' : ''}`}>{c.name}</h4>
-                    <p className="text-xs text-slate-600 dark:text-zinc-500">{c.host}:{c.port} ({c.category})</p>
+                    <h4 className={`font-medium text-sm ${!c.enabled ? 'text-fg-muted' : ''}`}>{c.name}</h4>
+                    <p className="text-xs text-fg-muted">{c.host}:{c.port} ({c.category})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0">

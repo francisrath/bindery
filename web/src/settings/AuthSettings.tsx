@@ -78,7 +78,7 @@ export default function AuthSettings() {
         {t('settings.oidc.heading')}
       </h3>
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
-        <p className="text-xs text-slate-600 dark:text-zinc-500">
+        <p className="text-xs text-fg-muted">
           {t('settings.oidc.description')}
         </p>
 
