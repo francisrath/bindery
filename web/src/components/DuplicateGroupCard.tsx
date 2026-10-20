@@ -166,12 +166,12 @@ export default function DuplicateGroupCard({ group, busyBooks, onToggle, onExclu
             >
               <span className="min-w-0">
                 <span className="flex items-baseline gap-1.5">
-                  <span className="shrink-0 text-[11px] text-slate-400 dark:text-zinc-500">{rowNumber.get(book.id)}.</span>
+                  <span className="shrink-0 text-[11px] text-fg-muted">{rowNumber.get(book.id)}.</span>
                   {showAuthor ? (
                     <Link
                       to={`/book/${book.id}`}
                       className={`block truncate font-medium hover:underline ${book.excluded
-                        ? 'text-slate-400 line-through dark:text-zinc-500'
+                        ? 'text-fg-muted line-through'
                         : 'text-slate-800 dark:text-zinc-200'}`}
                     >
                       {book.title}
@@ -179,7 +179,7 @@ export default function DuplicateGroupCard({ group, busyBooks, onToggle, onExclu
                   ) : (
                     <span
                       className={`block truncate font-medium ${book.excluded
-                        ? 'text-slate-400 line-through dark:text-zinc-500'
+                        ? 'text-fg-muted line-through'
                         : 'text-slate-800 dark:text-zinc-200'}`}
                     >
                       {book.title}

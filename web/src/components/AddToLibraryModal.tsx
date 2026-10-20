@@ -267,9 +267,9 @@ export default function AddToLibraryModal({ onClose, onAdded, initialQuery, mode
             <div className="text-xs text-fg-muted">{book.author.authorName}</div>
           )}
           {book.releaseDate && (
-            <div className="text-xs text-slate-500 dark:text-zinc-600">{new Date(book.releaseDate).getFullYear()}</div>
+            <div className="text-xs text-fg-muted">{new Date(book.releaseDate).getFullYear()}</div>
           )}
-          <BookRating book={book} withCount className="block text-xs text-slate-500 dark:text-zinc-600" />
+          <BookRating book={book} withCount className="block text-xs text-fg-muted" />
         </div>
         {book.libraryBookId ? (
           <div className="flex items-center gap-2 flex-shrink-0">

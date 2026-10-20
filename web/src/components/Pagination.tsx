@@ -47,7 +47,7 @@ export default function Pagination({
   // The gap select is styled to read as the "…" it replaces: no chrome until
   // you hover or focus it, at which point it is visibly a control. bg-none
   // drops the forms plugin's arrow, which was drawn over the "…" (#3148).
-  const gapSelect = `${btnBase} pointer-coarse:min-h-11 appearance-none cursor-pointer bg-transparent bg-none text-center text-slate-500 dark:text-zinc-600 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 focus:outline-hidden focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-600`
+  const gapSelect = `${btnBase} pointer-coarse:min-h-11 appearance-none cursor-pointer bg-transparent bg-none text-center text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 focus:outline-hidden focus:ring-1 focus:ring-slate-400 dark:focus:ring-zinc-600`
 
   return (
     <div className="flex flex-col items-center gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800 sm:flex-row sm:justify-between">

@@ -22,7 +22,7 @@ interface Props {
 const statusStyles: Record<string, string> = {
   move: 'text-sky-600 dark:text-sky-400',
   moved: 'text-emerald-600 dark:text-emerald-400',
-  noop: 'text-slate-400 dark:text-zinc-500',
+  noop: 'text-fg-muted',
   collision: 'text-amber-600 dark:text-amber-400',
   missing: 'text-amber-600 dark:text-amber-400',
   error: 'text-red-600 dark:text-red-400',
@@ -161,18 +161,18 @@ function MoveRow({ move }: { move: ReorganizeMove }) {
         </span>
         <span className="text-slate-400 dark:text-zinc-600">·</span>
         <span className="text-slate-600 dark:text-zinc-300 truncate">{move.bookTitle}</span>
-        <span className="uppercase text-[10px] tracking-wide text-slate-400 dark:text-zinc-600">
+        <span className="uppercase text-[10px] tracking-wide text-fg-muted">
           {move.format}
         </span>
       </div>
       <div className="font-mono text-fg-muted break-all">
         <div>
-          <span className="text-slate-400 dark:text-zinc-600">from </span>
+          <span className="text-fg-muted">from </span>
           {move.current}
         </div>
         {move.status !== 'noop' && (
           <div>
-            <span className="text-slate-400 dark:text-zinc-600">to </span>
+            <span className="text-fg-muted">to </span>
             {move.proposed}
           </div>
         )}

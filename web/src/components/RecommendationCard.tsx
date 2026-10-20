@@ -58,7 +58,7 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
               ))}
             </div>
             {rec.ratingsCount > 0 && (
-              <span className="text-[10px] text-slate-400 dark:text-zinc-600">({rec.ratingsCount})</span>
+              <span className="text-[10px] text-fg-muted">({rec.ratingsCount})</span>
             )}
           </div>
         )}
