@@ -232,15 +232,15 @@ export default function DuplicateGroupCard({ group, busyBooks, onToggle, onExclu
           </button>
         </div>
       ) : withheld === 'conflict' ? (
-        <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+        <p className="mt-2 text-[11px] text-fg-muted">
           {t('duplicateReview.noSuggestionConflict', 'The rows disagree, so nothing is suggested. Check the evidence before excluding a row.')}
         </p>
       ) : withheld === 'several-with-files' ? (
-        <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+        <p className="mt-2 text-[11px] text-fg-muted">
           {t('duplicateReview.noSuggestionFiles', 'More than one row has files, so nothing is suggested.')}
         </p>
       ) : withheld === 'no-evidence' ? (
-        <p className="mt-2 text-[11px] text-slate-500 dark:text-zinc-400">
+        <p className="mt-2 text-[11px] text-fg-muted">
           {t('duplicateReview.noSuggestionEvidence', 'Nothing ties every empty row to the row with files (no shared ISBN, ASIN, series position or matching title), so nothing is suggested.')}
         </p>
       ) : null}

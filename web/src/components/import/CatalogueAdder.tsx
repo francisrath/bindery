@@ -39,7 +39,7 @@ export default function CatalogueAdder({ initialQuery, onChoose, hint, actionLab
         type="button"
         onClick={() => setOpen(true)}
         aria-expanded={false}
-        className="text-xs text-slate-500 dark:text-zinc-400 hover:underline"
+        className="text-xs text-fg-muted hover:underline"
       >
         {t('manualImport.metadataOpen', 'Not in your library? Search metadata')}
       </button>
@@ -99,7 +99,7 @@ export default function CatalogueAdder({ initialQuery, onChoose, hint, actionLab
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-xs text-slate-500 dark:text-zinc-400 hover:underline"
+          className="text-xs text-fg-muted hover:underline"
         >
           {t('common.cancel', 'Cancel')}
         </button>

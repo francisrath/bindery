@@ -110,7 +110,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
         <h2 id="catalogue-reconciliation-title" className="text-base font-semibold text-slate-900 dark:text-white">
           {t('catalogueReconciliation.title', 'Reconcile catalogue')}
         </h2>
-        <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-fg-muted">
           {t('catalogueReconciliation.description', {
             author: authorName,
             defaultValue: 'Compare {{author}}’s metadata-only Wanted rows with the current provider and metadata profile.',
@@ -118,7 +118,7 @@ export default function CatalogueReconciliationModal({ authorId, authorName, onC
         </p>
 
         {loading ? (
-          <p className="mt-4 text-sm text-slate-500 dark:text-zinc-400">
+          <p className="mt-4 text-sm text-fg-muted">
             {t('catalogueReconciliation.loading', 'Checking the current provider catalogue…')}
           </p>
         ) : error && !result ? (

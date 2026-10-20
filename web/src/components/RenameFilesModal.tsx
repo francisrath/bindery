@@ -95,18 +95,18 @@ export default function RenameFilesModal({ scope, id, label, onClose, onApplied 
         onClick={e => e.stopPropagation()}
       >
         <h2 id={titleId} className="text-base font-semibold mb-1 text-slate-900 dark:text-white">Rename files</h2>
-        <p className="text-xs text-slate-500 dark:text-zinc-400 mb-4">
+        <p className="text-xs text-fg-muted mb-4">
           Move the files for{' '}
           <span className="font-medium text-slate-700 dark:text-zinc-200">{label}</span> to match the
           current naming template. Files already in the right place are left alone.
         </p>
 
         {loading ? (
-          <p className="text-sm text-slate-500 dark:text-zinc-400">Computing changes…</p>
+          <p className="text-sm text-fg-muted">Computing changes…</p>
         ) : error && !moves.length ? (
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         ) : moves.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-zinc-400">No tracked files to rename.</p>
+          <p className="text-sm text-fg-muted">No tracked files to rename.</p>
         ) : (
           <div className="overflow-y-auto flex-1 -mx-2 px-2">
             <ul className="space-y-3">
@@ -122,7 +122,7 @@ export default function RenameFilesModal({ scope, id, label, onClose, onApplied 
         )}
 
         <div className="mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-zinc-400">
+          <span className="text-xs text-fg-muted">
             {applied
               ? `${applied.summary.moved} moved, ${applied.summary.failed} failed`
               : `${movable.length} of ${moves.length} will move`}

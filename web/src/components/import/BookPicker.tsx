@@ -61,7 +61,7 @@ const BookPicker = forwardRef<HTMLInputElement, Props>(function BookPicker({ onP
           <button
             type="button"
             onClick={onCancel}
-            className="text-xs text-slate-500 dark:text-zinc-400 hover:underline"
+            className="text-xs text-fg-muted hover:underline"
           >
             {t('common.cancel', 'Cancel')}
           </button>
