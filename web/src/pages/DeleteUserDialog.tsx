@@ -61,7 +61,7 @@ export default function DeleteUserDialog({ user, counts, users, busy, onCancel, 
       <div {...panelProps} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-5 w-full max-w-md space-y-4 modal-max-h overflow-y-auto">
         <h2 id={titleId} className="text-base font-semibold">{t('users.deleteTitle', { username: user.username })}</h2>
 
-        <div className="text-sm text-slate-600 dark:text-zinc-400 space-y-2">
+        <div className="text-sm text-fg-muted space-y-2">
           <p>{t('users.deleteOwns')}</p>
           <ul className="space-y-0.5">
             {nonEmpty.map(r => (

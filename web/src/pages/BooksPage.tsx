@@ -217,7 +217,7 @@ export default function BooksPage() {
   }
 
   const statusBtnCls = (active: boolean) =>
-    `touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${active ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`
+    `touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${active ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white'}`
 
   // Clicking a column header sorts by that column: first click ascending, a
   // second click on the same column flips to descending (mirrors the sort
@@ -246,7 +246,7 @@ export default function BooksPage() {
           onClick={() => toggleSort(asc, desc)}
           aria-label={label}
           title={t('books.sortByColumn', { column: label, defaultValue: 'Sort by {{column}}' })}
-          className={`inline-flex items-center gap-0.5 uppercase transition-colors cursor-pointer select-none ${active ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+          className={`inline-flex items-center gap-0.5 uppercase transition-colors cursor-pointer select-none ${active ? 'text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white'}`}
         >
           {label}
           {active
@@ -470,15 +470,15 @@ export default function BooksPage() {
                       {book.author ? (
                         <Link
                           to={`/author/${book.authorId}`}
-                          className="text-slate-600 dark:text-zinc-400 hover:text-emerald-500 dark:hover:text-emerald-400"
+                          className="text-fg-muted hover:text-emerald-500 dark:hover:text-emerald-400"
                           onClick={e => e.stopPropagation()}
                         >
                           {book.author.authorName}
                         </Link>
                       ) : '—'}
                     </td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap hidden sm:table-cell">{book.releaseDate ? new Date(book.releaseDate).getFullYear() : '—'}</td>
-                    <td className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap hidden lg:table-cell">
+                    <td className="px-3 py-2 text-fg-muted whitespace-nowrap hidden sm:table-cell">{book.releaseDate ? new Date(book.releaseDate).getFullYear() : '—'}</td>
+                    <td className="px-3 py-2 text-fg-muted whitespace-nowrap hidden lg:table-cell">
                       {book.averageRating && book.averageRating > 0 ? <BookRating book={book} /> : '—'}
                     </td>
                     <td className="px-3 py-2 text-xs whitespace-nowrap">

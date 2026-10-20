@@ -165,7 +165,7 @@ export default function DiscoverPage() {
           <svg className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5.002 5.002 0 017.072 0" />
           </svg>
-          <p className="text-slate-600 dark:text-zinc-400 mb-4">{t('discover.empty.disabled')}</p>
+          <p className="text-fg-muted mb-4">{t('discover.empty.disabled')}</p>
           {/* The toggle lives on the Metadata tab, not General, which is where
               everyone looked first. Deep link straight to it: ?tab=… is the
               established way to open a Settings tab (SetupBanner, AuthorSyncNotice).
@@ -184,7 +184,7 @@ export default function DiscoverPage() {
           <svg className="w-16 h-16 mx-auto mb-4 text-slate-300 dark:text-zinc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
-          <p className="text-slate-600 dark:text-zinc-400">{t('discover.empty.noRecs')}</p>
+          <p className="text-fg-muted">{t('discover.empty.noRecs')}</p>
         </div>
       ) : (
         <>

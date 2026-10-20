@@ -273,7 +273,7 @@ export default function WantedPage() {
         <span className="text-xs text-slate-500 dark:text-zinc-500">
           {t('books.countLabel', { count: total, defaultValue: '{{count}} books' })}
         </span>
-        <label className="ml-auto flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400 cursor-pointer select-none">
+        <label className="ml-auto flex items-center gap-1.5 text-xs text-fg-muted cursor-pointer select-none">
           <input
             type="checkbox"
             checked={showExcluded}

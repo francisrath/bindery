@@ -15,7 +15,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   importFailed: 'bg-red-500/20 text-red-700 dark:text-red-400',
   deleted: 'bg-red-500/20 text-red-700 dark:text-red-400',
   renamed: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
-  ignored: 'bg-slate-300 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400',
+  ignored: 'bg-slate-300 dark:bg-zinc-700 text-fg-muted',
   bookFileRenamed: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
   // Amber rather than green: the import worked, but the file turned out not to
   // be the edition the catalogue described, which is worth a second look.
@@ -262,11 +262,11 @@ export default function HistoryPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800">
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('history.colEvent')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('history.colSourceTitle')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('history.colType')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('history.colSize')}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-slate-600 dark:text-zinc-400 uppercase tracking-wider">{t('history.colDate')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('history.colEvent')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('history.colSourceTitle')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('history.colType')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('history.colSize')}</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-fg-muted uppercase tracking-wider">{t('history.colDate')}</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -280,7 +280,7 @@ export default function HistoryPage() {
                     return (
                       <tr key={event.id} className="bg-slate-100/50 dark:bg-zinc-900/50 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 transition-colors">
                         <td className="px-4 py-3 align-top">
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400'}`}>
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-fg-muted'}`}>
                             {eventLabel(event.eventType)}
                           </span>
                         </td>
@@ -304,10 +304,10 @@ export default function HistoryPage() {
                             <span className="text-slate-500 dark:text-zinc-600">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-slate-600 dark:text-zinc-400 whitespace-nowrap align-top text-xs font-mono">
+                        <td className="px-4 py-3 text-fg-muted whitespace-nowrap align-top text-xs font-mono">
                           {formatBytes(size) || <span className="text-slate-500 dark:text-zinc-600">—</span>}
                         </td>
-                        <td className="px-4 py-3 text-slate-600 dark:text-zinc-400 whitespace-nowrap align-top text-xs">
+                        <td className="px-4 py-3 text-fg-muted whitespace-nowrap align-top text-xs">
                           {formatDate(event.createdAt)}
                         </td>
                         <td className="px-4 py-3 text-right align-top whitespace-nowrap">
@@ -347,7 +347,7 @@ export default function HistoryPage() {
                 <div key={event.id} className="border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100/50 dark:bg-zinc-900/50 p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-fg-muted'}`}>
                         {eventLabel(event.eventType)}
                       </span>
                       {mt === 'audiobook' && (

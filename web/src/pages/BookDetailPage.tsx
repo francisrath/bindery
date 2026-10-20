@@ -1072,14 +1072,14 @@ function BookDetailPageInner() {
             {publishedDate && (
               <>
                 <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
-                <span className="text-slate-600 dark:text-zinc-400">
+                <span className="text-fg-muted">
                   {t('bookDetail.publishedDate', { date: publishedDate })}
                 </span>
               </>
             )}
             <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
             {lang ? (
-              <span className="text-slate-600 dark:text-zinc-400">{lang}</span>
+              <span className="text-fg-muted">{lang}</span>
             ) : (
               <span
                 className="inline-flex items-center px-2 py-0.5 rounded font-medium bg-amber-500/20 text-amber-700 dark:text-amber-400"
@@ -1091,13 +1091,13 @@ function BookDetailPageInner() {
             {book.averageRating && book.averageRating > 0 ? (
               <>
                 <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
-                <BookRating book={book} withCount className="text-slate-600 dark:text-zinc-400" />
+                <BookRating book={book} withCount className="text-fg-muted" />
               </>
             ) : null}
             {book.narrator && (
               <>
                 <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
-                <span className="text-slate-600 dark:text-zinc-400">
+                <span className="text-fg-muted">
                   {t('bookDetail.narratedBy', { narrator: book.narrator })}
                 </span>
               </>
@@ -1105,13 +1105,13 @@ function BookDetailPageInner() {
             {book.durationSeconds ? (
               <>
                 <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
-                <span className="text-slate-600 dark:text-zinc-400">{formatDuration(book.durationSeconds)}</span>
+                <span className="text-fg-muted">{formatDuration(book.durationSeconds)}</span>
               </>
             ) : null}
             {series.map(s => (
               <span key={s.id} className="contents">
                 <span aria-hidden className="text-slate-400 dark:text-zinc-600">·</span>
-                <span className="text-slate-600 dark:text-zinc-400">
+                <span className="text-fg-muted">
                   {s.position
                     ? t('bookDetail.seriesPosition', {
                         series: s.title,
@@ -1534,7 +1534,7 @@ function BookDetailPageInner() {
                     {t('bookDetail.metadataSource.current', 'Current')}
                   </span>
                 )}
-                <code className="font-mono text-xs text-slate-600 dark:text-zinc-400 select-all break-all">
+                <code className="font-mono text-xs text-fg-muted select-all break-all">
                   {row.foreignId}
                 </code>
                 <button
@@ -1585,7 +1585,7 @@ function BookDetailPageInner() {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-end gap-2">
               <div className="flex-1">
-                <label htmlFor="book-asin" className="block text-xs text-slate-600 dark:text-zinc-400 mb-1">
+                <label htmlFor="book-asin" className="block text-xs text-fg-muted mb-1">
                   {t('bookDetail.asinLabel')}
                 </label>
                 <input

@@ -394,7 +394,7 @@ export default function AuthorsPage() {
           onClick={() => toggleSort(asc, desc)}
           aria-label={label}
           title={t('authors.sortByColumn', { column: label, defaultValue: 'Sort by {{column}}' })}
-          className={`inline-flex items-center gap-0.5 uppercase transition-colors cursor-pointer select-none ${active ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+          className={`inline-flex items-center gap-0.5 uppercase transition-colors cursor-pointer select-none ${active ? 'text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white'}`}
         >
           {label}
           {active
@@ -620,7 +620,7 @@ export default function AuthorsPage() {
                       </Link>
                     </td>
                     <td
-                      className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap tabular-nums"
+                      className="px-3 py-2 text-fg-muted whitespace-nowrap tabular-nums"
                       title={author.statistics && author.statistics.bookCount > 0
                         ? `${t('authors.booksInLibrary', '{{have}} of {{total}} in library', { have: author.statistics.availableBookCount, total: author.statistics.bookCount })}. ${t('authors.booksInLibraryHint', 'A book counts once at least one of its files is in your library.')}`
                         : undefined}
@@ -628,7 +628,7 @@ export default function AuthorsPage() {
                       {author.statistics && author.statistics.bookCount > 0 ? `${author.statistics.availableBookCount} / ${author.statistics.bookCount}` : '—'}
                     </td>
                     {anyRating && (
-                      <td className="px-3 py-2 text-slate-600 dark:text-zinc-400 whitespace-nowrap">
+                      <td className="px-3 py-2 text-fg-muted whitespace-nowrap">
                         {author.averageRating > 0 ? `★ ${author.averageRating.toFixed(2)}` : '—'}
                       </td>
                     )}
@@ -686,7 +686,7 @@ export default function AuthorsPage() {
                       {author.description || t('authors.noDescription')}
                     </p>
                     {author.statistics && author.statistics.bookCount > 0 && (
-                      <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1 tabular-nums">
+                      <p className="text-xs text-fg-muted mt-1 tabular-nums">
                         {t('authors.booksInLibrary', '{{have}} of {{total}} in library', { have: author.statistics.availableBookCount, total: author.statistics.bookCount })}
                       </p>
                     )}
@@ -741,7 +741,7 @@ export default function AuthorsPage() {
               <h3 id="bulk-monitoring-title" className="text-lg font-semibold">
                 {monitoringBulkAction === 'monitor' ? t('common.monitor') : t('common.unmonitor')}
               </h3>
-              <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1">
+              <p className="text-xs text-fg-muted mt-1">
                 {t('authors.bulkSetMonitorModeCount', {
                   count: selectedIds.size,
                   defaultValue: 'Selected authors: {{count}}',
@@ -759,7 +759,7 @@ export default function AuthorsPage() {
                 />
                 <span>
                   <span className="font-medium">{t('authors.bulkApplyMonitoringToExisting', 'Also apply to their existing books')}</span>
-                  <span className="block text-xs text-slate-600 dark:text-zinc-400 mt-0.5">{t('authors.bulkApplyMonitoringToExistingHint', 'Rewrites every book of the selected authors to match. Leave it off to change the authors only.')}</span>
+                  <span className="block text-xs text-fg-muted mt-0.5">{t('authors.bulkApplyMonitoringToExistingHint', 'Rewrites every book of the selected authors to match. Leave it off to change the authors only.')}</span>
                 </span>
               </label>
             </div>
@@ -767,7 +767,7 @@ export default function AuthorsPage() {
               <button
                 onClick={() => setMonitoringBulkAction(null)}
                 disabled={bulkBusy}
-                className="px-4 py-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
+                className="px-4 py-2 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
               >
                 {t('common.cancel', 'Cancel')}
               </button>
@@ -788,7 +788,7 @@ export default function AuthorsPage() {
           <ModalPanel onClose={closeBulkMonitorMode} canClose={!bulkBusy} labelledBy="bulk-monitor-mode-title" className="bg-slate-100 dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded-lg w-full max-w-md shadow-2xl modal-max-h overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="p-4 border-b border-slate-200 dark:border-zinc-800">
               <h3 id="bulk-monitor-mode-title" className="text-lg font-semibold">{t('authors.bulkSetMonitorModeTitle', 'Set monitor mode')}</h3>
-              <p className="text-xs text-slate-600 dark:text-zinc-400 mt-1">
+              <p className="text-xs text-fg-muted mt-1">
                 {t('authors.bulkSetMonitorModeCount', {
                   count: selectedIds.size,
                   defaultValue: 'Selected authors: {{count}}',
@@ -797,7 +797,7 @@ export default function AuthorsPage() {
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1" htmlFor="bulk-monitor-mode">
+                <label className="block text-xs text-fg-muted mb-1" htmlFor="bulk-monitor-mode">
                   {t('editAuthorModal.monitorMode', 'Monitor mode')}
                 </label>
                 <select
@@ -814,7 +814,7 @@ export default function AuthorsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1" htmlFor="bulk-monitor-new-items">
+                <label className="block text-xs text-fg-muted mb-1" htmlFor="bulk-monitor-new-items">
                   {t('editAuthorModal.monitorNewItems', 'Monitor newly discovered books')}
                 </label>
                 <select
@@ -834,7 +834,7 @@ export default function AuthorsPage() {
               </div>
               {bulkMonitorMode === 'latest' && (
                 <div>
-                  <label className="block text-xs text-slate-600 dark:text-zinc-400 mb-1" htmlFor="bulk-monitor-latest-count">
+                  <label className="block text-xs text-fg-muted mb-1" htmlFor="bulk-monitor-latest-count">
                     {t('editAuthorModal.monitorLatestCount', 'Latest book count')}
                   </label>
                   <input
@@ -862,7 +862,7 @@ export default function AuthorsPage() {
                 />
                 <span>
                   <span className="font-medium">{t('authors.bulkApplyMonitorModeToExisting', 'Apply monitor mode to existing books')}</span>
-                  <span className="block text-xs text-slate-600 dark:text-zinc-400 mt-0.5">{t('authors.bulkApplyMonitorModeToExistingHint', 'Otherwise this only affects books discovered in future refreshes.')}</span>
+                  <span className="block text-xs text-fg-muted mt-0.5">{t('authors.bulkApplyMonitorModeToExistingHint', 'Otherwise this only affects books discovered in future refreshes.')}</span>
                 </span>
               </label>
               {bulkMonitorModeError && (
@@ -875,7 +875,7 @@ export default function AuthorsPage() {
               <button
                 onClick={closeBulkMonitorMode}
                 disabled={bulkBusy}
-                className="px-4 py-2 text-sm text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
+                className="px-4 py-2 text-sm text-fg-muted hover:text-slate-900 dark:hover:text-white disabled:opacity-50"
               >
                 {t('common.cancel', 'Cancel')}
               </button>

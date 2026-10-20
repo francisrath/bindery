@@ -66,7 +66,7 @@ export default function LoginPage() {
   if (status?.mode === 'proxy') {
     return (
       <CardShell title={t('login.title')} subtitle="">
-        <p className="text-sm text-slate-600 dark:text-zinc-400 text-center py-2">
+        <p className="text-sm text-fg-muted text-center py-2">
           {t('login.proxyHint')}
         </p>
       </CardShell>
@@ -120,7 +120,7 @@ export default function LoginPage() {
             className="w-full bg-white dark:bg-zinc-900 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
           />
         </Field>
-        <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-zinc-400">
+        <label className="flex items-center gap-2 text-sm text-fg-muted">
           <input
             type="checkbox"
             name="rememberMe"
@@ -141,7 +141,7 @@ export default function LoginPage() {
         </button>
       </form>
       ) : oidcProviders.length === 0 ? (
-        <p className="text-sm text-slate-600 dark:text-zinc-400 text-center py-2">
+        <p className="text-sm text-fg-muted text-center py-2">
           {t('login.contactAdmin')}
         </p>
       ) : null}
@@ -193,7 +193,7 @@ function HostNotAllowedNotice({ mode, host }: { mode: string; host: string }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="block text-xs font-medium text-slate-600 dark:text-zinc-400 mb-1">{label}</span>
+      <span className="block text-xs font-medium text-fg-muted mb-1">{label}</span>
       {children}
     </label>
   )

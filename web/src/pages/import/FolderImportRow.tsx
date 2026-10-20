@@ -35,7 +35,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
   const badgeCls: Record<ScanItem['match'], string> = {
     confident: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400',
     ambiguous: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400',
-    none: 'bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400',
+    none: 'bg-slate-200 dark:bg-zinc-800 text-fg-muted',
   }
 
   return (
@@ -55,7 +55,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
             <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeCls[item.match]}`}>
               {t(`manualImport.group.${item.match}`, groupHeading(item.match))}
             </span>
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-zinc-800 text-fg-muted">
               {item.detectedFormat}
             </span>
             {item.alreadyImported && (

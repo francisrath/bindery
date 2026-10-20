@@ -174,12 +174,12 @@ function Shell() {
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `px-2.5 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-      isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
+      isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
     }`
 
   const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
     `block px-4 py-3 text-sm font-medium transition-colors focus-visible:-outline-offset-2 border-b border-slate-200/50 dark:border-zinc-800/50 ${
-      isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
+      isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
     }`
 
   return (
@@ -210,7 +210,7 @@ function Shell() {
                 to="/search"
                 className={({ isActive }) =>
                   `hidden lg:block p-2 rounded-md transition-colors ${
-                    isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
+                    isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
                   }`
                 }
                 title={t('nav.search')}
@@ -224,7 +224,7 @@ function Shell() {
                   to="/users"
                   className={({ isActive }) =>
                     `hidden lg:block p-2 rounded-md transition-colors ${
-                      isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
+                      isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
                     }`
                   }
                   title={t('nav.users')}
@@ -238,7 +238,7 @@ function Shell() {
                 to="/settings"
                 className={({ isActive }) =>
                   `hidden lg:block p-2 rounded-md transition-colors ${
-                    isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
+                    isActive ? 'bg-slate-200 dark:bg-zinc-800 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-zinc-800/50'
                   }`
                 }
                 title={t('nav.settings')}
@@ -259,7 +259,7 @@ function Shell() {
               )}
               <button
                 onClick={() => setMenuOpen(open => !open)}
-                className="xl:hidden p-2 rounded-md text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors"
+                className="xl:hidden p-2 rounded-md text-fg-muted hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors"
                 aria-label={t('nav.toggleMenu', 'Toggle menu')}
                 aria-expanded={menuOpen}
                 aria-controls={menuOpen ? 'mobile-menu' : undefined}

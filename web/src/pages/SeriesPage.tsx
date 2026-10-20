@@ -454,7 +454,7 @@ export default function SeriesPage() {
               aria-pressed={filter === f}
               onClick={() => selectFilter(f)}
               title={f === 'missing' && enhancedHardcoverApi ? t('series.filterMissingHint') : undefined}
-              className={`touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${filter === f ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+              className={`touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${filter === f ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white'}`}
             >
               {t(`series.filter.${f}`)}
             </button>
@@ -467,7 +467,7 @@ export default function SeriesPage() {
               type="button"
               aria-pressed={size === z}
               onClick={() => selectSize(z)}
-              className={`touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${size === z ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+              className={`touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${size === z ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-fg-muted hover:text-slate-900 dark:hover:text-white'}`}
             >
               {t(`series.size.${z}`)}
             </button>
@@ -644,7 +644,7 @@ export default function SeriesPage() {
                     <span className="ml-auto text-xs text-emerald-600 dark:text-emerald-400">{fillResult[series.id]}</span>
                   )}
                   {!fillResult[series.id] && linkResult[series.id] && (
-                    <span className="ml-auto text-xs text-slate-600 dark:text-zinc-400">{linkResult[series.id]}</span>
+                    <span className="ml-auto text-xs text-fg-muted">{linkResult[series.id]}</span>
                   )}
                 </div>
                 )}
@@ -683,7 +683,7 @@ export default function SeriesPage() {
                                 ? 'bg-emerald-500/20 text-emerald-400'
                                 : entry.book.status === 'wanted'
                                 ? 'bg-amber-500/20 text-amber-400'
-                                : 'bg-slate-300 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400'
+                                : 'bg-slate-300 dark:bg-zinc-700 text-fg-muted'
                             }`}>
                               {t(`bookStatus.${entry.book.status}`, { defaultValue: entry.book.status })}
                             </span>
@@ -695,7 +695,7 @@ export default function SeriesPage() {
                           )}
                           {splitPartIds.has(entry.bookId) && (
                             <span
-                              className="text-xs px-2 py-0.5 rounded bg-slate-300 dark:bg-zinc-700 text-slate-600 dark:text-zinc-400"
+                              className="text-xs px-2 py-0.5 rounded bg-slate-300 dark:bg-zinc-700 text-fg-muted"
                               title={t('series.splitParts.badgeHint')}
                             >
                               {t('series.splitParts.badge')}

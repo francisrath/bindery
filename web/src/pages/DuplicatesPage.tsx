@@ -68,7 +68,7 @@ export default function DuplicatesPage() {
           </button>
         </div>
       </div>
-      <p className="mb-4 max-w-3xl text-sm text-slate-600 dark:text-zinc-400">
+      <p className="mb-4 max-w-3xl text-sm text-fg-muted">
         {t('duplicateReview.pageDescription', 'Titles by the same author that look like the same book, across your whole library. The row with files is marked to keep, and the evidence shows whether the rows agree. Nothing changes until you exclude a row.')}
       </p>
 
@@ -77,7 +77,7 @@ export default function DuplicatesPage() {
       ) : error && !result ? (
         <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
       ) : result && result.total === 0 ? (
-        <p className="text-sm text-slate-600 dark:text-zinc-400">{t('duplicateCandidates.empty', 'No duplicate titles found.')}</p>
+        <p className="text-sm text-fg-muted">{t('duplicateCandidates.empty', 'No duplicate titles found.')}</p>
       ) : result ? (
         <>
           {error && <p className="mb-3 text-sm text-red-600 dark:text-red-400">{error}</p>}
