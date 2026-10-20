@@ -292,7 +292,7 @@ export default function CalendarPage() {
               </div>
             </div>
           ) : (
-            <p className="mt-4 text-center text-sm text-slate-500 dark:text-zinc-600">
+            <p className="mt-4 text-center text-sm text-fg-muted">
               {t('calendar.noReleases')}
             </p>
           )}

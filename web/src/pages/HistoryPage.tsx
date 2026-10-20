@@ -286,7 +286,7 @@ export default function HistoryPage() {
                         </td>
                         <td className="px-4 py-3 text-slate-800 dark:text-zinc-200 max-w-md">
                           <div className="truncate" title={event.sourceTitle}>
-                            {event.sourceTitle || <span className="text-slate-500 dark:text-zinc-600">—</span>}
+                            {event.sourceTitle || <span className="text-fg-muted">—</span>}
                           </div>
                           <BookAuthorLink book={event.book} />
                           {detail && (
@@ -301,11 +301,11 @@ export default function HistoryPage() {
                           ) : mt === 'ebook' ? (
                             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 text-[10px] font-medium">📖 Ebook</span>
                           ) : (
-                            <span className="text-slate-500 dark:text-zinc-600">—</span>
+                            <span className="text-fg-muted">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-fg-muted whitespace-nowrap align-top text-xs font-mono">
-                          {formatBytes(size) || <span className="text-slate-500 dark:text-zinc-600">—</span>}
+                          {formatBytes(size) || <span className="text-fg-muted">—</span>}
                         </td>
                         <td className="px-4 py-3 text-fg-muted whitespace-nowrap align-top text-xs">
                           {formatDate(event.createdAt)}
@@ -363,7 +363,7 @@ export default function HistoryPage() {
                     <span className="text-[10px] text-fg-muted">{formatDate(event.createdAt)}</span>
                   </div>
                   <p className="text-sm text-slate-800 dark:text-zinc-200 [overflow-wrap:anywhere] mb-1">
-                    {event.sourceTitle || <span className="text-slate-500 dark:text-zinc-600">—</span>}
+                    {event.sourceTitle || <span className="text-fg-muted">—</span>}
                   </p>
                   <BookAuthorLink book={event.book} />
                   {detail && (

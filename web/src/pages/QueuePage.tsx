@@ -517,7 +517,7 @@ export default function QueuePage() {
                         <span className="text-fg-muted">{t('queue.remaining', { time: item.timeLeft })}</span>
                       )}
                       {item.protocol && (
-                        <span className="text-slate-500 dark:text-zinc-600">{item.protocol}</span>
+                        <span className="text-fg-muted">{item.protocol}</span>
                       )}
                       {(() => {
                         const ts = getContextualTimestamp(item)
@@ -525,7 +525,7 @@ export default function QueuePage() {
                           <TapToReveal
                             label={ts.label}
                             detail={ts.absolute}
-                            className="touch-target text-slate-500 dark:text-zinc-600"
+                            className="touch-target text-fg-muted"
                           />
                         ) : null
                       })()}

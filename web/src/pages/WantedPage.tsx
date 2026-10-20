@@ -348,7 +348,7 @@ export default function WantedPage() {
                   <CoverImage loading="lazy" decoding="async" src={book.imageUrl} alt="" className="w-8 h-11 object-cover rounded bg-slate-200 dark:bg-zinc-800"
                     fallback={
                       <div
-                        className="w-8 h-11 rounded bg-slate-200 dark:bg-zinc-800 grid place-items-center text-[8px] text-slate-400 dark:text-zinc-600 text-center leading-tight"
+                        className="w-8 h-11 rounded bg-slate-200 dark:bg-zinc-800 grid place-items-center text-[8px] text-fg-muted text-center leading-tight"
                         aria-hidden
                       >
                         {t('wanted.noCover')}

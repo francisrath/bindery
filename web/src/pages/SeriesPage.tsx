@@ -537,7 +537,7 @@ export default function SeriesPage() {
                       <span className="text-xs text-fg-muted bg-slate-200 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
                         {t('series.bookCount', { count: bookCount })}
                       </span>
-                      <span className="text-slate-500 dark:text-zinc-600 text-xs">{isOpen ? '▲' : '▼'}</span>
+                      <span className="text-fg-muted text-xs">{isOpen ? '▲' : '▼'}</span>
                     </div>
                   </div>
                 </div>

@@ -1352,7 +1352,7 @@ function BookDetailPageInner() {
                               {row.path}
                             </code>
                             {!!row.sizeBytes && (
-                              <span className="shrink-0 text-xs text-slate-400 dark:text-zinc-600">
+                              <span className="shrink-0 text-xs text-fg-muted">
                                 {formatBytes(row.sizeBytes)}
                               </span>
                             )}

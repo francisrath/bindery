@@ -66,8 +66,8 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
           </div>
           {/* Full source path so the user can tell which file each row refers to;
               the basename alone is ambiguous across folders (#1435). */}
-          <div className="text-xs font-mono text-slate-500 dark:text-zinc-600 break-all sm:truncate" title={item.path}>{item.path}</div>
-          <div className="text-xs text-slate-500 dark:text-zinc-600 truncate">
+          <div className="text-xs font-mono text-fg-muted break-all sm:truncate" title={item.path}>{item.path}</div>
+          <div className="text-xs text-fg-muted truncate">
             {t('manualImport.parsed', { title: item.parsedTitle || '?', author: item.parsedAuthor || '?', defaultValue: `parsed: ${item.parsedTitle || '?'} / ${item.parsedAuthor || '?'}` })}
           </div>
 

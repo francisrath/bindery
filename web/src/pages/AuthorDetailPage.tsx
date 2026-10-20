@@ -1065,7 +1065,7 @@ export default function AuthorDetailPage() {
         <div className="w-32 flex-shrink-0">
           <CoverImage src={author.imageUrl} alt={author.authorName} className="w-full rounded-full shadow-lg aspect-square object-cover"
             fallback={
-              <div className="aspect-square rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-2xl font-bold text-slate-500 dark:text-zinc-600">
+              <div className="aspect-square rounded-full bg-slate-200 dark:bg-zinc-800 flex items-center justify-center text-2xl font-bold text-fg-muted">
                 {author.authorName.charAt(0).toUpperCase()}
               </div>
             }
