@@ -606,7 +606,7 @@ function MetadataProfileForm({ profile, onClose, onSaved }: { profile?: Metadata
           {t('settings.metadata.formSkipPartBooks')}
         </label>
       </div>
-      {err && <div className="text-xs text-red-400">{err}</div>}
+      {err && <div className="text-xs text-red-700 dark:text-red-400">{err}</div>}
       <div className="flex justify-end gap-2">
         <button type="button" onClick={onClose} className="px-3 py-1.5 text-xs text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white">
           {t('common.cancel')}

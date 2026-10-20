@@ -266,7 +266,7 @@ export default function EditBookModal({ book, onClose, onSaved, onSeriesSaved, s
                 onKeyDown={e => { if (e.key === 'Enter' && canSave) void save() }} className={inputCls} autoFocus />
             </div>
           )}
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm text-red-700 dark:text-red-400">{error}</p>}
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 flex items-center gap-2">

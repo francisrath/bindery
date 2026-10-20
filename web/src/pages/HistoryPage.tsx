@@ -314,7 +314,7 @@ export default function HistoryPage() {
                           {BLOCKLISTABLE.has(event.eventType) && (
                             <button
                               onClick={() => handleBlocklist(event.id)}
-                              className="text-xs text-amber-400 hover:text-amber-300 transition-colors mr-3"
+                              className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors mr-3"
                               title="Add to blocklist — prevents this release from being grabbed again"
                             >
                               {t('history.blocklist')}
@@ -375,7 +375,7 @@ export default function HistoryPage() {
                     {BLOCKLISTABLE.has(event.eventType) && (
                       <button
                         onClick={() => handleBlocklist(event.id)}
-                        className="touch-target text-xs text-amber-400 hover:text-amber-300 transition-colors py-1"
+                        className="touch-target text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors py-1"
                       >
                         {t('history.blocklist')}
                       </button>
