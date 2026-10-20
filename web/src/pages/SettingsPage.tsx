@@ -300,7 +300,7 @@ export default function SettingsPage() {
 
             {isAdmin && ADMIN_GROUPS.map((group, i) => (
               <div key={group.key} className={`${i === 0 ? 'pt-4' : 'pt-3'} pb-0.5`}>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-600 px-3 mb-1">{t(`settings.groups.${group.key}`)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-fg-muted px-3 mb-1">{t(`settings.groups.${group.key}`)}</p>
                 {group.tabs.map(id => (
                   <SettingsNavLink
                     key={id}

@@ -227,7 +227,7 @@ function AddProviderForm({
         <div className="flex gap-2 items-center">
           <code className="flex-1 text-xs font-mono px-3 py-2 rounded bg-slate-50 dark:bg-zinc-950 border border-slate-300 dark:border-zinc-700 text-fg-muted truncate min-w-0">
             {callbackPreview || (
-              <span className="italic text-slate-400 dark:text-zinc-600">
+              <span className="italic text-fg-muted">
                 {t('settings.oidc.callbackUrlEmpty')}
               </span>
             )}

@@ -568,7 +568,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                   <h5 className="font-medium text-sm truncate">{p.name}</h5>
                   <p className="text-xs text-fg-muted truncate">{p.url}</p>
                   {p.lastSyncAt && (
-                    <p className="text-xs text-slate-400 dark:text-zinc-600 mt-0.5">
+                    <p className="text-xs text-fg-muted mt-0.5">
                       {t('settings.prowlarr.lastSynced', {
                         at: new Date(p.lastSyncAt).toLocaleString(),
                         count: indexers.filter(i => i.prowlarrInstanceId === p.id).length,

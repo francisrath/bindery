@@ -831,7 +831,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               <option value="72h">72 hours</option>
               <option value="168h">7 days</option>
             </select>
-            <p className="text-xs text-slate-500 dark:text-zinc-600 mt-1">
+            <p className="text-xs text-fg-muted mt-1">
               {t('settings.general.searchIntervalRestart')}
             </p>
           </div>
@@ -876,7 +876,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
                 <option value={hardcoverSyncInterval}>{hardcoverSyncInterval}</option>
               )}
             </select>
-            <p className="text-xs text-slate-500 dark:text-zinc-600 mt-1">
+            <p className="text-xs text-fg-muted mt-1">
               {t('settings.general.searchIntervalRestart')}
             </p>
           </div>

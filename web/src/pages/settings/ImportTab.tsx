@@ -645,7 +645,7 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
       </div>
 
       {rows.length === 0 && !loadingLists && (
-        <p className="text-sm text-slate-500 dark:text-zinc-600">{t('settings.import.hardcoverEmpty')}</p>
+        <p className="text-sm text-fg-muted">{t('settings.import.hardcoverEmpty')}</p>
       )}
 
       <div className="space-y-2">
@@ -674,7 +674,7 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
                       {row.stale && <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 rounded">{t('settings.import.hardcoverSavedOnly', 'Saved only')}</span>}
                       {il && <span className="text-[10px] px-1.5 py-0.5 bg-slate-200 dark:bg-zinc-800 text-fg-muted rounded">{il.apiKeyConfigured ? t('settings.import.hardcoverOverrideConfigured', 'Override token') : t('settings.import.hardcoverGlobalToken', 'Global token')}</span>}
                     </span>
-                    <span className="block text-xs text-slate-500 dark:text-zinc-600 mt-0.5">
+                    <span className="block text-xs text-fg-muted mt-0.5">
                       {il?.lastSyncAt
                         ? t('settings.import.hardcoverLastSync', { date: new Date(il.lastSyncAt).toLocaleString() })
                         : il

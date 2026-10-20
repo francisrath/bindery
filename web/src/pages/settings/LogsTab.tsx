@@ -158,7 +158,7 @@ export default function LogsTab() {
         {/* Level filter pills. They wrap: five pills and the label in one
             unbreakable row pushed a phone page out to about 406px. */}
         <div className="flex flex-wrap items-center gap-1.5 text-xs" data-testid="log-level-filter">
-          <span className="text-[10px] font-medium uppercase text-slate-400 dark:text-zinc-600 mr-1">View</span>
+          <span className="text-[10px] font-medium uppercase text-fg-muted mr-1">View</span>
           {(['all', 'debug', 'info', 'warn', 'error'] as const).map(f => (
             <button
               key={f}
@@ -290,13 +290,13 @@ export default function LogsTab() {
             return /[\s=]/.test(s) ? `${k}="${s.replace(/"/g, '\\"')}"` : `${k}=${s}`
           }
           if (logEntries.length === 0) {
-            return <p className="text-slate-500 dark:text-zinc-600 p-4 text-center">{t('settings.logs.noEntries')}</p>
+            return <p className="text-fg-muted p-4 text-center">{t('settings.logs.noEntries')}</p>
           }
           const rows = logEntries.map((e, i) => {
             const levelCls =
               e.level === 'ERROR' ? 'text-red-500 dark:text-red-400' :
               e.level === 'WARN'  ? 'text-amber-600 dark:text-amber-400' :
-              e.level === 'DEBUG' ? 'text-slate-400 dark:text-zinc-500' :
+              e.level === 'DEBUG' ? 'text-fg-muted' :
               'text-emerald-600 dark:text-emerald-400'
             // Support both ring buffer (time/msg/attrs) and DB (ts/message/fields) shapes.
             const rawTs = e.ts ?? e.time ?? ''
@@ -320,7 +320,7 @@ export default function LogsTab() {
                 {rows.map(r => (
                   <li key={r.key} data-testid="log-entry" className="px-3 py-1.5 border-b border-slate-200 dark:border-zinc-900">
                     <div className="flex flex-wrap items-baseline gap-x-2">
-                      <span className="text-slate-500 dark:text-zinc-600 whitespace-nowrap" title={r.iso}>{r.ts}</span>
+                      <span className="text-fg-muted whitespace-nowrap" title={r.iso}>{r.ts}</span>
                       <span className={`font-semibold ${r.levelCls}`}>{r.level}</span>
                       {r.component && <span className="text-fg-muted">{r.component}</span>}
                     </div>
@@ -343,7 +343,7 @@ export default function LogsTab() {
               <tbody>
                 {rows.map(r => (
                   <tr key={r.key} className="border-b border-slate-200 dark:border-zinc-900 hover:bg-slate-100 dark:hover:bg-zinc-900/50">
-                    <td className="pl-3 pr-2 py-0.5 text-slate-500 dark:text-zinc-600 whitespace-nowrap align-top" title={r.iso}>{r.ts}</td>
+                    <td className="pl-3 pr-2 py-0.5 text-fg-muted whitespace-nowrap align-top" title={r.iso}>{r.ts}</td>
                     <td className={`pr-2 py-0.5 whitespace-nowrap font-semibold align-top ${r.levelCls}`}>{r.level}</td>
                     <td className="pr-2 py-0.5 text-fg-muted whitespace-nowrap align-top">{r.component}</td>
                     <td className="pr-2 py-0.5 text-slate-800 dark:text-zinc-200 break-words whitespace-pre-wrap align-top">{r.msgText}</td>
@@ -376,7 +376,7 @@ export default function LogsTab() {
         </button>
       </div>
 
-      <p className="text-xs text-slate-500 dark:text-zinc-600 mt-2">
+      <p className="text-xs text-fg-muted mt-2">
         {t('settings.logs.persistNote')} {t('settings.logs.downloadNote')}
       </p>
 
@@ -497,7 +497,7 @@ export default function LogsTab() {
               title={(settings['telemetry.enabled'] ?? 'true') !== 'false' ? t('common.disable') : t('common.enable')}
             />
           </div>
-          <p className="text-xs text-slate-500 dark:text-zinc-600">
+          <p className="text-xs text-fg-muted">
             {t('settings.general.telemetryDetail')}
           </p>
         </div>

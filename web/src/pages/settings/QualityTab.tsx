@@ -145,9 +145,9 @@ function ProfileRow({
                 const heading = kind === 'ebook' ? t('settings.quality.ebookList') : t('settings.quality.audiobookList')
                 return (
                   <div key={kind}>
-                    <p className="text-[10px] text-slate-500 dark:text-zinc-600 mb-1">
+                    <p className="text-[10px] text-fg-muted mb-1">
                       {heading}
-                      {list.length > 1 && <span className="ml-1.5 text-slate-400 dark:text-zinc-700">{t('settings.quality.bestFirst')}</span>}
+                      {list.length > 1 && <span className="ml-1.5">{t('settings.quality.bestFirst')}</span>}
                     </p>
                     <ul aria-label={heading} className="flex flex-wrap gap-1.5">
                       {list.map((item, i) => (

@@ -179,7 +179,7 @@ export default function MetadataTab() {
               author from their stored foreign ID: authors already in the
               library keep their existing provider. Without saying so the
               predictable outcome is flip, see no change, flip back. */}
-          <p className="text-xs text-slate-500 dark:text-zinc-600 mt-1">
+          <p className="text-xs text-fg-muted mt-1">
             {t('settings.general.metadataProviderLiveHint', 'Takes effect from the next lookup, with no restart. Authors already in your library stay linked to the provider they were added from; the new primary applies to authors you add afterwards. To move an existing author, use "Link metadata" on their page.')}
           </p>
         </div>

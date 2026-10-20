@@ -144,7 +144,7 @@ export default function GoodreadsImportSection() {
             </label>
           ))}
         </div>
-        <p className="text-xs text-slate-500 dark:text-zinc-600 mt-1">
+        <p className="text-xs text-fg-muted mt-1">
           {t('settings.import.goodreadsShelfHint')}
         </p>
       </div>
@@ -201,7 +201,7 @@ export default function GoodreadsImportSection() {
               >
                 {t('settings.import.goodreadsDownloadFailed')}
               </button>
-              <p className="mt-1 text-slate-500 dark:text-zinc-600">
+              <p className="mt-1 text-fg-muted">
                 {t('settings.import.goodreadsDownloadHint')}
               </p>
             </details>

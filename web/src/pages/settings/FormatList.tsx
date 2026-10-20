@@ -38,7 +38,7 @@ export default function FormatList({
       <div className="flex items-baseline justify-between mb-1">
         <p className="text-xs font-medium text-slate-700 dark:text-zinc-300">{heading}</p>
         {items.length > 1 && (
-          <p className="text-[10px] text-slate-500 dark:text-zinc-600">{t('settings.quality.bestFirst')}</p>
+          <p className="text-[10px] text-fg-muted">{t('settings.quality.bestFirst')}</p>
         )}
       </div>
       {items.length > 0 && (

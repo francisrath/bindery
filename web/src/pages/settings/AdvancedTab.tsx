@@ -337,7 +337,7 @@ export default function AdvancedTab() {
           ) : (
             <span className="font-mono text-xs text-slate-900 dark:text-zinc-100">{d.key}</span>
           )}
-          <span className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-zinc-600">{d.type}</span>
+          <span className="text-[10px] uppercase tracking-wide text-fg-muted">{d.type}</span>
           {renderBadges(d)}
         </div>
 

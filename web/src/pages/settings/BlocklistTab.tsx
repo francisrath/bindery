@@ -134,7 +134,7 @@ export default function BlocklistTab() {
                       <td className="px-4 py-3 max-w-xs">
                         <p className="text-slate-800 dark:text-zinc-200 truncate" title={entry.title}>{entry.title}</p>
                         {entry.guid && (
-                          <p className="text-[10px] text-slate-500 dark:text-zinc-600 mt-0.5 font-mono truncate">{entry.guid}</p>
+                          <p className="text-[10px] text-fg-muted mt-0.5 font-mono truncate">{entry.guid}</p>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -185,7 +185,7 @@ export default function BlocklistTab() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm text-slate-800 dark:text-zinc-200 [overflow-wrap:anywhere]">{entry.title}</p>
                     {entry.guid && (
-                      <p className="text-[10px] text-slate-500 dark:text-zinc-600 mt-0.5 font-mono truncate">{entry.guid}</p>
+                      <p className="text-[10px] text-fg-muted mt-0.5 font-mono truncate">{entry.guid}</p>
                     )}
                     <div className="flex flex-wrap items-center gap-2 mt-2">
                       <span className="text-xs px-2 py-0.5 rounded bg-red-500/20 text-red-700 dark:text-red-400">
