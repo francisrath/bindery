@@ -57,6 +57,10 @@ describe('theme text tokens meet WCAG AA on app surfaces', () => {
   it('regression: the old bare emerald-400 fails on light (why accent-text exists)', () => {
     expect(contrast('#34d399', SURFACES.lightCard)).toBeLessThan(AA_NORMAL)
   })
+
+  it('regression: zinc-500 secondary text fails on dark cards (why fg-muted is zinc-400) (#3084)', () => {
+    expect(contrast('#71717a', SURFACES.darkCard)).toBeLessThan(AA_NORMAL)
+  })
 })
 
 // CoverPlaceholder paints its own ground, so its text contrast is
