@@ -40,8 +40,11 @@ the two audiobook sources return before their cache is read while off.
 An author's photo and bio come from the author's own provider. When it has none,
 the optional *author enrichers* fill the gap on the staggered `refresh-metadata`
 job and on the two single author actions, adding an author and its Refresh
-button, never inside `GetAuthor`. Bulk refresh, Refresh all, scheduled
-discovery and the imports send them nothing.
+button, never inside `GetAuthor`. Bulk refresh, Refresh all and scheduled
+discovery ask too, but only for an author whose enrichment is due: they stamp
+the profile fresh, which takes the author out of `refresh-metadata`, so leaving
+enrichment to that job postponed it by a day each time they ran (#3398). The
+imports send them nothing.
 Today that is
 Wikidata, found by the authority ID the author already carries (NORAF, GND, BnF
 or OpenLibrary) and only while `metadata.author_enrichment.wikidata` is on

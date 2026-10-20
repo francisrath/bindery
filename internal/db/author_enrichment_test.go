@@ -46,3 +46,35 @@ func TestStampEnrichment(t *testing.T) {
 		t.Error("reading on a closed database gave no error")
 	}
 }
+
+// An author is due for enrichment when it was never enriched, when its stamp
+// is older than AuthorEnrichmentInterval, and when the stamp cannot be read.
+func TestEnrichmentDue(t *testing.T) {
+	database, err := OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	repo := NewAuthorRepo(database)
+	a := newDiscoveryTestAuthor(t, repo, "OL11A", nil)
+
+	if !repo.EnrichmentDue(ctx, a.ID) {
+		t.Error("never enriched: want due")
+	}
+	if err := repo.StampEnrichment(ctx, a.ID, time.Now().Add(-time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	if repo.EnrichmentDue(ctx, a.ID) {
+		t.Error("enriched an hour ago: want not due")
+	}
+	if err := repo.StampEnrichment(ctx, a.ID, time.Now().Add(-AuthorEnrichmentInterval-time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	if !repo.EnrichmentDue(ctx, a.ID) {
+		t.Error("stamp past the interval: want due")
+	}
+	_ = database.Close()
+	if !repo.EnrichmentDue(ctx, a.ID) {
+		t.Error("unreadable stamp: want due")
+	}
+}

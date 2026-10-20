@@ -56,19 +56,23 @@ func TestRefreshAuthorProfile_EnrichesWhateverTheStamp(t *testing.T) {
 	}
 }
 
-// Only an add and the Refresh button enrich straight away. Every other
-// catalogue sync (bulk refresh, Refresh all, scheduled discovery, the
-// imports) spans many authors and leaves enrichment to the staggered
-// refresh, so it asks the enrichers nothing and stamps nothing.
+// An add and the Refresh button always enrich. The other refresh-path syncs
+// (bulk refresh, Refresh all, scheduled discovery) enrich once the author's
+// enrichment is due: they stamp the profile fresh, which takes the author out
+// of the staggered refresh, so leaving it to that refresh postponed it by a
+// day each time they ran (#3398). An import never asks, however due.
 func TestCatalogueSyncEnrichesOnlyWhenAsked(t *testing.T) {
 	for _, tc := range []struct {
-		name string
-		opts catalogueSyncOptions
-		want int
+		name        string
+		opts        catalogueSyncOptions
+		enrichedAgo time.Duration // 0: never enriched
+		want        int
 	}{
-		{"bulk refresh", catalogueSyncOptions{discovery: true}, 0},
-		{"import", catalogueSyncOptions{}, 0},
-		{"add or Refresh button", catalogueSyncOptions{discovery: true, enrichProfile: true}, 1},
+		{"bulk refresh, never enriched", catalogueSyncOptions{discovery: true}, 0, 1},
+		{"bulk refresh, enrichment aged", catalogueSyncOptions{discovery: true}, db.AuthorEnrichmentInterval + time.Hour, 1},
+		{"bulk refresh, enriched recently", catalogueSyncOptions{discovery: true}, time.Hour, 0},
+		{"import, never enriched", catalogueSyncOptions{}, 0, 0},
+		{"add or Refresh button, enriched recently", catalogueSyncOptions{discovery: true, enrichProfile: true}, time.Hour, 1},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			provider := &stubMetaProvider{author: &models.Author{ForeignID: "OL1A", Name: "Kari Nordmann"}}
@@ -80,12 +84,20 @@ func TestCatalogueSyncEnrichesOnlyWhenAsked(t *testing.T) {
 			if err := f.authors.Create(ctx, author); err != nil {
 				t.Fatal(err)
 			}
+			before := time.Now().Add(-tc.enrichedAgo)
+			if tc.enrichedAgo > 0 {
+				if err := f.authors.StampEnrichment(ctx, author.ID, before); err != nil {
+					t.Fatal(err)
+				}
+			}
 			f.h.fetchAuthorBooks(ctx, author, tc.opts)
 			if e.calls() != tc.want {
 				t.Errorf("%d enricher calls, want %d", e.calls(), tc.want)
 			}
-			if ts, _ := f.authors.LastEnrichmentAt(ctx, author.ID); (ts != nil) != (tc.want == 1) {
-				t.Errorf("enrichment stamp %v, want stamped=%v", ts, tc.want == 1)
+			ts, _ := f.authors.LastEnrichmentAt(ctx, author.ID)
+			restamped := ts != nil && (tc.enrichedAgo == 0 || ts.After(before.Add(time.Minute)))
+			if restamped != (tc.want == 1) {
+				t.Errorf("enrichment stamp %v, want restamped=%v", ts, tc.want == 1)
 			}
 		})
 	}

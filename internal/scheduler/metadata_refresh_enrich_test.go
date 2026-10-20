@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/vavallee/bindery/internal/db"
 	"github.com/vavallee/bindery/internal/metadata"
 	"github.com/vavallee/bindery/internal/models"
 )
@@ -58,7 +59,7 @@ func TestRefreshMetadata_EnrichesOnlyWhenTheStampHasAged(t *testing.T) {
 	}
 
 	// A month on, it is asked again.
-	if err := f.authors.StampEnrichment(ctx, id, time.Now().Add(-authorEnrichmentInterval-time.Hour)); err != nil {
+	if err := f.authors.StampEnrichment(ctx, id, time.Now().Add(-db.AuthorEnrichmentInterval-time.Hour)); err != nil {
 		t.Fatal(err)
 	}
 	f.stampAgo("OL000A", 25*time.Hour)

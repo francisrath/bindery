@@ -33,10 +33,6 @@ const (
 	// metadataRefreshInterval is how often each author's profile is due: one
 	// day, the cadence of the job before it was staggered.
 	metadataRefreshInterval = 24 * time.Hour
-	// authorEnrichmentInterval is how long an enrichment answer, a miss
-	// included, holds before the refresh asks the enrichers again (#3287).
-	// It is stamped on the author row, so a restart does not reset it.
-	authorEnrichmentInterval = 30 * 24 * time.Hour
 
 	// maxMetadataRefreshBatch caps how many authors one hourly tick refreshes.
 	// Discovery caps at 25 (maxDiscoveryBatch) because one discovery check is
@@ -310,7 +306,7 @@ loop:
 		// once its stamp has aged, so a library is asked about at most once a
 		// month however often it is refreshed or restarted.
 		enrichAnswered := false
-		if s.enrichmentDue(ctx, author.ID) {
+		if s.authors.EnrichmentDue(ctx, author.ID) {
 			enrichAnswered = s.meta.EnrichAuthor(ctx, updated)
 		}
 		if s.persistRefreshedAuthor(ctx, &author, updated, current.UpdatedAtRaw) {
@@ -376,14 +372,6 @@ func (s *Scheduler) persistRefreshedAuthor(ctx context.Context, author, updated 
 		return false
 	}
 	return true
-}
-
-// enrichmentDue reports whether authorID's enrichment stamp is missing or
-// older than authorEnrichmentInterval. A failed read counts as due: the
-// enricher's own cache still keeps a repeat from reaching the network.
-func (s *Scheduler) enrichmentDue(ctx context.Context, authorID int64) bool {
-	last, err := s.authors.LastEnrichmentAt(ctx, authorID)
-	return err != nil || last == nil || time.Since(*last) >= authorEnrichmentInterval
 }
 
 // hasCalibrePrefix reports a Calibre-imported author. Those have synthetic

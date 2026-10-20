@@ -231,9 +231,12 @@ contact; the guidelines' "operator" is whoever runs the install), honours
 `Retry-After` is given), holds back for 5 minutes after three requests in a
 row fail outright, so an outage doesn't cost every author a request timeout, and asks one author at a time on the staggered
 author refresh (#3275), so a library is spread over the day. Outside that
-refresh only two single author actions ask, adding an author and its Refresh
-button; bulk refresh, Refresh all, scheduled discovery and imports ask
-nothing. An answer, a miss included, is stamped on the
+refresh, adding an author and its Refresh button always ask; bulk refresh,
+Refresh all and scheduled discovery ask only for an author that is due, the
+same 30-day rule as below, because they take the author out of the staggered
+refresh for a day (#3398); imports ask nothing. Lookups run one author at a
+time whoever asks, so a bulk refresh of several authors at once still sends
+Wikimedia one request after another. An answer, a miss included, is stamped on the
 author (`last_enrichment_at`) and the refresh asks again only after 30 days,
 so an author with no photo is not asked about every day, and a restart does
 not start the month over. An answer built while Commons or Wikipedia was

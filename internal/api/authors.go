@@ -1631,11 +1631,10 @@ func (h *AuthorHandler) refreshAuthorProfile(ctx context.Context, author *models
 	if upstream == nil {
 		return
 	}
-	// An add or a Refresh click asks the enrichers (#3287) whatever the
-	// stamp says; their own cache still keeps a repeat click off the
-	// network. A full answer is stamped, so the staggered refresh leaves
-	// this author alone for a month. Every other sync leaves enrichment to
-	// that refresh.
+	// enrich is set by the caller (#3287): always for an add or a Refresh
+	// click, whose repeat the enrichers' own cache keeps off the network,
+	// and for the other refresh-path syncs once the stamp has aged. A full
+	// answer is stamped, so the author is not asked again for a month.
 	enrichAnswered := enrich && h.meta.EnrichAuthor(ctx, upstream)
 	defer func() {
 		if enrichAnswered {
@@ -1896,8 +1895,16 @@ func (h *AuthorHandler) runCatalogueSync(ctx context.Context, author *models.Aut
 	// Single-work runs are skipped for the same reason as the re-link: the
 	// author usually already existed before this request, and an Add Book is
 	// not a request to rewrite their profile.
+	//
+	// An add and the Refresh button always enrich. The other refresh-path
+	// syncs (Refresh all, bulk refresh, scheduled discovery) enrich when it
+	// is due: they stamp the profile fresh, which takes the author out of the
+	// staggered refresh that would otherwise have enriched it, so leaving it
+	// to that refresh postponed enrichment by a day each time they ran. An
+	// import still never asks, so a large one sends the enrichers nothing.
 	if !wasCalibre && !singleWork {
-		h.refreshAuthorProfile(metaCtx, author, opts.enrichProfile)
+		enrich := opts.enrichProfile || (opts.discovery && h.authors.EnrichmentDue(metaCtx, author.ID))
+		h.refreshAuthorProfile(metaCtx, author, enrich)
 	}
 
 	// Load the author's secondary provider identities so supplemental

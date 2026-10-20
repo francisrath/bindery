@@ -66,6 +66,11 @@ type Client struct {
 	wikipediaREST string
 	now           func() time.Time
 
+	// lookupMu lets one author lookup run at a time, whoever asks: a bulk
+	// refresh syncs several authors at once (#3398), and Wikimedia's
+	// etiquette is one request after another.
+	lookupMu sync.Mutex
+
 	mu        sync.Mutex
 	cache     map[string]cacheEntry
 	holdUntil time.Time
@@ -105,6 +110,16 @@ func (c *Client) EnrichAuthor(ctx context.Context, author *models.Author) (*meta
 		return nil, nil
 	}
 	key := property + "=" + value
+	if profile, ok := c.cached(key); ok {
+		return profile, nil
+	}
+	if c.held() {
+		return nil, ErrHeld
+	}
+	c.lookupMu.Lock()
+	defer c.lookupMu.Unlock()
+	// Checked again: a caller that waited may find this author answered, or
+	// Wikimedia holding back, by the lookup that ran before it.
 	if profile, ok := c.cached(key); ok {
 		return profile, nil
 	}
