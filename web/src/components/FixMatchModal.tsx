@@ -58,7 +58,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
         const { items } = await api.listBooks({ search: q, limit: 20 })
         if (!cancelled) setResults(items.filter(b => b.id !== sourceBookId))
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'search failed')
+        if (!cancelled) setError(e instanceof Error ? e.message : t('bookDetail.fixMatch.searchFailed', 'search failed'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -67,7 +67,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
       cancelled = true
       clearTimeout(handle)
     }
-  }, [term, sourceBookId])
+  }, [term, sourceBookId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch the destination for the pending target once the user chooses to move
   // the file. A failure here does not block the reassign: it means we cannot
@@ -85,7 +85,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
         if (!cancelled) setPreview(p)
       })
       .catch(e => {
-        if (!cancelled) setPreviewError(e instanceof Error ? e.message : 'preview failed')
+        if (!cancelled) setPreviewError(e instanceof Error ? e.message : t('bookDetail.fixMatch.previewFailed', 'preview failed'))
       })
       .finally(() => {
         if (!cancelled) setPreviewLoading(false)
@@ -93,7 +93,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
     return () => {
       cancelled = true
     }
-  }, [target, path, format, relocate])
+  }, [target, path, format, relocate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const chooseTarget = (b: Book) => {
     setError('')
@@ -115,7 +115,7 @@ export default function FixMatchModal({ sourceBookId, path, format, onClose, onR
       await api.reassignFile({ path, targetBookId: target.id, format, relocate })
       onReassigned(target.id)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'reassign failed')
+      setError(e instanceof Error ? e.message : t('bookDetail.fixMatch.reassignFailed', 'reassign failed'))
       setSubmitting(false)
     }
   }

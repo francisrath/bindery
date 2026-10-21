@@ -56,7 +56,7 @@ export default function CatalogueAdder({ initialQuery, onChoose, hint, actionLab
       setSearched(true)
     } catch (e) {
       setResults([])
-      setError(e instanceof Error ? e.message : 'Metadata search failed')
+      setError(e instanceof Error ? e.message : t('importPage.catalogueAdder.searchFailed', 'Metadata search failed'))
     } finally {
       setSearching(false)
     }
@@ -69,7 +69,7 @@ export default function CatalogueAdder({ initialQuery, onChoose, hint, actionLab
     try {
       await onChoose(b)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not add the book')
+      setError(e instanceof Error ? e.message : t('importPage.catalogueAdder.addFailed', 'Could not add the book'))
     } finally {
       setAdding('')
     }

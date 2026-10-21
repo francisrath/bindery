@@ -97,7 +97,9 @@
     "myRequests": "My requests",
     "requests": "Requests",
     "requestsPending": "{{count}} pending requests",
-    "toggleMenu": "Toggle menu"
+    "toggleMenu": "Toggle menu",
+    "themeLight": "Switch to light mode",
+    "themeDark": "Switch to dark mode"
   },
   "librarySearch": {
     "label": "Search library",
@@ -169,7 +171,14 @@
     "viewLibrary": "In your library",
     "viewFolder": "From a folder",
     "viewLibraryHint": "Files already inside your library folders that the last scan could not place. Nothing moves; you say which book each one is.",
-    "viewFolderHint": "Files anywhere else on disk. Each one is matched to a book in your catalogue and imported into your library."
+    "viewFolderHint": "Files anywhere else on disk. Each one is matched to a book in your catalogue and imported into your library.",
+    "catalogueAdder": {
+      "searchFailed": "Metadata search failed",
+      "addFailed": "Could not add the book"
+    },
+    "folderScan": {
+      "failed": "Scan failed"
+    }
   },
   "adoption": {
     "adminOnly": "Only an admin can decide what the files in the library are.",
@@ -993,6 +1002,40 @@
       "done_one": "{{count}} split part unmonitored",
       "done_other": "{{count}} split parts unmonitored",
       "failed": "Could not unmonitor the split parts"
+    },
+    "addBookModal": {
+      "loadFailed": "Failed to load books",
+      "selectBook": "Select a book",
+      "addFailed": "Failed to add book",
+      "title": "Add Book to Series",
+      "searchPlaceholder": "Search library books...",
+      "loading": "Loading...",
+      "noMatch": "No matching books found.",
+      "position": "Position (optional)",
+      "primarySeries": "Primary series",
+      "adding": "Adding...",
+      "add": "Add"
+    },
+    "hardcoverLink": {
+      "searchFailed": "Search failed",
+      "linkFailed": "Failed to link series",
+      "unlinkFailed": "Failed to remove link",
+      "title": "Link to Hardcover Series",
+      "current": "Currently linked",
+      "view": "View on Hardcover ↗",
+      "auto": "Auto",
+      "manual": "Manual",
+      "remove": "Remove Link",
+      "searchPlaceholder": "Search Hardcover series",
+      "books_one": "{{count}} book",
+      "books_other": "{{count}} books",
+      "readers": "{{n}} readers",
+      "match": "{{confidence}} match",
+      "noPage": "No Hardcover page for this result",
+      "searching": "Searching...",
+      "noResults": "No Hardcover series found.",
+      "saving": "Saving...",
+      "confirm": "Confirm Selection"
     }
   },
   "importHints": {
@@ -2466,7 +2509,11 @@
     "merging": "Merging…",
     "cancel": "Cancel",
     "confirmBody": "Merge \"{{source}}\" into \"{{target}}\"?\n\n• {{count}} book(s) will be reparented.\n• \"{{source}}\" will be kept as an alias of \"{{target}}\".\n• This cannot be undone.",
-    "confirmAcknowledge": "I understand this cannot be undone."
+    "confirmAcknowledge": "I understand this cannot be undone.",
+    "failed": "Merge failed",
+    "counting": "Counting books…",
+    "willMove": "book(s) will move to the target.",
+    "aliasPreserved": "Alias preserved:"
   },
   "pagination": {
     "previous": "Previous",
@@ -2806,7 +2853,10 @@
       "destinationUnknown": "Bindery could not work out the destination. The file will still be moved and renamed.",
       "confirmButton": "Move and reassign",
       "confirmButtonNoop": "Reassign",
-      "backButton": "Choose a different book"
+      "backButton": "Choose a different book",
+      "searchFailed": "search failed",
+      "previewFailed": "preview failed",
+      "reassignFailed": "reassign failed"
     },
     "metadataSource": {
       "heading": "Metadata source",
@@ -2938,5 +2988,52 @@
     "genreOverrideDone": "Updated {{count}} book(s).",
     "bio": "Bio",
     "bioHint": "A bio you write here stays as you wrote it: no refresh replaces it. Clear it to let the metadata provider fill it again."
+  },
+  "absConflicts": {
+    "relinking": "Relinking…",
+    "relink": "Attempt upstream relink",
+    "upstreamSource": "upstream",
+    "needsReview": "Needs review",
+    "using": "Using {{source}}",
+    "empty": "Empty",
+    "upstream": "Upstream",
+    "useAbs": "Use ABS",
+    "useUpstream": "Use upstream",
+    "prefers": "Prefers {{source}}"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "body": "The page hit an unexpected error and couldn't render. You can try reloading or returning to the home page.",
+    "reload": "Reload",
+    "home": "Go home",
+    "hideDetails": "Hide details",
+    "showDetails": "Show details"
+  },
+  "mediaBadge": {
+    "both": "Ebook + Audiobook"
+  },
+  "renameFiles": {
+    "status": {
+      "move": "Will move",
+      "moved": "Moved",
+      "noop": "Already correct",
+      "collision": "Destination exists",
+      "missing": "Not on disk",
+      "error": "Error",
+      "failed": "Failed"
+    },
+    "previewFailed": "Preview failed",
+    "renameFailed": "Rename failed",
+    "title": "Rename files",
+    "intro": "Move the files for <label>{{label}}</label> to match the current naming template. Files already in the right place are left alone.",
+    "computing": "Computing changes…",
+    "none": "No tracked files to rename.",
+    "appliedSummary": "{{moved}} moved, {{failed}} failed",
+    "previewSummary": "{{movable}} of {{total}} will move",
+    "apply_one": "Rename {{count}} file",
+    "apply_other": "Rename {{count}} files",
+    "renaming": "Renaming…",
+    "from": "from",
+    "to": "to"
   }
 }

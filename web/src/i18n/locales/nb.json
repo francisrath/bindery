@@ -97,7 +97,9 @@
     "myRequests": "Mine forespørsler",
     "requests": "Forespørsler",
     "requestsPending": "{{count}} ventende forespørsler",
-    "toggleMenu": "Vis eller skjul menyen"
+    "toggleMenu": "Vis eller skjul menyen",
+    "themeLight": "Bytt til lyst tema",
+    "themeDark": "Bytt til mørkt tema"
   },
   "librarySearch": {
     "label": "Søk i biblioteket",
@@ -169,7 +171,14 @@
     "viewLibrary": "I biblioteket ditt",
     "viewFolder": "Fra en mappe",
     "viewLibraryHint": "Filer som allerede ligger i bibliotekmappene dine, men som siste skanning ikke klarte å plassere. Ingenting flyttes; du sier selv hvilken bok hver av dem er.",
-    "viewFolderHint": "Filer hvor som helst ellers på disken. Hver av dem kobles til en bok i katalogen din og importeres til biblioteket."
+    "viewFolderHint": "Filer hvor som helst ellers på disken. Hver av dem kobles til en bok i katalogen din og importeres til biblioteket.",
+    "catalogueAdder": {
+      "searchFailed": "Metadatasøket mislyktes",
+      "addFailed": "Kunne ikke legge til boken"
+    },
+    "folderScan": {
+      "failed": "Skanningen mislyktes"
+    }
   },
   "adoption": {
     "adminOnly": "Bare en administrator kan avgjøre hva filene i biblioteket er.",
@@ -959,6 +968,40 @@
       "done_one": "{{count}} delbind overvåkes ikke lenger",
       "done_other": "{{count}} delbind overvåkes ikke lenger",
       "failed": "Kunne ikke slutte å overvåke delbindene"
+    },
+    "addBookModal": {
+      "loadFailed": "Kunne ikke laste bøkene",
+      "selectBook": "Velg en bok",
+      "addFailed": "Kunne ikke legge til boken",
+      "title": "Legg til bok i serien",
+      "searchPlaceholder": "Søk i bøkene i biblioteket…",
+      "loading": "Laster…",
+      "noMatch": "Fant ingen bøker som passer.",
+      "position": "Plassering (valgfritt)",
+      "primarySeries": "Hovedserie",
+      "adding": "Legger til…",
+      "add": "Legg til"
+    },
+    "hardcoverLink": {
+      "searchFailed": "Søket mislyktes",
+      "linkFailed": "Kunne ikke koble til serien",
+      "unlinkFailed": "Kunne ikke fjerne koblingen",
+      "title": "Koble til en serie på Hardcover",
+      "current": "Koblet nå",
+      "view": "Vis på Hardcover ↗",
+      "auto": "Automatisk",
+      "manual": "Manuelt",
+      "remove": "Fjern koblingen",
+      "searchPlaceholder": "Søk etter serier på Hardcover",
+      "books_one": "{{count}} bok",
+      "books_other": "{{count}} bøker",
+      "readers": "{{n}} lesere",
+      "match": "{{confidence}} treff",
+      "noPage": "Ingen Hardcover-side for dette resultatet",
+      "searching": "Søker…",
+      "noResults": "Fant ingen serier på Hardcover.",
+      "saving": "Lagrer…",
+      "confirm": "Bekreft valget"
     }
   },
   "importHints": {
@@ -2432,7 +2475,11 @@
     "merging": "Slår sammen…",
     "cancel": "Avbryt",
     "confirmBody": "Slå sammen «{{source}}» med «{{target}}»?\n\n• {{count}} bok(er) flyttes til den nye forfatteren.\n• «{{source}}» beholdes som alias for «{{target}}».\n• Dette kan ikke angres.",
-    "confirmAcknowledge": "Jeg forstår at dette ikke kan angres."
+    "confirmAcknowledge": "Jeg forstår at dette ikke kan angres.",
+    "failed": "Sammenslåingen mislyktes",
+    "counting": "Teller bøker…",
+    "willMove": "bok/bøker flyttes til målet.",
+    "aliasPreserved": "Aliaset beholdes:"
   },
   "pagination": {
     "previous": "Forrige",
@@ -2772,7 +2819,10 @@
       "modeLinkOnlyHint": "Filen blir liggende der den er, med det navnet den har nå. Bare boken den hører til, endres.",
       "modeRelocate": "Flytt filen og gi den nytt navn også",
       "modeRelocateHint": "Bindery flytter filen inn i mappen til den valgte boken og gir den nytt navn etter navnemalen din.",
-      "staysAtLabel": "Filen blir liggende i"
+      "staysAtLabel": "Filen blir liggende i",
+      "searchFailed": "søket mislyktes",
+      "previewFailed": "forhåndsvisningen mislyktes",
+      "reassignFailed": "omkoblingen mislyktes"
     },
     "metadataSource": {
       "heading": "Metadatakilde",
@@ -2938,5 +2988,52 @@
     "genreOverrideDone": "Bøker oppdatert: {{count}}.",
     "bio": "Biografi",
     "bioHint": "En biografi du skriver her, blir stående slik du skrev den: ingen oppdatering erstatter den. Tøm feltet for å la metadatakilden fylle den inn igjen."
+  },
+  "absConflicts": {
+    "relinking": "Kobler på nytt…",
+    "relink": "Prøv å koble til kilden på nytt",
+    "upstreamSource": "kilden",
+    "needsReview": "Må gjennomgås",
+    "using": "Bruker {{source}}",
+    "empty": "Tom",
+    "upstream": "Kilde",
+    "useAbs": "Bruk ABS",
+    "useUpstream": "Bruk kilden",
+    "prefers": "Foretrekker {{source}}"
+  },
+  "errorBoundary": {
+    "title": "Noe gikk galt",
+    "body": "Siden fikk en uventet feil og kunne ikke vises. Du kan prøve å laste inn på nytt eller gå tilbake til startsiden.",
+    "reload": "Last inn på nytt",
+    "home": "Til startsiden",
+    "hideDetails": "Skjul detaljer",
+    "showDetails": "Vis detaljer"
+  },
+  "mediaBadge": {
+    "both": "E-bok + lydbok"
+  },
+  "renameFiles": {
+    "status": {
+      "move": "Flyttes",
+      "moved": "Flyttet",
+      "noop": "Allerede riktig",
+      "collision": "Målet finnes",
+      "missing": "Ikke på disk",
+      "error": "Feil",
+      "failed": "Mislyktes"
+    },
+    "previewFailed": "Forhåndsvisningen mislyktes",
+    "renameFailed": "Omdøpingen mislyktes",
+    "title": "Gi filer nytt navn",
+    "intro": "Flytt filene for <label>{{label}}</label> slik at de følger gjeldende navnemal. Filer som allerede ligger riktig, blir ikke rørt.",
+    "computing": "Beregner endringer…",
+    "none": "Ingen sporede filer å gi nytt navn.",
+    "appliedSummary": "{{moved}} flyttet, {{failed}} mislyktes",
+    "previewSummary": "{{movable}} av {{total}} flyttes",
+    "apply_one": "Gi {{count}} fil nytt navn",
+    "apply_other": "Gi {{count}} filer nytt navn",
+    "renaming": "Gir nytt navn…",
+    "from": "fra",
+    "to": "til"
   }
 }
