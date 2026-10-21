@@ -1029,7 +1029,188 @@
         "unknownRunHeading": "Eldre elementer · {{count}}",
         "dismissRun": "Avvis alle fra denne kjøringen",
         "dismissingRun": "Avviser…",
-        "dismissRunConfirm": "Vil du avvise {{count}} elementer til gjennomgang fra kjøring #{{runId}}? Dette kan ikke angres."
+        "dismissRunConfirm": "Vil du avvise {{count}} elementer til gjennomgang fra kjøring #{{runId}}? Dette kan ikke angres.",
+        "reason": {
+          "unmatchedAuthor": "Fant ingen sikker forfatter",
+          "ambiguousAuthor": "Flere forfattere passer",
+          "unmatchedBook": "Fant ingen sikker bok",
+          "ambiguousBook": "Flere bøker passer"
+        },
+        "heading": "Bøker uten treff",
+        "hint": "ABS-elementer med lav sikkerhet blir liggende her til du uttrykkelig importerer eller avviser dem, slik at dårlige metadata holdes utenfor hovedkatalogen.",
+        "none": "Ingen ABS-elementer venter på gjennomgang.",
+        "unknownAuthor": "Ukjent forfatter",
+        "resolvedAuthor": "Forfatter: {{name}}",
+        "resolvedBook": "Bok: {{title}}",
+        "fileMappingFound": "Filkobling funnet",
+        "searching": "Søker…",
+        "searchAuthor": "Forfatter",
+        "searchBook": "Bok",
+        "importing": "Importerer…",
+        "import": "Importer",
+        "dismiss": "Avvis"
+      },
+      "errors": {
+        "loadConflicts": "Kunne ikke laste inn berikelseskonflikter",
+        "loadReview": "Kunne ikke laste inn elementer til gjennomgang",
+        "loadLibraries": "Kunne ikke laste inn biblioteker",
+        "loadConfig": "Kunne ikke laste inn Audiobookshelf-oppsettet",
+        "save": "Kunne ikke lagre Audiobookshelf-innstillingene",
+        "test": "Tilkoblingstesten mislyktes",
+        "importStart": "Importen kunne ikke startes",
+        "rollbackPreview": "Kunne ikke forhåndsvise tilbakerullingen",
+        "rollback": "Kunne ikke rulle tilbake importkjøringen",
+        "resolveConflict": "Kunne ikke løse konflikten",
+        "relink": "Kunne ikke koble forfatteren på nytt",
+        "reviewImport": "Kunne ikke importere elementet",
+        "reviewDismiss": "Kunne ikke avvise elementet",
+        "reviewDismissRun": "Kunne ikke avvise kjøringen",
+        "authorSearch": "Forfattersøket mislyktes",
+        "resolveAuthor": "Kunne ikke angi forfatteren",
+        "bookSearch": "Boksøket mislyktes",
+        "resolveBook": "Kunne ikke angi boken"
+      },
+      "import": {
+        "saveFirst": "Lagre Audiobookshelf-innstillingene før du starter en import",
+        "heading": "Katalogimport",
+        "hint": "Importer forfattere, bøker, serier og utgaver fra de valgte ABS-bibliotekene. Delte filstier blir automatisk koblet til Binderys eierskap; når ABS og Bindery bruker ulike monteringsprefikser, legger du til en stioversettelse ovenfor. Stier som ikke er synlige, forblir bare metadata og telles for manuell oppfølging.",
+        "dryRun": "Start med en prøvekjøring",
+        "preview": "Forhåndsvis endringer",
+        "running": "Kjører…",
+        "runSelected": "Kjør valgt modus",
+        "run": "Importer biblioteker",
+        "saveFirstHint": "Lagre Audiobookshelf-innstillingene før du starter en import, slik at kjøringen bruker det lagrede kildeoppsettet.",
+        "chooseLibraryHint": "Velg minst ett bibliotek, eller bruk «Test tilkobling» eller «List biblioteker» for å hente tilgjengelige bokbiblioteker før du starter en import.",
+        "working": "Arbeider…",
+        "processed": "{{count}} behandlet",
+        "resumedAfter": "Fortsatte fra side {{page}} etter {{item}}.",
+        "resumed": "Fortsatte fra side {{page}}.",
+        "dryRunFailed": "Prøvekjøringen mislyktes: {{error}}",
+        "failed": "Importen mislyktes: {{error}}",
+        "dryRunComplete": "Prøvekjøringen er ferdig",
+        "complete": "Importen er ferdig",
+        "stats": {
+          "librariesScanned_one": "bibliotek skannet",
+          "librariesScanned_other": "biblioteker skannet",
+          "booksCreated_one": "bok opprettet",
+          "booksCreated_other": "bøker opprettet",
+          "booksLinked_one": "koblet til en eksisterende rad",
+          "booksLinked_other": "koblet til eksisterende rader",
+          "booksUpdated_one": "oppdatert",
+          "booksUpdated_other": "oppdatert",
+          "authorsCreated_one": "forfatter opprettet",
+          "authorsCreated_other": "forfattere opprettet",
+          "seriesCreated_one": "serie opprettet",
+          "seriesCreated_other": "serier opprettet",
+          "editionsAdded_one": "utgave lagt til",
+          "editionsAdded_other": "utgaver lagt til",
+          "ownedMarked_one": "format merket som eid",
+          "ownedMarked_other": "formater merket som eid",
+          "reviewQueued_one": "lagt i kø for gjennomgang",
+          "reviewQueued_other": "lagt i kø for gjennomgang",
+          "pendingManual_one": "venter på manuell oppfølging",
+          "pendingManual_other": "venter på manuell oppfølging",
+          "metadataRelinked_one": "metadata koblet på nytt",
+          "metadataRelinked_other": "metadata koblet på nytt",
+          "metadataConflicts_one": "konflikt lagt i kø for gjennomgang",
+          "metadataConflicts_other": "konflikter lagt i kø for gjennomgang"
+        }
+      },
+      "loading": "Laster inn Audiobookshelf…",
+      "runStatus": {
+        "rolledBack": "rullet tilbake",
+        "completed": "fullført",
+        "failed": "mislyktes",
+        "running": "kjører"
+      },
+      "runs": {
+        "unknownLibrary": "Ukjent bibliotek",
+        "heading": "Siste kjøringer",
+        "hint": "Bruk en prøvekjøring før en ekte import, og forhåndsvis deretter tilbakerulling av akkurat den kjøringen hvis du trenger å angre den trygt.",
+        "refresh": "Oppdater kjøringer",
+        "none": "Ingen ABS-importkjøringer er registrert ennå.",
+        "dryRun": "Prøvekjøring",
+        "live": "Ekte import",
+        "title": "Kjøring #{{id}} · {{mode}} · {{status}}",
+        "summary": "{{seen}} elementer sett, {{fetched}} detaljoppslag, {{created}} bøker opprettet, {{linked}} koblet, {{updated}} oppdatert, {{owned}} formater merket som eid, {{review}} lagt i kø for gjennomgang, {{manual}} venter på manuell oppfølging.",
+        "checkpointAfter": "Siste sjekkpunkt: side {{page}} etter {{item}}.",
+        "checkpoint": "Siste sjekkpunkt: side {{page}}."
+      },
+      "rollback": {
+        "action": {
+          "deleteAuthor": "Slett forfatteren {{name}}",
+          "deleteBook": "Slett boken {{name}}",
+          "deleteEdition": "Slett utgaven {{name}}",
+          "deleteSeries": "Slett serien {{name}}",
+          "restoreBook": "Gjenopprett bokmetadata for {{name}}",
+          "unlinkSeries": "Fjern seriekoblingen {{name}}",
+          "unlinkProvenance": "Fjern ABS-koblingen {{name}}",
+          "retain": "Behold {{entityType}} {{name}}"
+        },
+        "previewing": "Forhåndsviser…",
+        "preview": "Forhåndsvis tilbakerulling",
+        "rolledBack": "Rullet tilbake",
+        "applying": "Ruller tilbake…",
+        "apply": "Rull tilbake",
+        "previewHeading": "Forhåndsvisning av tilbakerulling",
+        "resultHeading": "Resultat av tilbakerulling",
+        "summary": "{{planned}} handlinger planlagt, {{deleted}} oppføringer slettet, {{unlinked}} ABS-koblinger fjernet, {{skipped}} beholdt, {{failed}} feil.",
+        "wouldChange": "Ville bli slettet eller endret",
+        "changed": "Slettet eller endret",
+        "noChanges": "Ingen oppføringer ville bli slettet eller endret.",
+        "wouldRetain": "Ville bli beholdt",
+        "retained": "Beholdt",
+        "noRetained": "Ingen beholdte oppføringer er rapportert."
+      },
+      "intro": "Sett opp én ABS-kilde, test innloggingen med API-nøkkelen, velg bokbiblioteker og importer deretter ABS-metadata til Bindery-katalogen.",
+      "matchingTip": "For bedre treff fra starten hjelper det å gå gjennom de valgte ABS-bibliotekene først og koble lydbøkene til Audible-kilder, slik at ASIN-er allerede finnes før importen.",
+      "disableSource": "Deaktiver Audiobookshelf-kilden",
+      "enableSource": "Aktiver Audiobookshelf-kilden",
+      "libraries": {
+        "heading": "Biblioteker",
+        "hint": "Velg hvert ABS-bokbibliotek som skal importeres fra denne kilden.",
+        "none": "Ingen biblioteker er valgt. Bruk «Test tilkobling» eller «List biblioteker» for å finne tilgjengelige bokbiblioteker."
+      },
+      "fields": {
+        "sourceLabel": "Navn på kilden",
+        "baseUrl": "Basis-URL",
+        "apiKey": "API-nøkkel",
+        "apiKeySavedPlaceholder": "Den lagrede nøkkelen er skjult. Skriv inn en ny nøkkel for å rotere den.",
+        "apiKeyPlaceholder": "Lim inn en ABS-API-nøkkel",
+        "apiKeySavedHint": "En nøkkel er allerede lagret og kan bare skrives, ikke leses. La feltet stå tomt for å beholde den lagrede nøkkelen. Bruk nøkkelen til en bruker som har tilgang til de valgte bokbibliotekene; ABS-administratorrettigheter trengs ikke.",
+        "apiKeyHint": "Bruk nøkkelen til en bruker som har tilgang til de valgte bokbibliotekene. ABS-administratorrettigheter trengs ikke, og den lagrede nøkkelen sendes aldri tilbake til nettleseren etter at du har lagret den."
+      },
+      "test": {
+        "connectedAs": "Tilkoblet som",
+        "serverVersion": "på ABS {{version}}",
+        "defaultLibrary": "standardbibliotek {{id}}"
+      },
+      "pathRemap": {
+        "label": "ABS-stiomkobling",
+        "help": "Valgfritt, og atskilt fra omkoblingene for nedlastingsklienter. Bruk den når ABS oppgir stier på delt lagring som Bindery ser under en annen montering."
+      },
+      "saveSource": "Lagre kilden",
+      "testConnection": "Test tilkobling",
+      "listLibraries": "List biblioteker",
+      "results": {
+        "books": "Bøker",
+        "authors": "Forfattere",
+        "series": "Serier",
+        "editions": "Utgaver",
+        "followUp": "Oppfølging",
+        "createdLinked": "{{created}} opprettet, {{linked}} koblet.",
+        "editionsSummary": "{{added}} lagt til, {{owned}} formater merket som eid.",
+        "followUpSummary": "{{review}} lagt i kø for gjennomgang, {{manual}} venter på manuell oppfølging, {{conflicts}} konflikter i kø."
+      },
+      "conflicts": {
+        "authorTitle": "Forfatterkonflikter",
+        "authorDescription": "Gå gjennom ABS-plassholderforfattere her først. Hvis Bindery trygt kan koble en av dem til metadata fra leverandøren, kan du gjøre det før du går gjennom bøkene.",
+        "authorEmpty": "Ingen forfatterkonflikter er registrert ennå.",
+        "authorResolved": "Løste forfattervalg",
+        "bookTitle": "Bokkonflikter",
+        "bookDescription": "Når bokmetadata fra ABS og fra leverandøren ikke stemmer overens, beholder Bindery leverandørens verdi inntil videre og lar deg bekrefte her hvilken kilde som skal gjelde.",
+        "bookEmpty": "Ingen bokkonflikter er registrert ennå.",
+        "bookResolved": "Løste bokvalg"
       }
     },
     "calibre": {
@@ -1147,6 +1328,73 @@
         "close": "Lukk",
         "closeRunningHint": "Lukk. Bøkene i køen fortsetter å sendes i bakgrunnen.",
         "closeAndKeepGoing": "Lukk og fortsett"
+      },
+      "errors": {
+        "save": "Lagringen mislyktes",
+        "importStart": "Importen kunne ikke startes"
+      },
+      "test": {
+        "pluginReachable": "✓ Programtillegget svarer",
+        "calibredbReachable": "✓ calibredb svarer",
+        "failed": "Testen mislyktes",
+        "pluginUnreachable": "✗ Fikk ikke kontakt med programtillegget",
+        "calibredbUnreachable": "✗ calibredb svarer ikke",
+        "button": "Test tilkobling"
+      },
+      "intro": "Calibre kjenner bare til bøker som er registrert i <code>metadata.db</code>; en fil som legges i bibliotekmappen, er usynlig for Calibre og for CWA. Det er tre måter å levere en bok på: registrere den i Calibre etter importen (Skriveintegrasjon nedenfor), kopiere den til en CWA-innleveringsmappe (CWA-delen nedenfor), eller la CWA eller Calibre eie biblioteket og fylle det fra en slippmappe (importmodus Ekstern, under Filnavngiving på fanen Generelt). Verken skriveintegrasjonen eller CWA-speilingen kjører i importmodusen Ekstern. <guide>Veiledningen for Calibre-integrasjon</guide> sammenligner dem.",
+      "fields": {
+        "libraryPath": "Bibliotekssti",
+        "libraryPathHint": "Mappen som inneholder <code>metadata.db</code>. Brukes av både skriveintegrasjonen og biblioteksimporten.",
+        "binaryPath": "Sti til programfilen (valgfritt)",
+        "binaryPathHint": "La stå tomt for å finne <code>calibredb</code> via PATH. Angi den når Bindery kjører i en container som har Calibre på en fast plassering.",
+        "pluginUrl": "URL til programtillegget",
+        "pluginUrlHint": "Basis-URL-en til HTTP-serveren i programtillegget Bindery Bridge, som kjører inne i Calibre.",
+        "apiKey": "API-nøkkel",
+        "apiKeyHint": "Bearer-tokenet som er satt opp i dialogen Calibre-innstillinger for programtillegget.",
+        "apiKeyPlaceholder": "API-nøkkel for programtillegget",
+        "pushRemap": "Stiomkobling for sending",
+        "pushRemapHint": "Valgfritt. Hvis Calibre-containeren monterer biblioteket under en annen sti enn Bindery, kobler du Binderys prefiks til Calibres som <code>{{pair}}</code>-par (kommaseparert), for eksempel <code>{{linux}}</code>. For Calibre på Windows kobler du til en nettverksressurs, for eksempel <code>{{windows}}</code>; en nettverksadresse er mer pålitelig enn en tilordnet stasjonsbokstav, som Calibre ikke alltid ser mens det kjører. La feltet stå tomt når begge containerne ser biblioteket under samme sti."
+      },
+      "mode": {
+        "heading": "Skriveintegrasjon",
+        "off": "Av",
+        "offDesc": "Calibre kalles ikke ved import. Filen havner bare i Bindery-biblioteket.",
+        "calibredb": "calibredb-CLI",
+        "calibredbDesc": "Kjør calibredb add --with-library etter hver import. Calibre kopierer filen inn i sitt eget bibliotek, så den finnes to ganger. Krever calibredb i Bindery-containeren eller -prosessen; det offisielle distroless-imaget har det ikke.",
+        "plugin": "Programtillegget Calibre Bridge",
+        "pluginDesc": "Gi hver import videre til programtillegget Bindery Bridge, som kjører inne i Calibre i en annen container eller på en annen vert. Med sendemetoden sendes bare stien og metadataene, så Calibre må se Bindery-biblioteket; med hentemetoden laster programtillegget ned hver bok fra Bindery selv."
+      },
+      "import": {
+        "heading": "Biblioteksimport",
+        "hint": "Les det eksisterende Calibre-biblioteket ditt og importer bøker, forfattere og utgaver til Bindery. Fungerer uavhengig av skrivemodusen ovenfor.",
+        "disable": "Deaktiver biblioteksimport",
+        "enable": "Aktiver biblioteksimport",
+        "syncOnStartup": "Synkroniser ved oppstart",
+        "syncOnStartupHint": "Importer på nytt hver gang Bindery starter. Trygt å la stå på: importen er inkrementell og gir samme resultat hver gang.",
+        "lastImport": "Siste import:",
+        "never": "Aldri importert.",
+        "running": "Importerer…",
+        "start": "Importer biblioteket",
+        "working": "Arbeider…",
+        "failed": "Importen mislyktes: {{error}}",
+        "complete": "Importen er ferdig",
+        "stats": {
+          "authorsAdded_one": "forfatter lagt til",
+          "authorsAdded_other": "forfattere lagt til",
+          "booksAdded_one": "bok lagt til",
+          "booksAdded_other": "bøker lagt til",
+          "editionsAdded_one": "utgave lagt til",
+          "editionsAdded_other": "utgaver lagt til",
+          "duplicatesMerged_one": "slått sammen",
+          "duplicatesMerged_other": "slått sammen",
+          "skipped_one": "hoppet over",
+          "skipped_other": "hoppet over"
+        }
+      },
+      "cwa": {
+        "intro": "Når dette er satt, kopieres også hver vellykkede e-bokimport til denne mappen, slik at en <cwa>CWA</cwa>-container ved siden av kan hente den inn. Bindery beholder sin egen kopi. Lydbøker speiles ikke. Speilingen er uavhengig av skriveintegrasjonen ovenfor, og den gjør ingenting i importmodusen Ekstern; bruk slippmappen på fanen Generelt for det oppsettet. La feltet stå tomt for å slå den av.",
+        "ingestPath": "Sti til innleveringsmappen",
+        "ingestPathHint": "Monter samme sti i begge containerne. Dokumentasjonen til CWA bruker <code>{{path}}</code>."
       }
     },
     "indexers": {
@@ -1885,7 +2133,42 @@
       "system": "System"
     },
     "previewBadge": "Forhåndsvisning",
-    "tabWithPreview": "{{tab}} (forhåndsvisning)"
+    "tabWithPreview": "{{tab}} (forhåndsvisning)",
+    "grimmory": {
+      "errors": {
+        "save": "Lagringen mislyktes",
+        "test": "Testen mislyktes",
+        "syncStart": "Synkroniseringen kunne ikke startes"
+      },
+      "intro": "Send importerte e-bøker til et selvdriftet <site>Grimmory</site>-bibliotek. Hver vellykkede e-bokimport lastes opp til Grimmorys innboks <b>BookDrop</b>, der Grimmorys egen metadatamatching og gjennomgang tar over. Hver fil sendes høyst én gang.",
+      "enable": "Aktiver Grimmory-integrasjonen",
+      "fields": {
+        "serverUrl": "Server-URL",
+        "username": "Brukernavn",
+        "usernamePlaceholder": "Grimmory-konto med rett til opplasting",
+        "password": "Passord",
+        "configured": "(satt opp, la stå tomt for å beholde)",
+        "passwordHint": "Bindery logger inn i Grimmory med denne påloggingen (dagens Grimmory har ingen API-tokener). Bruk en konto med rett til opplasting, gjerne en egen konto til dette.",
+        "apiToken": "API-token",
+        "optional": "(valgfritt)",
+        "apiTokenPlaceholder": "Bare hvis en fremtidig Grimmory-versjon får tokenpålogging",
+        "apiTokenHint": "Hvis dette er satt, sendes tokenet som en Bearer-legitimasjon, og innloggingen med brukernavn og passord hoppes over (<link>grimmory-tools#1487</link>)."
+      },
+      "testConnection": "Test tilkobling",
+      "push": {
+        "heading": "Send biblioteket til Grimmory",
+        "hint": "Last opp alle importerte e-bøker som ikke er sendt ennå. Filer som allerede er sendt, hoppes over, så det er trygt å kjøre på nytt.",
+        "running": "Sender…",
+        "start": "Send alt til Grimmory",
+        "enableFirst": "Aktiver og lagre integrasjonen først.",
+        "progress": "{{processed}}/{{total}} behandlet, {{pushed}} sendt, {{already}} allerede sendt, {{failed}} mislyktes",
+        "moreErrors": "…og {{count}} til",
+        "total_one": "{{count}} fil er sendt så langt.",
+        "total_other": "{{count}} filer er sendt så langt.",
+        "totalLast_one": "{{count}} fil er sendt så langt, sist {{last}}.",
+        "totalLast_other": "{{count}} filer er sendt så langt, sist {{last}}."
+      }
+    }
   },
   "addToLibrary": {
     "title": "Legg til i biblioteket",

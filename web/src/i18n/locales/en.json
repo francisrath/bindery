@@ -1082,7 +1082,188 @@
         "unknownRunHeading": "Older items · {{count}}",
         "dismissRun": "Dismiss all from this run",
         "dismissingRun": "Dismissing…",
-        "dismissRunConfirm": "Dismiss {{count}} review items from run #{{runId}}? This cannot be undone."
+        "dismissRunConfirm": "Dismiss {{count}} review items from run #{{runId}}? This cannot be undone.",
+        "reason": {
+          "unmatchedAuthor": "No confident author match",
+          "ambiguousAuthor": "Multiple author matches",
+          "unmatchedBook": "No confident book match",
+          "ambiguousBook": "Multiple book matches"
+        },
+        "heading": "No-match books",
+        "hint": "Low-confidence ABS items stay here until you explicitly import or dismiss them, which keeps bad metadata out of the main catalog.",
+        "none": "No queued ABS review items.",
+        "unknownAuthor": "Unknown author",
+        "resolvedAuthor": "Author: {{name}}",
+        "resolvedBook": "Book: {{title}}",
+        "fileMappingFound": "File Mapping Found",
+        "searching": "Searching...",
+        "searchAuthor": "Author",
+        "searchBook": "Book",
+        "importing": "Importing…",
+        "import": "Import",
+        "dismiss": "Dismiss"
+      },
+      "errors": {
+        "loadConflicts": "Failed to load enrichment conflicts",
+        "loadReview": "Failed to load review items",
+        "loadLibraries": "Failed to load libraries",
+        "loadConfig": "Failed to load Audiobookshelf config",
+        "save": "Failed to save Audiobookshelf settings",
+        "test": "Connection test failed",
+        "importStart": "Import failed to start",
+        "rollbackPreview": "Failed to preview rollback",
+        "rollback": "Failed to roll back import run",
+        "resolveConflict": "Failed to resolve conflict",
+        "relink": "Failed to relink author",
+        "reviewImport": "Failed to import review item",
+        "reviewDismiss": "Failed to dismiss review item",
+        "reviewDismissRun": "Failed to dismiss review run",
+        "authorSearch": "Author search failed",
+        "resolveAuthor": "Failed to resolve author",
+        "bookSearch": "Book search failed",
+        "resolveBook": "Failed to resolve book"
+      },
+      "import": {
+        "saveFirst": "Save Audiobookshelf settings before starting an import",
+        "heading": "Catalog import",
+        "hint": "Import authors, books, series, and editions from the selected ABS libraries. Shared filesystem paths are reconciled into Bindery ownership automatically; when ABS and Bindery use different mount prefixes, add a path translation above. Non-visible paths stay metadata-only and are counted for manual follow-up.",
+        "dryRun": "Start with dry-run",
+        "preview": "Preview changes",
+        "running": "Running…",
+        "runSelected": "Run selected mode",
+        "run": "Import libraries",
+        "saveFirstHint": "Save Audiobookshelf settings before starting an import so the run uses the stored source configuration.",
+        "chooseLibraryHint": "Choose at least one library or use \"Test connection\" or \"List libraries\" to load accessible book libraries before starting an import.",
+        "working": "Working…",
+        "processed": "{{count}} processed",
+        "resumedAfter": "Resumed from page {{page}} after {{item}}.",
+        "resumed": "Resumed from page {{page}}.",
+        "dryRunFailed": "Dry-run failed: {{error}}",
+        "failed": "Import failed: {{error}}",
+        "dryRunComplete": "Dry-run complete",
+        "complete": "Import complete",
+        "stats": {
+          "librariesScanned_one": "library scanned",
+          "librariesScanned_other": "libraries scanned",
+          "booksCreated_one": "book created",
+          "booksCreated_other": "books created",
+          "booksLinked_one": "linked to an existing row",
+          "booksLinked_other": "linked to existing rows",
+          "booksUpdated_one": "updated",
+          "booksUpdated_other": "updated",
+          "authorsCreated_one": "author created",
+          "authorsCreated_other": "authors created",
+          "seriesCreated_one": "series created",
+          "seriesCreated_other": "series created",
+          "editionsAdded_one": "edition added",
+          "editionsAdded_other": "editions added",
+          "ownedMarked_one": "format marked owned",
+          "ownedMarked_other": "formats marked owned",
+          "reviewQueued_one": "queued for review",
+          "reviewQueued_other": "queued for review",
+          "pendingManual_one": "pending manual follow-up",
+          "pendingManual_other": "pending manual follow-up",
+          "metadataRelinked_one": "metadata relinked",
+          "metadataRelinked_other": "metadata relinked",
+          "metadataConflicts_one": "conflict queued for review",
+          "metadataConflicts_other": "conflicts queued for review"
+        }
+      },
+      "loading": "Loading Audiobookshelf…",
+      "runStatus": {
+        "rolledBack": "rolled back",
+        "completed": "completed",
+        "failed": "failed",
+        "running": "running"
+      },
+      "runs": {
+        "unknownLibrary": "Unknown library",
+        "heading": "Recent runs",
+        "hint": "Use a dry-run before a live import, then preview rollback against the exact batch if you need to unwind it safely.",
+        "refresh": "Refresh runs",
+        "none": "No ABS import runs recorded yet.",
+        "dryRun": "Dry-run",
+        "live": "Live import",
+        "title": "Run #{{id}} · {{mode}} · {{status}}",
+        "summary": "{{seen}} items seen, {{fetched}} detail fetches, {{created}} books created, {{linked}} linked, {{updated}} updated, {{owned}} formats marked owned, {{review}} queued for review, {{manual}} pending manual.",
+        "checkpointAfter": "Last checkpoint: page {{page}} after {{item}}.",
+        "checkpoint": "Last checkpoint: page {{page}}."
+      },
+      "rollback": {
+        "action": {
+          "deleteAuthor": "Delete author {{name}}",
+          "deleteBook": "Delete book {{name}}",
+          "deleteEdition": "Delete edition {{name}}",
+          "deleteSeries": "Delete series {{name}}",
+          "restoreBook": "Restore book metadata {{name}}",
+          "unlinkSeries": "Remove series link {{name}}",
+          "unlinkProvenance": "Remove ABS link {{name}}",
+          "retain": "Retain {{entityType}} {{name}}"
+        },
+        "previewing": "Previewing…",
+        "preview": "Preview rollback",
+        "rolledBack": "Rolled back",
+        "applying": "Rolling back…",
+        "apply": "Apply rollback",
+        "previewHeading": "Rollback preview",
+        "resultHeading": "Rollback result",
+        "summary": "{{planned}} actions planned, {{deleted}} entities deleted, {{unlinked}} ABS links removed, {{skipped}} retained, {{failed}} failures.",
+        "wouldChange": "Would delete or change",
+        "changed": "Deleted or changed",
+        "noChanges": "No entities would be deleted or changed.",
+        "wouldRetain": "Would be retained",
+        "retained": "Retained",
+        "noRetained": "No retained entities reported."
+      },
+      "intro": "Configure one ABS source, test API-key auth, pick book libraries, then import ABS metadata into the Bindery catalog.",
+      "matchingTip": "For better initial matching, it helps to review the selected ABS libraries first and match audiobooks to Audible sources so ASINs are already present before import.",
+      "disableSource": "Disable Audiobookshelf source",
+      "enableSource": "Enable Audiobookshelf source",
+      "libraries": {
+        "heading": "Libraries",
+        "hint": "Select each ABS book library to import from this source.",
+        "none": "No libraries selected. Use Test connection or List libraries to discover accessible book libraries."
+      },
+      "fields": {
+        "sourceLabel": "Source label",
+        "baseUrl": "Base URL",
+        "apiKey": "API key",
+        "apiKeySavedPlaceholder": "Saved key is hidden. Enter a new key to rotate it.",
+        "apiKeyPlaceholder": "Paste an ABS API key",
+        "apiKeySavedHint": "A key is already stored and stays write-only. Leaving this blank keeps the saved key. Use a key for a user that can access the selected book libraries; ABS admin permissions are not required.",
+        "apiKeyHint": "Use a key for a user that can access the selected book libraries. ABS admin permissions are not required, and the saved key never comes back to the browser after you store it."
+      },
+      "test": {
+        "connectedAs": "Connected as",
+        "serverVersion": "on ABS {{version}}",
+        "defaultLibrary": "default library {{id}}"
+      },
+      "pathRemap": {
+        "label": "ABS path remap",
+        "help": "Optional and separate from download-client remaps. Use when ABS reports shared-storage paths that Bindery sees under a different mount."
+      },
+      "saveSource": "Save source",
+      "testConnection": "Test connection",
+      "listLibraries": "List libraries",
+      "results": {
+        "books": "Books",
+        "authors": "Authors",
+        "series": "Series",
+        "editions": "Editions",
+        "followUp": "Follow-up",
+        "createdLinked": "{{created}} created, {{linked}} linked.",
+        "editionsSummary": "{{added}} added, {{owned}} formats marked owned.",
+        "followUpSummary": "{{review}} queued for review, {{manual}} pending manual, {{conflicts}} conflicts queued."
+      },
+      "conflicts": {
+        "authorTitle": "Author conflicts",
+        "authorDescription": "Review placeholder ABS authors here first. If Bindery can confidently relink one to upstream metadata, you can trigger that before working through book review items.",
+        "authorEmpty": "No author conflicts recorded yet.",
+        "authorResolved": "Resolved author choices",
+        "bookTitle": "Book conflicts",
+        "bookDescription": "When ABS and upstream book metadata disagree, Bindery keeps the upstream value temporarily and lets you confirm the winning source here.",
+        "bookEmpty": "No book conflicts recorded yet.",
+        "bookResolved": "Resolved book choices"
       }
     },
     "calibre": {
@@ -1200,6 +1381,73 @@
         "close": "Close",
         "closeRunningHint": "Close. Queued books keep going out in the background.",
         "closeAndKeepGoing": "Close and keep going"
+      },
+      "errors": {
+        "save": "Save failed",
+        "importStart": "Import failed to start"
+      },
+      "test": {
+        "pluginReachable": "✓ Plugin reachable",
+        "calibredbReachable": "✓ calibredb reachable",
+        "failed": "Test failed",
+        "pluginUnreachable": "✗ Could not reach plugin",
+        "calibredbUnreachable": "✗ calibredb unreachable",
+        "button": "Test connection"
+      },
+      "intro": "Calibre only knows about books recorded in its <code>metadata.db</code>; a file placed in its library folder is invisible to Calibre and to CWA. There are three ways to hand a book over: register it with Calibre after import (Write integration below), copy it into a CWA ingest folder (the CWA section below), or let CWA or Calibre own the library and feed it from a drop folder (Import Mode External, under File Naming on the General tab). Neither the write integration nor the CWA mirror runs in External import mode. The <guide>Calibre integration guide</guide> compares them.",
+      "fields": {
+        "libraryPath": "Library path",
+        "libraryPathHint": "Directory containing <code>metadata.db</code>. Used by both the write integration and library import.",
+        "binaryPath": "Binary path (optional)",
+        "binaryPathHint": "Leave blank to resolve <code>calibredb</code> on PATH. Set explicitly when running in a container that bundles Calibre at a pinned location.",
+        "pluginUrl": "Plugin URL",
+        "pluginUrlHint": "Base URL of the Bindery Bridge plugin’s HTTP server running inside Calibre.",
+        "apiKey": "API key",
+        "apiKeyHint": "Bearer token configured in the plugin’s Calibre Preferences dialog.",
+        "apiKeyPlaceholder": "plugin api key",
+        "pushRemap": "Push path remap",
+        "pushRemapHint": "Optional. If the Calibre container mounts your library at a different path than Bindery, map Bindery’s prefix to Calibre’s as <code>{{pair}}</code> pairs (comma separated), e.g. <code>{{linux}}</code>. For Calibre on Windows, map to a network share, e.g. <code>{{windows}}</code>; a share address is more reliable than a mapped drive letter, which the running Calibre may not see. Leave empty when both containers see the library at the same path."
+      },
+      "mode": {
+        "heading": "Write integration",
+        "off": "Off",
+        "offDesc": "No Calibre call on import. The file lands in the Bindery library only.",
+        "calibredb": "calibredb CLI",
+        "calibredbDesc": "Run calibredb add --with-library after each import. Calibre copies the file into its own library, so it exists twice. Needs calibredb inside the Bindery container or process; the official distroless image does not ship it.",
+        "plugin": "Calibre Bridge plugin",
+        "pluginDesc": "Hand each import to the Bindery Bridge plugin running inside Calibre, in another container or host. With the push transport only the path and metadata are sent, so Calibre must see the Bindery library; with pull the plugin downloads each book from Bindery itself."
+      },
+      "import": {
+        "heading": "Library import",
+        "hint": "Read your existing Calibre library and import books, authors, and editions into Bindery. Works independently of the write mode above.",
+        "disable": "Disable library import",
+        "enable": "Enable library import",
+        "syncOnStartup": "Sync on startup",
+        "syncOnStartupHint": "Re-import each time Bindery starts. Safe to leave on — imports are incremental and idempotent.",
+        "lastImport": "Last import:",
+        "never": "Never imported.",
+        "running": "Importing…",
+        "start": "Import library",
+        "working": "Working…",
+        "failed": "Import failed: {{error}}",
+        "complete": "Import complete",
+        "stats": {
+          "authorsAdded_one": "author added",
+          "authorsAdded_other": "authors added",
+          "booksAdded_one": "book added",
+          "booksAdded_other": "books added",
+          "editionsAdded_one": "edition added",
+          "editionsAdded_other": "editions added",
+          "duplicatesMerged_one": "merged",
+          "duplicatesMerged_other": "merged",
+          "skipped_one": "skipped",
+          "skipped_other": "skipped"
+        }
+      },
+      "cwa": {
+        "intro": "When set, every successful ebook import is also copied into this directory so a sibling <cwa>CWA</cwa> container can ingest it. Bindery keeps its own copy. Audiobooks are not mirrored. This mirror is independent of the write integration above, and it does nothing in External import mode; use the Drop folder on the General tab for that setup. Leave blank to disable.",
+        "ingestPath": "Ingest folder path",
+        "ingestPathHint": "Mount the same path into both containers. CWA’s docs use <code>{{path}}</code>."
       }
     },
     "indexers": {
@@ -1919,6 +2167,41 @@
       "sectionInternal": "Bindery's own bookkeeping",
       "sectionInert": "No longer used",
       "sectionUnknown": "Unrecognised keys"
+    },
+    "grimmory": {
+      "errors": {
+        "save": "Save failed",
+        "test": "Test failed",
+        "syncStart": "Sync failed to start"
+      },
+      "intro": "Push imported ebooks to a <site>Grimmory</site> self-hosted library. Every successful ebook import is uploaded to Grimmory's <b>BookDrop</b> inbox, where Grimmory's own metadata matching and review flow takes over. Files are pushed at most once.",
+      "enable": "Enable Grimmory integration",
+      "fields": {
+        "serverUrl": "Server URL",
+        "username": "Username",
+        "usernamePlaceholder": "Grimmory account with upload permission",
+        "password": "Password",
+        "configured": "(configured — leave blank to keep)",
+        "passwordHint": "Bindery signs in to Grimmory with these credentials (current Grimmory has no API tokens). Use an account with upload permission — a dedicated one is a good idea.",
+        "apiToken": "API token",
+        "optional": "(optional)",
+        "apiTokenPlaceholder": "Only if a future Grimmory release adds token auth",
+        "apiTokenHint": "If set, the token is sent as a Bearer credential and the username/password login is skipped (<link>grimmory-tools#1487</link>)."
+      },
+      "testConnection": "Test Connection",
+      "push": {
+        "heading": "Push library to Grimmory",
+        "hint": "Upload every imported ebook that hasn't been pushed yet. Already-pushed files are skipped, so re-running is safe.",
+        "running": "Pushing…",
+        "start": "Push all to Grimmory",
+        "enableFirst": "Enable and save the integration first.",
+        "progress": "{{processed}}/{{total}} processed, {{pushed}} pushed, {{already}} already pushed, {{failed}} failed",
+        "moreErrors": "…and {{count}} more",
+        "total_one": "{{count}} file pushed so far.",
+        "total_other": "{{count}} files pushed so far.",
+        "totalLast_one": "{{count}} file pushed so far, last at {{last}}.",
+        "totalLast_other": "{{count}} files pushed so far, last at {{last}}."
+      }
     }
   },
   "addToLibrary": {
