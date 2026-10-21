@@ -462,7 +462,7 @@ export default function WantedPage() {
                         <div className="min-w-0 mr-3">
                           <span className="truncate block">{r.title}</span>
                           <span className="text-fg-muted truncate block">
-                            {r.indexerName} &middot; {formatBytes(r.size)} &middot; {r.grabs} grabs
+                            {r.indexerName} &middot; {formatBytes(r.size)} &middot; {t('search.grabs', { n: r.grabs, defaultValue: '{{n}} grabs' })}
                             {safeHref(r.infoUrl) && (
                               <>
                                 {' '}&middot;{' '}

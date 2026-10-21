@@ -367,7 +367,8 @@
     "pageTitle": "Search",
     "searchFailed": "Search failed",
     "grabFailed": "Grab failed",
-    "indexerLink": "indexer"
+    "indexerLink": "indexer",
+    "grabs": "{{n}} grabs"
   },
   "login": {
     "title": "Sign in",
@@ -611,7 +612,8 @@
     "aliasesHeading": "Also known as",
     "aliasSource": "From {{source}}",
     "noBooks": "No books tracked for this author yet.",
-    "noFilterMatch": "No books match the current filters."
+    "noFilterMatch": "No books match the current filters.",
+    "ratings": "{{n}} ratings"
   },
   "catalogueReconciliation": {
     "title": "Reconcile catalogue",
@@ -904,7 +906,8 @@
       "error": "Error:"
     },
     "pendingGrabbing": "Grabbing…",
-    "pendingGrab": "Grab Now"
+    "pendingGrab": "Grab Now",
+    "pendingHeading": "Pending Releases ({{n}})"
   },
   "series": {
     "searchPlaceholder": "Search series…",
@@ -2574,7 +2577,8 @@
     "next": "Next",
     "pageOf": "Page {{page}} of {{total}}",
     "jumpToPage": "Jump to page",
-    "perPage": "Per page"
+    "perPage": "Per page",
+    "range": "{{start}}–{{end}} of {{total}}"
   },
   "bulkActionBar": {
     "selected": "{{count}} selected",
@@ -2984,7 +2988,11 @@
       "delivered": "In Calibre",
       "failed": "Calibre failed"
     },
-    "releaseGrabs": "{{n}} grabs"
+    "results": {
+      "ebooks": "Ebooks ({{n}})",
+      "audiobooks": "Audiobooks ({{n}})",
+      "all": "Results ({{n}})"
+    }
   },
   "bookRebind": {
     "title": "Re-bind metadata",

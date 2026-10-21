@@ -26,6 +26,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string, options?: Record<string, unknown>) => {
       if (key === 'books.countLabel') return `${String(options?.count)} books`
       if (key === 'wanted.selectBook') return `Select ${String(options?.title)}`
+      if (key === 'search.grabs') return `${String(options?.n)} grabs`
       if (key === 'wanted.changeFormat') return `Change format for ${String(options?.title)}`
       if (key === 'bookDetail.filteredHeading') return `Filtered (${String(options?.count)})`
       if (key === 'bookDetail.noResultsFiltered') return `None matched, ${String(options?.count)} filtered.`

@@ -33,6 +33,7 @@ vi.mock('react-i18next', () => ({
     t: (key: string, options?: Record<string, unknown>) => {
       if (key === 'queue.remaining') return `${String(options?.time)} remaining`
       if (key === 'queue.selectItem') return `Select ${String(options?.title)}`
+      if (key === 'queue.pendingHeading') return `Pending Releases (${String(options?.n)})`
       const labels: Record<string, string> = {
         'common.loading': 'Loading...',
         'queue.title': 'Queue',

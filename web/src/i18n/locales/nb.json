@@ -367,7 +367,8 @@
     "pageTitle": "Søk",
     "searchFailed": "Søket mislyktes",
     "grabFailed": "Hentingen mislyktes",
-    "indexerLink": "indekserer"
+    "indexerLink": "indekserer",
+    "grabs": "{{n}} hentinger"
   },
   "login": {
     "title": "Logg inn",
@@ -611,7 +612,8 @@
     "aliasesHeading": "Også kjent som",
     "aliasSource": "Fra {{source}}",
     "noBooks": "Ingen bøker spores for denne forfatteren ennå.",
-    "noFilterMatch": "Ingen bøker passer til filtrene."
+    "noFilterMatch": "Ingen bøker passer til filtrene.",
+    "ratings": "{{n}} vurderinger"
   },
   "catalogueReconciliation": {
     "title": "Avstem katalogen",
@@ -870,7 +872,8 @@
       "error": "Feil:"
     },
     "pendingGrabbing": "Henter…",
-    "pendingGrab": "Hent nå"
+    "pendingGrab": "Hent nå",
+    "pendingHeading": "Ventende utgivelser ({{n}})"
   },
   "series": {
     "addFromHardcover": {
@@ -2540,7 +2543,8 @@
     "next": "Neste",
     "pageOf": "Side {{page}} av {{total}}",
     "jumpToPage": "Gå til side",
-    "perPage": "Per side"
+    "perPage": "Per side",
+    "range": "{{start}}–{{end}} av {{total}}"
   },
   "bulkActionBar": {
     "selected": "{{count}} valgt",
@@ -2950,7 +2954,11 @@
       "delivered": "I Calibre",
       "failed": "Calibre feilet"
     },
-    "releaseGrabs": "{{n}} hentinger"
+    "results": {
+      "ebooks": "E-bøker ({{n}})",
+      "audiobooks": "Lydbøker ({{n}})",
+      "all": "Resultater ({{n}})"
+    }
   },
   "bookRebind": {
     "title": "Koble om metadata",

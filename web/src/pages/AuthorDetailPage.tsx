@@ -1124,7 +1124,7 @@ export default function AuthorDetailPage() {
           )}
           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-fg-muted">
             {author.averageRating > 0 && (
-              <span>★ {author.averageRating.toFixed(2)} ({author.ratingsCount.toLocaleString()} ratings)</span>
+              <span>★ {author.averageRating.toFixed(2)} ({t('authorDetail.ratings', { n: author.ratingsCount.toLocaleString(), defaultValue: '{{n}} ratings' })})</span>
             )}
             {(() => {
               const src = metadataSourceLink(author.foreignAuthorId, 'author')

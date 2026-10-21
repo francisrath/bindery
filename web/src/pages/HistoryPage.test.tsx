@@ -23,6 +23,7 @@ const i18nOverrides = vi.hoisted(() => ({ labels: {} as Record<string, string> }
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: Record<string, unknown> & { defaultValue?: string }) => {
+      if (key === 'pagination.range') return `${String(opts?.start)}–${String(opts?.end)} of ${String(opts?.total)}`
       const labels: Record<string, string> = {
         'common.loading': 'Loading...',
         'common.ebook': 'Ebook',

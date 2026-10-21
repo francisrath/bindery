@@ -653,7 +653,7 @@ export default function QueuePage() {
             <div>
               <h3 className="text-sm font-semibold text-fg-muted mb-2 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                Pending Releases ({pending.length})
+                {t('queue.pendingHeading', { n: pending.length, defaultValue: 'Pending Releases ({{n}})' })}
               </h3>
               <div className="space-y-2">
                 {pending.map(item => (
