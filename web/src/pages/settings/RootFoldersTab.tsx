@@ -159,7 +159,7 @@ export default function RootFoldersTab() {
             setRootFolders([...rootFolders, created])
             setNewFolderPath('')
           } catch (err: unknown) {
-            setFolderError(err instanceof Error ? err.message : 'Failed to add folder')
+            setFolderError(err instanceof Error ? err.message : t('settings.rootFolders.addFailed', 'Failed to add folder'))
           }
         }}
         className="flex gap-2 items-start"

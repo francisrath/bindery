@@ -102,7 +102,7 @@ export default function ApiKeysTab() {
         tokenConfigured: hardcoverTokenConfigured,
         searchResults: 0,
         catalogOk: false,
-        error: err instanceof Error ? err.message : 'Hardcover API test failed',
+        error: err instanceof Error ? err.message : t('settings.apiKeys.hardcoverTestFailed', 'Hardcover API test failed'),
       })
     }
   }

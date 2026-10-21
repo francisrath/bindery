@@ -1459,7 +1459,8 @@
       "cooldown": "Hastighetsbegrenset. Søkene gjenopptas {{until}}: {{error}}",
       "pinnedClientDisabled": "Låst til nedlastingsklienten {{name}}, som er deaktivert. Det som hentes fra denne indeksereren, mislykkes og går ikke til en annen klient før du aktiverer den eller velger en annen.",
       "pinnedClientWrongProtocol": "Låst til nedlastingsklienten {{name}}, som har feil protokoll for denne indeksereren. Det som hentes fra denne indeksereren, mislykkes og går ikke til en annen klient før du velger en klient som passer.",
-      "pinnedClientMissing": "Låst til en nedlastingsklient som ikke finnes lenger. Det som hentes fra denne indeksereren, mislykkes til du velger en annen."
+      "pinnedClientMissing": "Låst til en nedlastingsklient som ikke finnes lenger. Det som hentes fra denne indeksereren, mislykkes til du velger en annen.",
+      "requestFailed": "Forespørselen mislyktes"
     },
     "prowlarr": {
       "heading": "Prowlarr",
@@ -1579,6 +1580,30 @@
         "apply": "Bruk denne omkoblingen",
         "applying": "Bruker…",
         "failed": "Kunne ikke lagre omkoblingen: {{error}}"
+      },
+      "saveFailed": "Kunne ikke lagre",
+      "name": "Navn",
+      "clientType": "Klienttype",
+      "connection": "Tilkobling",
+      "useSsl": "Bruk SSL",
+      "urlBase": "URL-base",
+      "username": "Brukernavn",
+      "host": "Vert",
+      "port": "Port",
+      "password": "Passord",
+      "apiKey": "API-nøkkel",
+      "hostHint": "Bare vertsnavn eller IP, uten prefikset <code>http://</code>. I Docker bruker du tjeneste- eller containernavnet (f.eks. <code>nzbget</code>), ikke <code>localhost</code>.",
+      "urlBaseHint": "Valgfritt stiprefiks når klienten ligger bak en omvendt proxy (f.eks. <code>/sabnzbd</code>). La stå tomt ved direkte tilkobling.",
+      "downloadDir": "Nedlastingsmappe",
+      "categoryLabel": "Kategori / etikett",
+      "downloadDirPlaceholder": "/downloads (la stå tomt for standard)",
+      "transmissionDirHint": "Valgfri absolutt sti som overstyrer standarden. La stå tomt for å bruke nedlastingsmappen som er satt opp i Transmission.",
+      "delugeLabelHint": "Settes via etikett-programtillegget i Deluge. La stå tomt hvis programtillegget ikke er installert.",
+      "pathRemapLabel": "Stiomkobling for nedlastingsklienten",
+      "remapHelp": {
+        "qbittorrent": "Koble stien qBittorrent rapporterer, til stien Bindery kan lese. Eksempel: hvis qBittorrent viser /downloads/books, men Bindery ser den mappen som /media/books, bruker du /downloads:/media/books. Bindery bruker også dette motsatt vei når nye torrenter sendes.",
+        "rtorrent": "Koble stien rTorrent rapporterer, til stien Bindery kan lese. Seedbokser trenger nesten alltid dette, f.eks. når rTorrent skriver til /home/user/downloads mens Bindery har montert den delingen som /media/books: bruk da /home/user/downloads:/media/books. Bindery bruker også dette motsatt vei når nedlastingsmappen for en ny torrent settes, og for å finne filene når du fjerner en nedlasting sammen med dataene.",
+        "other": "Koble stien denne klienten rapporterer, til stien Bindery kan lese: klientens sti, et kolon og så Binderys. Eksempel: hvis klienten viser /downloads/books, men Bindery ser den mappen som /media/books, bruker du /downloads:/media/books. En Windows-sti fungerer på klientsiden, for eksempel S:\\Downloads:/downloads. La stå tomt når begge allerede ser samme montering. Diagnose sjekker koblingen fra ende til ende."
       }
     },
     "notifications": {
@@ -1605,7 +1630,23 @@
         "requestCreated": "en av brukerne dine ba om at en bok eller forfatter skulle legges til"
       },
       "testSent": "Testvarsel sendt!",
-      "saveFailed": "Kunne ikke lagre varselet: {{error}}"
+      "saveFailed": "Kunne ikke lagre varselet: {{error}}",
+      "trigger": {
+        "grab": "Henting",
+        "import": "Import",
+        "failure": "Feil",
+        "upgrade": "Oppgradering",
+        "health": "Helse"
+      },
+      "headersInvalidEdit": "Hodene må være et gyldig JSON-objekt med strengverdier, eller tomme.",
+      "headersInvalid": "Hodene må være gyldig JSON eller tomme.",
+      "name": "Navn",
+      "webhookUrl": "Webhook-URL",
+      "topicLabel": "ntfy-emne (valgfritt)",
+      "topicHint": "For ntfy: angi emnet her og la URL-en peke på roten av ntfy-serveren (f.eks. https://ntfy.sh). Bindery sender da en JSON-kropp som ntfy viser direkte, i stedet for rå JSON.",
+      "headersLabel": "Egne hoder (JSON, valgfritt)",
+      "headersHint": "For ntfy-autentisering, ruting i Discord eller andre egne hoder. La stå tomt for å ikke sende noen.",
+      "triggerOn": "Utløses ved:"
     },
     "quality": {
       "heading": "Kvalitetsprofiler",
@@ -1666,7 +1707,9 @@
       "formSkipPartBooks": "Hopp over delbøker",
       "saveChanges": "Lagre endringer",
       "createProfile": "Opprett profil",
-      "saveFail": "Kunne ikke lagre profilen"
+      "saveFail": "Kunne ikke lagre profilen",
+      "languagesAny": "alle",
+      "libraryDefaults": "Standarder for biblioteket"
     },
     "rootfolders": {
       "heading": "Rotmapper",
@@ -1701,7 +1744,23 @@
       "downloadNote": "«Last ned» lagrer oppføringene som samsvarer med filtrene i tabellen, som en ren tekstfil du kan legge ved en feilrapport. Store eksporter har en øvre grense; i så fall står det i bunnteksten i filen.",
       "page": "Side {{page}}",
       "deleteBackupConfirm": "Slette sikkerhetskopien {{filename}}?",
-      "deleteBackupTitle": "Slett sikkerhetskopi"
+      "deleteBackupTitle": "Slett sikkerhetskopi",
+      "age": {
+        "justNow": "nå nettopp",
+        "soon": "om et øyeblikk",
+        "minutesAgo": "for {{n}} min siden",
+        "inMinutes": "om {{n}} min",
+        "hoursAgo": "for {{n}} t siden",
+        "inHours": "om {{n}} t",
+        "daysAgo": "for {{n}} d siden",
+        "inDays": "om {{n}} d"
+      },
+      "backupCreated": "Sikkerhetskopi opprettet:",
+      "backupFailed": "Sikkerhetskopieringen mislyktes:",
+      "deleteFailed": "Slettingen mislyktes:",
+      "viewLabel": "Vis",
+      "runtimeLevel": "Loggnivå",
+      "runtimeLevelHint": "Bestemmer hvilke loggnivåer som skrives til databasen"
     },
     "general": {
       "appearance": "Utseende",
@@ -1956,7 +2015,60 @@
       "defaultMonitorModeHint": "Brukes for forfattere som legges til. Eksisterende forfattere beholder modusen sin med mindre de redigeres.",
       "defaultMonitorLatestCountLabel": "Antall nyeste bøker",
       "audiobookFileTemplate": "Navngiving av lydbokfiler (per spor)",
-      "audiobookFileTemplateHint": "La stå tomt for å beholde filoppsettet fra nedlastingen. Angi en mal for å gi hvert lydbokspor nytt navn i avspillingsrekkefølge; den må inneholde {Part}. En lydbok med én fil får også nytt navn, som del 1, med mindre {Part} står i en gruppe med egen tekst, som {Title}{ - Pt. Part:3}.{ext}, som utelates når det bare er én fil."
+      "audiobookFileTemplateHint": "La stå tomt for å beholde filoppsettet fra nedlastingen. Angi en mal for å gi hvert lydbokspor nytt navn i avspillingsrekkefølge; den må inneholde {Part}. En lydbok med én fil får også nytt navn, som del 1, med mindre {Part} står i en gruppe med egen tekst, som {Title}{ - Pt. Part:3}.{ext}, som utelates når det bare er én fil.",
+      "saveFailed": "Lagringen mislyktes",
+      "scanFailed": "Skanningen mislyktes:",
+      "importMode": {
+        "label": "Importmodus",
+        "hint": "Hvordan Bindery legger ferdige nedlastinger inn i biblioteket. <b>Automatisk</b> (standard) lager hardlenker når nedlastingsmappen og biblioteket deler volum, og kopierer ellers. Kilden blir uansett liggende, så seeding av torrenter fortsetter. <b>Flytt</b> flytter kilden ut av nedlastingsmappen, og da stopper seedingen. Bruk <b>Hardlenke</b> eller <b>Kopier</b> for å tvinge frem at kildefilen beholdes; Hardlenke krever at nedlastingsmappen og biblioteket ligger på samme filsystem eller volum. Bruk <b>Ekstern</b> hvis et annet verktøy (Calibre, Grimmory osv.) styrer biblioteket ditt: Bindery henter nedlastingen og stopper der, verktøyet ditt behandler den, og Bindery avstemmer ved neste skanning av biblioteket.",
+        "auto": "Automatisk",
+        "move": "Flytt",
+        "copy": "Kopier",
+        "hardlink": "Hardlenke",
+        "external": "Ekstern"
+      },
+      "interval": {
+        "hours_one": "{{count}} time",
+        "hours_other": "{{count}} timer",
+        "days_one": "{{count}} dag",
+        "days_other": "{{count}} dager",
+        "withDefault": "{{interval}} (standard)"
+      },
+      "auth": {
+        "unknown": "ukjent",
+        "regenerateFailed": "Kunne ikke lage ny nøkkel:",
+        "rotateFailed": "Rotering mislyktes:",
+        "modeChangeFailed": "Kunne ikke bytte modus:",
+        "secretRotated": "Økthemmeligheten er rotert. Nye innlogginger signeres med den nye hemmeligheten; eksisterende økter er gyldige frem til neste rotering.",
+        "authMode": "Autentiseringsmodus",
+        "modeEnabled": "På",
+        "modeLocalOnly": "Bare lokalt (unntak for private IP-er)",
+        "modeDisabled": "Av (ingen autentisering)",
+        "modeEnabledHint": "Krever alltid innlogging, uansett hvilket nettverk forespørselen kommer fra.",
+        "modeLocalOnlyHint": "Innlogging hoppes over for forespørsler fra private IP-områder og LAN. Krever fortsatt innlogging fra internett.",
+        "modeDisabledHint": "Ingen autentisering. Bare trygt når Bindery står bak en klarert omvendt proxy som håndhever tilgangskontroll.",
+        "apiKey": "API-nøkkel",
+        "apiKeyHint": "Send som hodet <code>X-Api-Key</code> eller spørreparameteren <code>?apikey=</code>. Brukes av eksterne integrasjoner (Tautulli, egne skript osv.).",
+        "hideKey": "Skjul",
+        "showKey": "Vis",
+        "regenerate": "Lag ny",
+        "regenerateHint": "En ny nøkkel gjør den nåværende ugyldig. Oppdater alle eksterne integrasjoner etterpå.",
+        "sessionSecret": "Økthemmelighet",
+        "sessionSecretHint": "Signerer øktinformasjonskapsler. Rotering lager en ny hemmelighet og lar den forrige gjelde i et rotasjonsvindu, så eksisterende innlogginger ikke faller ut med en gang. Roter to ganger for å gjøre alle økter signert med den gamle hemmeligheten ugyldige.",
+        "rotateSecret": "Roter økthemmelighet"
+      },
+      "password": {
+        "mismatch": "De nye passordene er ikke like",
+        "tooShort": "Passordet må ha minst 8 tegn",
+        "changeFailed": "Kunne ikke bytte passord",
+        "heading": "Bytt passord for <b>{{username}}</b>",
+        "current": "Nåværende passord",
+        "new": "Nytt passord",
+        "confirm": "Bekreft nytt passord",
+        "updated": "Passordet er oppdatert",
+        "updating": "Oppdaterer…",
+        "change": "Bytt passord"
+      }
     },
     "import": {
       "csvHeading": "CSV med forfatternavn",
@@ -2055,7 +2167,25 @@
       "configureHardcoverToken": "Angi API-tokenet for Hardcover i innstillingene for API-nøkler →",
       "folderMovedHeading": "Importer fra en mappe",
       "folderMovedBody": "Skanning av en mappe og import av det som gir treff, finner du nå på Import-siden, ved siden av bøkene som en skanning av biblioteket ikke fant treff for.",
-      "folderMovedLink": "Åpne Import"
+      "folderMovedLink": "Åpne Import",
+      "uploadFailed": "Opplastingen mislyktes",
+      "lookupFailed": "Oppslaget mislyktes",
+      "importFailed": "Importen mislyktes",
+      "hardcoverLoadSavedFailed": "Kunne ikke laste de lagrede Hardcover-listene",
+      "hardcoverLoadFailed": "Kunne ikke laste Hardcover-listene",
+      "updateMediaTypeFailed": "Kunne ikke endre medietype",
+      "updateMonitorNewFailed": "Kunne ikke endre nedlastingsvalget",
+      "updateOwnerFailed": "Kunne ikke endre eier",
+      "hardcoverUpdateFailed": "Kunne ikke oppdatere importlisten fra Hardcover",
+      "tokenOverrideSaveFailed": "Kunne ikke lagre det overstyrte tokenet",
+      "tokenOverrideClearFailed": "Kunne ikke fjerne det overstyrte tokenet",
+      "resultAuthors": "Forfattere",
+      "resultIndexers": "Indekserere",
+      "resultDownloadClients": "Nedlastingsklienter",
+      "resultBlocklist": "Blokkeringsliste",
+      "manualImportSelect": "Velg…",
+      "hardcoverListBooks_one": " · {{count}} bok",
+      "hardcoverListBooks_other": " · {{count}} bøker"
     },
     "oidc": {
       "heading": "SSO-/OIDC-leverandører",
@@ -2168,6 +2298,15 @@
         "totalLast_one": "{{count}} fil er sendt så langt, sist {{last}}.",
         "totalLast_other": "{{count}} filer er sendt så langt, sist {{last}}."
       }
+    },
+    "rootFolders": {
+      "addFailed": "Kunne ikke legge til mappen"
+    },
+    "apiKeys": {
+      "hardcoverTestFailed": "Testen av Hardcover-API-et mislyktes"
+    },
+    "pathRemap": {
+      "syntaxHint": "Bruk kommaseparerte prefiksomskrivinger på formen <code>from:to</code>."
     }
   },
   "addToLibrary": {
