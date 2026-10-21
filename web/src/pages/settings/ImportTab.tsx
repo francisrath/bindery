@@ -1,26 +1,10 @@
-import { useCallback, useEffect, useState, useId } from 'react'
+import { useCallback, useEffect, useRef, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, BINDERY_BASE, Book, HardcoverList, ImportList, ImportListSyncProgress, ManagedUser, ManualImportLookup } from '../../api/client'
+import { api, BINDERY_BASE, Book, HardcoverList, ImportList, ImportListSyncProgress, ManagedUser, ManualImportLookup, MigrateResult, ReadarrImportProgress } from '../../api/client'
 import { inputCls } from './formStyles'
 import GoodreadsImportSection from './GoodreadsImportSection'
 import { secretInputAttrs } from '../../util/inputAttrs'
 import { primaryFill } from '../../components/buttons'
-
-interface MigrateResult {
-  requested?: number
-  added?: number
-  skipped?: number
-  errors?: number
-  addedNames?: string[]
-  failures?: Record<string, string>
-}
-
-interface ReadarrResult {
-  authors?: MigrateResult
-  indexers?: MigrateResult
-  downloadClients?: MigrateResult
-  blocklist?: MigrateResult
-}
 
 // onNavigate threads SettingsPage's soft (no-reload) tab switch into the
 // "Configure … in General settings →" link so it doesn't full-page-reload.
@@ -31,27 +15,74 @@ export interface ImportTabProps {
 export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
   const { t } = useTranslation()
   const [csvResult, setCsvResult] = useState<MigrateResult | null>(null)
-  const [readarrResult, setReadarrResult] = useState<ReadarrResult | null>(null)
+  const [readarrProgress, setReadarrProgress] = useState<ReadarrImportProgress | null>(null)
   const [uploading, setUploading] = useState<'csv' | 'readarr' | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const uploadStartedRef = useRef(false)
 
   const upload = async (endpoint: 'csv' | 'readarr', file: File) => {
     setUploading(endpoint)
     setErr(null)
     setCsvResult(null)
-    setReadarrResult(null)
+    // Only a new Readarr upload clears the Readarr view. A CSV upload must not
+    // hide a catalogue backfill that is still running.
+    if (endpoint === 'readarr') {
+      uploadStartedRef.current = true
+      setReadarrProgress(null)
+    }
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const data = await api.uploadMigrate<MigrateResult | ReadarrResult>(endpoint, fd)
-      if (endpoint === 'csv') setCsvResult(data as MigrateResult)
-      else setReadarrResult(data as ReadarrResult)
+      if (endpoint === 'csv') {
+        setCsvResult(await api.uploadMigrate<MigrateResult>(endpoint, fd))
+      } else {
+        // 202: the import runs in the background and is followed by polling.
+        setReadarrProgress(await api.uploadMigrate<ReadarrImportProgress>(endpoint, fd))
+      }
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'Upload failed')
     } finally {
       setUploading(null)
     }
   }
+
+  // A returning visitor mid-import (or mid catalogue backfill, which can run
+  // for tens of minutes) picks the progress back up.
+  useEffect(() => {
+    let cancelled = false
+    api.readarrImportStatus()
+      .then(p => {
+        // A late answer must not overwrite state after unmount or after an
+        // upload from this page has started.
+        if (cancelled || uploadStartedRef.current) return
+        if (p?.running || p?.catalogueRunning) setReadarrProgress(p)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [])
+
+  // Poll while the database import or the catalogue backfill behind it is
+  // running. The backfill outlives the import, so `running` alone would stop
+  // the poll early. It ends when both are false; a restarted server reports
+  // both false (counters gone) and ends it too.
+  const readarrActive = Boolean(readarrProgress?.running || readarrProgress?.catalogueRunning)
+  useEffect(() => {
+    if (!readarrActive) return
+    let cancelled = false
+    const timer = setInterval(async () => {
+      try {
+        const next = await api.readarrImportStatus()
+        if (!cancelled) setReadarrProgress(next)
+      } catch {
+        // Transient poll failure: keep polling rather than dropping the view.
+      }
+    }, 2000)
+    return () => { cancelled = true; clearInterval(timer) }
+  }, [readarrActive])
+
+  const readarrResult = readarrProgress?.result
+  const catalogueTotal = readarrProgress?.catalogueTotal ?? 0
+  const catalogueDone = Math.min(readarrProgress?.catalogueDone ?? 0, catalogueTotal)
 
   const renderResult = (r: MigrateResult | undefined, label: string) => {
     if (!r) return null
@@ -106,16 +137,32 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
             type="file"
             accept=".db,.sqlite,application/x-sqlite3,application/octet-stream"
             className="hidden"
-            disabled={uploading !== null}
+            disabled={uploading !== null || readarrProgress?.running === true}
             onChange={e => { const f = e.target.files?.[0]; if (f) upload('readarr', f); e.currentTarget.value = '' }}
           />
         </label>
+        {readarrProgress?.running && (
+          <p className="mt-3 text-xs text-slate-600 dark:text-zinc-500">{t('settings.import.importingReadarr')}</p>
+        )}
+        {readarrProgress?.error && !readarrProgress.running && (
+          <p className="mt-3 text-xs text-red-600 dark:text-red-400">{readarrProgress.error}</p>
+        )}
         {readarrResult && (
           <div className="mt-4 space-y-2">
             {renderResult(readarrResult.authors, 'Authors')}
             {renderResult(readarrResult.indexers, 'Indexers')}
             {renderResult(readarrResult.downloadClients, 'Download clients')}
             {renderResult(readarrResult.blocklist, 'Blocklist')}
+          </div>
+        )}
+        {catalogueTotal > 0 && (
+          <div className="mt-3 text-xs text-slate-600 dark:text-zinc-500" data-testid="readarr-catalogue-progress">
+            <p>
+              {readarrProgress?.catalogueRunning
+                ? t('settings.import.catalogueFetching', { done: catalogueDone, total: catalogueTotal })
+                : t('settings.import.catalogueFetched', { done: catalogueDone, total: catalogueTotal })}
+            </p>
+            {readarrProgress?.catalogueRunning && <p className="mt-1">{t('settings.import.catalogueHint')}</p>}
           </div>
         )}
       </section>

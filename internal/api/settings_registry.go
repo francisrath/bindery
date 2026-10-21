@@ -161,6 +161,11 @@ var settingDescriptors = []SettingDescriptor{
 		State:       SettingStateActive,
 	},
 	{
+		Key: SettingMetadataEnrichersDisabled, Type: SettingTypeString, Default: "",
+		Description: "Comma separated metadata enrichers to turn off: any of openlibrary, hardcover, googlebooks, dnb, plus the audiobook sources audible (Audible catalogue) and audnex. Empty leaves all on. The primary provider is never turned off, so naming it is ignored. A disabled enricher is no longer used as an enricher (Hardcover can still be reached by its list sync, recommendations and series features), and a disabled audible or audnex is never asked. A change applies to the next metadata lookup, without a restart.",
+		State:       SettingStateActive,
+	},
+	{
 		Key: "search.preferredLanguage", Type: SettingTypeString, Default: "",
 		Description: "Preferred release language, used to rank search results and to build the recommendation taste profile. Empty means no preference.",
 		State:       SettingStateActive,

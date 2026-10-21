@@ -148,19 +148,22 @@ const resultRowCls = (approved?: boolean) =>
       : 'bg-slate-100 dark:bg-zinc-900 border-slate-200 dark:border-zinc-800'
   }`
 
-export function SearchResultsSection({
-  results,
-  bookMediaType,
+// ReleaseRow is one release with its Grab button. The main results and the
+// filtered section (#2334) both render it, so a filtered release is grabbed
+// by exactly the same path as any other.
+function ReleaseRow({
+  r,
+  fmt,
   grabbing,
   onGrab,
 }: {
-  results: SearchResult[]
-  bookMediaType?: string
+  r: SearchResult
+  fmt?: 'ebook' | 'audiobook'
   grabbing: string | null
   onGrab: (r: SearchResult) => void
 }) {
-  const renderRow = (r: SearchResult, fmt?: 'ebook' | 'audiobook') => (
-    <div key={r.guid} className={resultRowCls(r.approved)}>
+  return (
+    <div className={resultRowCls(r.approved)}>
       <div className="min-w-0 mr-3">
         <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
           {fmt && <MediaBadge type={fmt} />}
@@ -194,6 +197,22 @@ export function SearchResultsSection({
       </button>
     </div>
   )
+}
+
+export function SearchResultsSection({
+  results,
+  bookMediaType,
+  grabbing,
+  onGrab,
+}: {
+  results: SearchResult[]
+  bookMediaType?: string
+  grabbing: string | null
+  onGrab: (r: SearchResult) => void
+}) {
+  const renderRow = (r: SearchResult, fmt?: 'ebook' | 'audiobook') => (
+    <ReleaseRow key={r.guid} r={r} fmt={fmt} grabbing={grabbing} onGrab={onGrab} />
+  )
 
   if (bookMediaType === 'both') {
     const ebooks = results.filter(r => r.mediaType === 'ebook')
@@ -220,6 +239,63 @@ export function SearchResultsSection({
     <section className="mb-6">
       <h3 className="text-sm font-semibold mb-2 text-slate-800 dark:text-zinc-200">Results ({results.length})</h3>
       <div className="space-y-1">{results.slice(0, 20).map(r => renderRow(r))}</div>
+    </section>
+  )
+}
+
+// FilteredResultsSection lists the releases Bindery's relevance and language
+// filters removed (#2334), collapsed by default, each with the reason and the
+// same Grab button as any other release. Hidden when there are none. The filters
+// are right far more often than wrong, so the default view stays as it was;
+// this is the way out when one of them is wrong about a release you can see.
+export function FilteredResultsSection({
+  filtered,
+  total,
+  bookMediaType,
+  grabbing,
+  onGrab,
+}: {
+  filtered: SearchResult[]
+  total?: number
+  bookMediaType?: string
+  grabbing: string | null
+  onGrab: (r: SearchResult) => void
+}) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  if (filtered.length === 0) return null
+  return (
+    <section className="mb-6" data-testid="filtered-results">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        className="text-sm font-semibold text-slate-800 dark:text-zinc-200 hover:underline"
+      >
+        <span aria-hidden className="inline-block w-4">{open ? '▾' : '▸'}</span>
+        {t('bookDetail.filteredHeading', { count: total ?? filtered.length })}
+      </button>
+      {open && (
+        <div className="mt-2">
+          <p className="text-xs text-slate-500 dark:text-zinc-500 mb-2">
+            {t('bookDetail.filteredHint')}
+            {total !== undefined && total > filtered.length && (
+              <> {t('bookDetail.filteredCapped', { shown: filtered.length, total })}</>
+            )}
+          </p>
+          <div className="space-y-1">
+            {filtered.map(r => (
+              <ReleaseRow
+                key={r.guid}
+                r={r}
+                fmt={bookMediaType === 'both' && (r.mediaType === 'ebook' || r.mediaType === 'audiobook') ? r.mediaType : undefined}
+                grabbing={grabbing}
+                onGrab={onGrab}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
@@ -279,6 +355,9 @@ function BookDetailPageInner() {
   const [autoSearching, setAutoSearching] = useState(false)
   const [autoSearchNotice, setAutoSearchNotice] = useState<string | null>(null)
   const [results, setResults] = useState<SearchResult[] | null>(null)
+  // Releases the relevance and language filters dropped (#2334).
+  const [filtered, setFiltered] = useState<SearchResult[]>([])
+  const [filteredTotal, setFilteredTotal] = useState<number | undefined>(undefined)
   const [searchDebug, setSearchDebug] = useState<SearchDebug | null>(null)
   // #1636: the results of an interactive search render below the metadata
   // sections, often well below the fold, and a sweep can take 10 to 18
@@ -495,6 +574,8 @@ function BookDetailPageInner() {
     if (!book) return
     setSearching(true)
     setResults(null)
+    setFiltered([])
+    setFilteredTotal(undefined)
     setSearchDebug(null)
     setError(null)
     // A leftover "automatic search started" banner over a fresh list of
@@ -507,6 +588,8 @@ function BookDetailPageInner() {
       ])
       setHasIndexers(indexers.length > 0)
       setResults(r.results)
+      setFiltered(r.filtered ?? [])
+      setFilteredTotal(r.filteredTotal)
       setSearchDebug(r.debug ?? null)
       setRevealResults(true)
     } catch (e) {
@@ -611,6 +694,8 @@ function BookDetailPageInner() {
       setBook(b)
       setEvents(h.items)
       setResults(null)
+      setFiltered([])
+      setFilteredTotal(undefined)
     } catch (e) {
       setError(e instanceof Error ? e.message : t('bookDetail.grabFailed'))
     } finally {
@@ -1556,6 +1641,8 @@ function BookDetailPageInner() {
                 {t('bookDetail.noIndexers')}{' '}
                 <Link to="/settings" className="underline">{t('nav.settings')}</Link>.
               </>
+            ) : filtered.length > 0 ? (
+              t('bookDetail.noResultsFiltered', { count: filteredTotal ?? filtered.length })
             ) : (
               t('bookDetail.noResults')
             )}
@@ -1576,6 +1663,18 @@ function BookDetailPageInner() {
           <div className="mt-6">
             <SearchResultsSection
               results={results}
+              bookMediaType={book.mediaType}
+              grabbing={grabbing}
+              onGrab={grab}
+            />
+          </div>
+        )}
+
+        {filtered.length > 0 && (
+          <div className="mt-2">
+            <FilteredResultsSection
+              filtered={filtered}
+              total={filteredTotal}
               bookMediaType={book.mediaType}
               grabbing={grabbing}
               onGrab={grab}

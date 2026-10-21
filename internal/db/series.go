@@ -525,6 +525,33 @@ func (r *SeriesRepo) GetHardcoverLink(ctx context.Context, seriesID int64) (*mod
 	return &link, nil
 }
 
+// GetByHardcoverSeriesID returns the series already tied to a Hardcover series:
+// the one whose stored link names it, else the one whose provider foreign id is
+// it (or was merged into it). nil when none is. Series are global rows, so the
+// lookup is not user scoped; the create-and-link route is admin only (#1706).
+func (r *SeriesRepo) GetByHardcoverSeriesID(ctx context.Context, hardcoverSeriesID string) (*models.Series, error) {
+	hardcoverSeriesID = strings.TrimSpace(hardcoverSeriesID)
+	if hardcoverSeriesID == "" {
+		return nil, nil
+	}
+	var id int64
+	err := r.db.QueryRowContext(ctx,
+		"SELECT series_id FROM series_hardcover_links WHERE hardcover_series_id = ? ORDER BY series_id LIMIT 1",
+		hardcoverSeriesID).Scan(&id)
+	if errors.Is(err, sql.ErrNoRows) {
+		// Only the prefixed spelling is a Hardcover id; a bare "42" could be
+		// any other provider's series.
+		if !strings.HasPrefix(hardcoverSeriesID, HardcoverSeriesIDPrefix) {
+			return nil, nil
+		}
+		return r.GetByForeignID(ctx, hardcoverSeriesID)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get series by hardcover series id %s: %w", hardcoverSeriesID, err)
+	}
+	return r.GetByID(ctx, id)
+}
+
 // HardcoverSeriesIDPrefix is the foreign-id prefix Bindery stores for a
 // Hardcover series ("hc-series:1017"). Provider-supplied, so a series row
 // carrying it already knows its Hardcover identity exactly.

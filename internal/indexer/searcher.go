@@ -924,6 +924,16 @@ func filterRelevantDetailed(results []newznab.SearchResult, title, author string
 // knows about the wanted book (see bookContext). A zero bookContext is
 // filterRelevantDetailed exactly.
 func filterRelevantWithContext(results []newznab.SearchResult, title, author string, aliases []string, bc bookContext) ([]newznab.SearchResult, []FilterDebug) {
+	kept, dropped := filterRelevantKeepDropped(results, title, author, aliases, bc)
+	return kept, droppedFilterDebug(dropped)
+}
+
+// filterRelevantKeepDropped is the relevance filter itself. It returns the
+// dropped releases whole (not just a FilterDebug summary) so the interactive
+// search can offer them for a deliberate grab (#2334). Every other form of the
+// filter is a projection of this one, so the kept set cannot differ between
+// the scheduler and the interactive path.
+func filterRelevantKeepDropped(results []newznab.SearchResult, title, author string, aliases []string, bc bookContext) ([]newznab.SearchResult, []DroppedRelease) {
 	// Strip edition qualifiers ("(German Edition)" etc.) and normalize
 	// smart quotes before tokenizing, so they don't become spurious keywords.
 	// Format qualifiers mid title ("(Light Novel)") go too, matching what the
@@ -1007,8 +1017,8 @@ func filterRelevantWithContext(results []newznab.SearchResult, title, author str
 		normTitles[i] = NormalizeRelease(r.Title)
 	}
 
-	drop := func(r newznab.SearchResult, reason string) FilterDebug {
-		return FilterDebug{Title: r.Title, IndexerName: r.IndexerName, Stage: "relevance", Reason: reason}
+	drop := func(r newznab.SearchResult, reason string) DroppedRelease {
+		return DroppedRelease{Result: r, Stage: StageRelevance, Reason: reason}
 	}
 
 	rules := newTrailingRules(title, bc, fullIdentity, fullIdentityElided, primaryIdentity, primaryIdentityElided, seriesIdentity)
@@ -1070,7 +1080,7 @@ func filterRelevantWithContext(results []newznab.SearchResult, title, author str
 	}
 
 	filtered := make([]newznab.SearchResult, 0, len(results))
-	var dropped []FilterDebug
+	var dropped []DroppedRelease
 	for i, r := range results {
 		n := normTitles[i]
 		if authorConflict(r) {
@@ -1433,19 +1443,32 @@ func isNonBookCategory(cat string) bool {
 // filters on q= searches and return anything matching the title words
 // (#1591) — this is the response-side backstop.
 func filterNonBookContent(results []newznab.SearchResult) []newznab.SearchResult {
+	kept, _ := filterNonBookContentDetailed(results)
+	return kept
+}
+
+// filterNonBookContentDetailed is filterNonBookContent that also reports each
+// drop and why. It is the one implementation, so the scheduler's SearchBook and
+// the interactive SearchBookWithDebug cannot disagree about what is not a book.
+// The drops are for the Filter decisions panel only: a video release or a movie
+// category result is not a book, so it is never offered for a grab (#2334).
+func filterNonBookContentDetailed(results []newznab.SearchResult) ([]newznab.SearchResult, []DroppedRelease) {
 	out := make([]newznab.SearchResult, 0, len(results))
+	var dropped []DroppedRelease
 	for _, r := range results {
 		if videoMarkerRe.MatchString(r.Title) {
 			slog.Debug("dropping video release from book search", "title", r.Title, "indexer", r.IndexerName)
+			dropped = append(dropped, DroppedRelease{Result: r, Stage: StageNonBook, Reason: "release name carries video markers (resolution, codec or rip tag)"})
 			continue
 		}
 		if isNonBookCategory(r.Category) {
 			slog.Debug("dropping non-book category result", "title", r.Title, "category", r.Category, "indexer", r.IndexerName)
+			dropped = append(dropped, DroppedRelease{Result: r, Stage: StageNonBook, Reason: "indexer filed it under a non-book category (" + r.Category + ")"})
 			continue
 		}
 		out = append(out, r)
 	}
-	return out
+	return out, dropped
 }
 
 // detectQuality scans a result title for known quality keywords and returns
@@ -1761,13 +1784,21 @@ func sceneJoint(sep string) bool {
 // ISO 639-2/T, so a profile written "pt-BR" accepted the book and then dropped
 // every Portuguese release of it.
 func FilterByAllowedLanguages(results []newznab.SearchResult, allowed []string) []newznab.SearchResult {
+	kept, _ := SplitByAllowedLanguages(results, allowed)
+	return kept
+}
+
+// SplitByAllowedLanguages is FilterByAllowedLanguages that also returns the
+// results it removed, in their original order, so the interactive search can
+// offer them for a deliberate grab (#2334). It is the one implementation.
+func SplitByAllowedLanguages(results []newznab.SearchResult, allowed []string) (kept, dropped []newznab.SearchResult) {
 	if len(allowed) == 0 {
-		return results
+		return results, nil
 	}
 	set := make(map[string]bool, len(allowed))
 	for _, code := range allowed {
 		if strings.ToLower(strings.TrimSpace(code)) == "any" {
-			return results
+			return results, nil
 		}
 		code = models.NormalizeLanguageCode(code)
 		if code == "" {
@@ -1788,9 +1819,11 @@ func FilterByAllowedLanguages(results []newznab.SearchResult, allowed []string) 
 		}
 		if ok {
 			filtered = append(filtered, r)
+		} else {
+			dropped = append(dropped, r)
 		}
 	}
-	return filtered
+	return filtered, dropped
 }
 
 // FilterByLanguage removes results whose titles contain known foreign-language
@@ -1798,8 +1831,14 @@ func FilterByAllowedLanguages(results []newznab.SearchResult, allowed []string) 
 // This is the global search.preferredLanguage setting's filter; profile-aware
 // callers use FilterByAllowedLanguages directly.
 func FilterByLanguage(results []newznab.SearchResult, lang string) []newznab.SearchResult {
+	kept, _ := SplitByLanguage(results, lang)
+	return kept
+}
+
+// SplitByLanguage is FilterByLanguage that also returns what it removed.
+func SplitByLanguage(results []newznab.SearchResult, lang string) (kept, dropped []newznab.SearchResult) {
 	if lang != "en" {
-		return results
+		return results, nil
 	}
-	return FilterByAllowedLanguages(results, []string{"eng"})
+	return SplitByAllowedLanguages(results, []string{"eng"})
 }

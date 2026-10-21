@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useModal } from './useModal'
 import { primaryFill } from './buttons'
@@ -9,9 +9,11 @@ interface Props {
   submitLabel: string
   onClose: () => void
   onSubmit: (name: string) => Promise<void> | void
+  // Rendered above the name field, for a way to pick a series instead of typing one.
+  beforeName?: ReactNode
 }
 
-export default function SeriesNameModal({ title, initialName = '', submitLabel, onClose, onSubmit }: Props) {
+export default function SeriesNameModal({ title, initialName = '', submitLabel, onClose, onSubmit, beforeName }: Props) {
   const { t } = useTranslation()
   const [name, setName] = useState(initialName)
   const [saving, setSaving] = useState(false)
@@ -52,6 +54,7 @@ export default function SeriesNameModal({ title, initialName = '', submitLabel, 
             <h3 id={titleId} className="text-lg font-semibold">{title}</h3>
           </div>
           <div className="p-4 space-y-3">
+            {beforeName}
             <label className="block text-sm font-medium text-slate-700 dark:text-zinc-300" htmlFor="series-name">
               {t('series.nameModal.name')}
             </label>

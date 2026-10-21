@@ -38,10 +38,12 @@ Next to the search, the filter buttons narrow the list without changing anything
 - **Not linked to Hardcover** shows series with no Hardcover link. It appears only when enhanced Hardcover data is on.
 - **Shortlisted** shows series you added to your shortlist.
 
-The filter combines with the title search and is kept in the page address (`?filter=missing`), so reloading, going back or sharing the link keeps it. Filtering never marks books wanted, monitors them, runs searches or fills gaps.
+A second row of buttons filters by how many books a series holds: **Any size**, **1 book** and **2+ books**. It uses the number of books the series already lists, so it needs no Hardcover data. It is a quick way to see the one book series in a large library. It combines with the status filter and the title search, and the "N of M series" count follows it.
+
+The filter combines with the title search and is kept in the page address (`?filter=missing`, and `?size=single` or `?size=multi` for the size), so reloading, going back or sharing the link keeps it. Filtering never marks books wanted, monitors them, runs searches or fills gaps.
 
 1. Open **Library → Series**.
-2. Create a series manually, or open an existing series populated from your library metadata.
+2. Create a series manually, or open an existing series populated from your library metadata. With enhanced Hardcover data on, **Add Series** also has a search box: type a title, press Enter or **Search**, and each result shows its author, book count and the first few book titles so you can tell near-identical series apart. **Add** creates the series already linked to that Hardcover series and opens it with its catalog diff, so the books you do not have yet are listed as missing. Nothing is added to your library until you choose to, one book at a time or with **Fill gaps**. If that Hardcover series is already in your library, Bindery opens the existing one instead of making a second. The name field is still there for a plain manual series.
 3. Use **Add Book** to attach existing Bindery books and set their series positions.
 4. Use **Search** to find a matching Hardcover series.
 5. Pick the correct Hardcover result, or remove a bad existing link. Each candidate carries a **View on Hardcover** link so you can open it before choosing, which matters most for light novels, where the novel, its manga adaptation and a spin-off all come back under near-identical names.

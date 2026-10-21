@@ -73,6 +73,20 @@ func (a *Aggregator) WithAudibleCatalogue(catalogue audibleCatalogue) *Aggregato
 	return a
 }
 
+// SetAudiobookSourcesDisabled switches the Audible catalogue and the audnex
+// lookup off or on (#1890, #2015). Neither is an enricher, so Reconfigure does
+// not cover them. Like Reconfigure it publishes a new core, so it applies to
+// the next lookup without a restart. While a source is off its lookups return
+// before the cache is read, so nothing it supplied earlier is served and
+// nothing is cached for it; turning it back on resumes from the cache as it
+// was.
+func (a *Aggregator) SetAudiobookSourcesDisabled(audibleOff, audnexOff bool) {
+	a.update(func(c *aggregatorCore) {
+		c.audibleOff = audibleOff
+		c.audnexOff = audnexOff
+	})
+}
+
 // load returns the core every part of one lookup runs on. A nil Aggregator
 // yields a nil core, whose methods behave as a nil Aggregator's always did.
 func (a *Aggregator) load() *aggregatorCore {
@@ -289,6 +303,10 @@ func (a *Aggregator) EnrichAudiobook(ctx context.Context, book *models.Book) err
 
 func (a *Aggregator) GetCanonicalBookByASIN(ctx context.Context, asin string) (*models.Book, error) {
 	return a.load().GetCanonicalBookByASIN(ctx, asin)
+}
+
+func (a *Aggregator) AudnexDisabled() bool {
+	return a.load().AudnexDisabled()
 }
 
 func (a *Aggregator) GetAuthorAudiobooks(ctx context.Context, authorName string) ([]models.Book, error) {

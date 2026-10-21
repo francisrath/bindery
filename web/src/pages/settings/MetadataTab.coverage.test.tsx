@@ -89,7 +89,9 @@ describe('MetadataTab library defaults', () => {
     expect(mediaType).toHaveValue('ebook')
     expect(monitorMode).toHaveValue('all')
 
-    const strict = screen.getByRole('checkbox')
+    const outsideSources = () =>
+      screen.queryAllByRole('checkbox').filter(c => !c.closest('[data-testid="metadata-sources"]'))
+    const strict = outsideSources()[0]
     fireEvent.click(strict)
     await waitFor(() => expect(api.setSetting).toHaveBeenCalledWith('default.media_type_strict', 'true'))
     expect(strict).toBeChecked()
@@ -97,7 +99,7 @@ describe('MetadataTab library defaults', () => {
     fireEvent.change(mediaType, { target: { value: 'both' } })
     await waitFor(() => expect(api.setSetting).toHaveBeenCalledWith('default.media_type', 'both'))
     // The strict flag only makes sense when a single format is the default.
-    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+    expect(outsideSources()).toHaveLength(0)
 
     fireEvent.change(monitorMode, { target: { value: 'latest' } })
     await waitFor(() => expect(api.setSetting).toHaveBeenCalledWith('author.default_monitor_mode', 'latest'))

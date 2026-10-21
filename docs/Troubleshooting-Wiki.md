@@ -12,6 +12,13 @@ Title-only releases, connecting words, file-format labels and narrator credits
 remain supported. Unrecognised trailing text can be conservatively rejected;
 inspect the release's title and author rather than relying only on shared words.
 
+When a filter is wrong about a release you can see, you do not have to wait for
+a fix. The book page's interactive search keeps what the title and author check
+and the language filter removed in a **Filtered** section under the results. It
+is collapsed by default, shows the reason on each row, and has the same Grab
+button. Releases dropped as not a book (video, a movie or console category, a
+raw usenet posting) are listed in the search details panel only.
+
 ### A release names the next book in the series
 
 Matching also reads what comes AFTER your title. A release that has the whole
@@ -126,6 +133,47 @@ and three more:
 - The series number and other title checks above also read what follows the
   main title, so `The High Druid of Shannara 3 - Straken` is not `High Druid of
   Shannara: Jarka Ruus`.
+
+- A bare series entry is not its numbered volumes. When the wanted title has no
+  series position but your library already holds `Rotten School #12 - Battle of
+  the Dum Diddys` under the same author, `R L Stine - [Rotten School 12] -
+  Battle of the Dum Diddys (epub)` is dropped for the wanted `Rotten School`
+  (`release names a different series number after this title`), and so is the
+  plain `Rotten School - Battle of the Dum Diddys`. Only a library title that
+  starts with the wanted title and a number of 2 or more counts, so titles that
+  end in a number, such as `Catch-22` or `Apollo 13`, are unaffected.
+  A stored series position switches this off, so a duplicate row never hides
+  the wanted volume's own release. The same goes for a library title with the
+  series prefix and no number: with `Rotten School - Punk'd and skunked` in
+  the library (excluded books are not listed, so the standalone `Punk'd and
+  Skunked` row does not help), `R L Stine - [Rotten School 11] - Punk'd and
+  Skunked (epub)` is dropped for the wanted `Rotten School` (`release names
+  another title after this one`), whichever way the apostrophe is spelled.
+  The prefix must be followed by a dash, colon or bracket. A suffix that
+  describes an edition is not read as a book: one that starts or ends with a
+  word for edition (`German Edition`, `Edicion en Espanol`, `Deutsche Ausgabe`,
+  `Norsk utgave`), starts with an ordinal or a language name (`10th Anniversary
+  Edition`, `Second Printing`), mentions an anniversary, or is made only of
+  words such as `Large Print`, `Movie Tie-in` and `A Novel`. A library title
+  that is the same book written with its subtitle (`Sapiens: A Brief History
+  of Humankind` next to `Sapiens`, a duplicate from another provider) never
+  rejects the release that carries the whole title straight after the wanted
+  one, in any punctuation (`Sapiens - A Brief History of Humankind`). Only
+  connecting words (the, a, an, and, or, of, in, to, by, for, with, at, from,
+  on) may sit between the two; a number, a roman numeral, a short word such as
+  `Mr`, or a number before the wanted title (`11 - Rotten School - ...`) still
+  counts as another book. If the library also holds the subtitle as a book of
+  its own, that book still counts. Searching for `Punk'd and Skunked` itself
+  still finds these releases.
+
+- Known trade-off of the two rules above: with a library title
+  `Dune 2 - Illustrated Edition` and no stored position, the plain `Dune -
+  Illustrated Edition (epub)` is dropped for the wanted `Dune`, because the
+  words after the number count as another title. Known misses that stay kept,
+  as on main: a number after the suffix (`Punk'd and Skunked - Book 11`,
+  `#11`), a backtick used as the apostrophe, and a real book whose suffix
+  starts with an ordinal or a language name or reads like an edition (`Second
+  Foundation`, `Edition Zero`, `Anniversary Waltz`).
 
 The limit: with no series position, no library title that matches the main
 title, and no full title among the results, a lone `Legion (2012)` is still
@@ -776,6 +824,20 @@ Two things this does not do:
 - It does not react to a storage outage. If a mount is temporarily unavailable then every path under it looks missing at once, so Bindery deliberately keeps showing what it showed before rather than acting on the absence. Nothing is deleted or reset, and the books come back as they were when the mount does.
 
 If you reshape your library regularly, **Rename files** on the book or author page is the supported way to do it: it moves the file *and* repoints the same tracking row at the new location, so there is never a second row to clean up.
+
+## "path is outside the configured library roots" or "Bindery cannot read this file"
+
+These come from the Import page and the **Reassign file to another book** window, and they mean different things.
+
+**"Bindery cannot read this file: NAME."** The path sits inside one of your library folders, but Bindery could not open it. The file was moved or renamed, the drive is not mounted, or the account Bindery runs as is not allowed to read the folder. A file that is itself a link to something missing gets the outside roots message below instead, deliberately. Older versions reported this case as "outside the configured library roots" even though the root they listed contained the file ([#3332](https://github.com/vavallee/bindery/discussions/3332)). Check from inside the container, because the path that matters is the one the container sees:
+
+```
+docker exec -it bindery ls -l "/books_drive/Audiobooks/Author/Book/file.mp3"
+```
+
+The image is minimal and may have no `ls`. If so, check the bind mount instead: the host folder must be mapped to the same path in the container, the drive must be up when the container starts, and `user: "UID:GID"` in Compose must be able to read it. On Docker Desktop with WSL a drive that was unmounted or slept can leave a stale mount, so restart the container after it is back. If the file really was renamed, use **Forget this file** on the book and let a scan register the new name.
+
+**"path is outside the configured library roots: ..."** The path does not resolve under any listed root. That is what you get for a file outside them, for a link inside a library that points out of it, and also for a file that does not exist outside them, and for a link that points at nothing or loops back on itself, because Bindery deliberately answers the same way whether or not anything is there. The message does not mean the file exists. Either add the real folder in Settings, Root Folders, or replace the symlink inside your library with the file itself. A link that points out of a root is refused on purpose.
 
 ## A scan leaves files unmatched
 

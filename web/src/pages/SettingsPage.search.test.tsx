@@ -200,7 +200,7 @@ describe('Settings search', () => {
     // dropped flag remove its own entry from the test. These are the sections
     // GeneralTab renders inside its isAdmin block.
     const ADMIN_ONLY = [
-      'settings.general.fileNaming', 'settings.general.downloads', 'settings.general.storage',
+      'settings.general.fileNaming', 'settings.general.downloads', 'settings.general.storage', 'settings.general.dbCheck',
       'settings.general.library', 'settings.general.search', 'settings.general.hardcoverSync',
       'settings.general.discovery', 'settings.general.defaultLibraryLocation',
     ]

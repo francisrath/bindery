@@ -380,7 +380,7 @@ func (h *IndexerHandler) Create(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name and url required"})
 		return
 	}
-	if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyLANLoopback); err != nil {
+	if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyService); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
@@ -491,7 +491,7 @@ func (h *IndexerHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	idx.APIKey = apiKey
 	if idx.URL != "" {
-		if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyLANLoopback); err != nil {
+		if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyService); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
@@ -567,7 +567,7 @@ func (h *IndexerHandler) Test(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if idx.URL != "" {
-		if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyLANLoopback); err != nil {
+		if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyService); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
 		}
@@ -607,7 +607,7 @@ func (h *IndexerHandler) TestConfig(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "url required"})
 		return
 	}
-	if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyLANLoopback); err != nil {
+	if err := httpsec.ValidateOutboundURL(idx.URL, httpsec.PolicyService); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
@@ -726,6 +726,9 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 	// filterCategoriesForMedia, silently dropping all audiobook results.
 	var results []newznab.SearchResult
 	var dbg *indexer.SearchDebug
+	// Releases the relevance stage dropped, kept whole for the "filtered"
+	// section (#2334). Never mixed into results: only this handler reads them.
+	var relDropped []indexer.DroppedRelease
 	if book.MediaType == models.MediaTypeBoth {
 		// Both legs copy crit, so each carries the profile and ranks by its
 		// own list: ebooks by the ebook list, audiobooks by the audiobook list.
@@ -746,6 +749,7 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 			for i := range res {
 				res[i].MediaType = "ebook"
 			}
+			stampDropped(d, "ebook")
 			ebookCh <- searchOut{res, d}
 		}()
 		go func() {
@@ -753,6 +757,7 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 			for i := range res {
 				res[i].MediaType = "audiobook"
 			}
+			stampDropped(d, "audiobook")
 			audioCh <- searchOut{res, d}
 		}()
 		ebookOut := <-ebookCh
@@ -766,6 +771,12 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 		// score is now load bearing rather than incidental.
 		results = append(ebookResults, audioResults...)
 		results = indexer.DedupeResults(results)
+		if ebookDbg != nil {
+			relDropped = append(relDropped, ebookDbg.Dropped...)
+		}
+		if audioDbg != nil {
+			relDropped = append(relDropped, audioDbg.Dropped...)
+		}
 		// Merge debug info from both searches.
 		if ebookDbg != nil && audioDbg != nil {
 			merged := *ebookDbg
@@ -789,6 +800,13 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		results, dbg = h.searcher.SearchBookWithDebug(r.Context(), idxs, crit)
+		if dbg != nil {
+			relDropped = dbg.Dropped
+		}
+	}
+	if dbg != nil {
+		// The debug log keeps this payload; it must not keep raw URLs.
+		dbg.Dropped = nil
 	}
 
 	// Build decision specs.
@@ -797,20 +815,26 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 	// Language filter: author profile takes precedence, fall back to global setting.
 	beforeLang := len(results)
 	filterDesc := ""
+	var langDropped []newznab.SearchResult
 	if len(allowedLangs) > 0 {
-		results = indexer.FilterByAllowedLanguages(results, allowedLangs)
+		results, langDropped = indexer.SplitByAllowedLanguages(results, allowedLangs)
 		filterDesc = "allowed=" + strings.Join(allowedLangs, ",")
 	} else if s, _ := h.settings.Get(r.Context(), "search.preferredLanguage"); s != nil {
-		results = indexer.FilterByLanguage(results, s.Value)
+		results, langDropped = indexer.SplitByLanguage(results, s.Value)
 		filterDesc = "filter=" + s.Value
 	}
+	langReason := "release name tagged with a language outside the profile (" + filterDesc + ")"
 	if dbg != nil && beforeLang != len(results) {
 		dbg.Filters = append(dbg.Filters, indexer.FilterDebug{
-			Stage:  "language",
-			Reason: "release name tagged with a language outside the profile (" + filterDesc + ")",
+			Stage:  indexer.StageLanguage,
+			Reason: langReason,
 			Title:  "(" + strconv.Itoa(beforeLang-len(results)) + " result(s) dropped)",
 		})
 	}
+	// Releases the relevance and language stages removed, offered behind a
+	// collapsed section so the user can still grab one deliberately (#2334).
+	// Language drops come first: they are the right book in the wrong tag.
+	filtered, filteredTotal := collectFiltered(results, langDropped, langReason, relDropped)
 
 	// Blocklist spec.
 	if h.blocklist != nil {
@@ -837,11 +861,6 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 
 	decisions := dm.Evaluate(releases, *book)
 
-	type searchDecision struct {
-		newznab.SearchResult
-		Approved  bool   `json:"approved"`
-		Rejection string `json:"rejection,omitempty"`
-	}
 	out := make([]searchDecision, len(decisions))
 	for i, d := range decisions {
 		res := results[i]
@@ -866,6 +885,20 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Filtered releases are recorded first so the main results are the newest
+	// entries and the last the registry's cap would evict. They go out
+	// labelled not approved with the stage's reason; they are not run through
+	// the decision specs, which judge a release that passed the filters.
+	filteredOut := make([]searchDecision, len(filtered))
+	rawFiltered := make([]newznab.SearchResult, len(filtered))
+	for i, f := range filtered {
+		rawFiltered[i] = f.Result
+		res := f.Result
+		redactSearchResult(&res)
+		filteredOut[i] = searchDecision{SearchResult: res, Approved: false, Rejection: f.Reason}
+	}
+	h.searchResults.remember(rawFiltered)
+
 	// Every result is grabbable, approved or not: a rejection only labels it.
 	// The registry keeps the raw URL, before the redaction above, so a grab
 	// never depends on the URL the client posts back.
@@ -883,8 +916,103 @@ func (h *IndexerHandler) SearchBook(w http.ResponseWriter, r *http.Request) {
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"results": out,
-		"debug":   dbg,
+		// filtered is the releases the relevance and language filters removed,
+		// same item shape as results with approved=false and the filter's
+		// reason as rejection, capped at maxFilteredReleases. filteredTotal is
+		// the count before the cap.
+		"filtered":      filteredOut,
+		"filteredTotal": filteredTotal,
+		"debug":         dbg,
 	})
+}
+
+// searchDecision is one release in an interactive search response: the search
+// result plus the verdict on it.
+type searchDecision struct {
+	newznab.SearchResult
+	Approved  bool   `json:"approved"`
+	Rejection string `json:"rejection,omitempty"`
+}
+
+// maxFilteredReleases bounds the "filtered" array of one interactive search,
+// and with it the registry entries a search adds beyond its main results. A
+// generic title can have hundreds of unrelated hits dropped by the relevance
+// filter; a collapsed list of that size helps nobody, and remembering all of
+// them would let one search push earlier searches out of the registry. The
+// relevance drops are ranked best first, so the cap keeps the likeliest ones.
+const maxFilteredReleases = 100
+
+// stampDropped sets the media type on a dual-format leg's dropped releases, as
+// the leg's main results are stamped.
+func stampDropped(d *indexer.SearchDebug, mediaType string) {
+	if d == nil {
+		return
+	}
+	for i := range d.Dropped {
+		d.Dropped[i].Result.MediaType = mediaType
+	}
+}
+
+// collectFiltered gathers the language drops and the relevance drops into one
+// list: de-duplicated by GUID, never repeating a release that is in the main
+// results, GUID-less ones skipped (a grab needs a GUID), capped at
+// maxFilteredReleases. It returns the capped list and the count before the cap.
+func collectFiltered(kept, langDropped []newznab.SearchResult, langReason string, relDropped []indexer.DroppedRelease) ([]indexer.DroppedRelease, int) {
+	// Keyed the way the registry and the UI key a release: the GUID with its
+	// credentials stripped, so two releases differing only in credentials are
+	// one release here too.
+	seen := make(map[string]bool, len(kept))
+	for _, r := range kept {
+		seen[registryKey(r.GUID)] = true
+	}
+	var all []indexer.DroppedRelease
+	add := func(d indexer.DroppedRelease) {
+		if d.Result.GUID == "" || seen[registryKey(d.Result.GUID)] {
+			return
+		}
+		seen[registryKey(d.Result.GUID)] = true
+		all = append(all, d)
+	}
+	for _, r := range langDropped {
+		add(indexer.DroppedRelease{Result: r, Stage: indexer.StageLanguage, Reason: langReason})
+	}
+	for _, d := range relDropped {
+		add(d)
+	}
+	all = interleaveByMediaType(all)
+	total := len(all)
+	if total > maxFilteredReleases {
+		all = all[:maxFilteredReleases]
+	}
+	return all, total
+}
+
+// interleaveByMediaType round robins releases across media types, keeping each
+// type's own order, so the cap keeps the best of each format of a dual-format
+// book rather than all of one format's. Without a media type (a single-format
+// book) it is the identity.
+func interleaveByMediaType(in []indexer.DroppedRelease) []indexer.DroppedRelease {
+	var order []string
+	groups := map[string][]indexer.DroppedRelease{}
+	for _, d := range in {
+		mt := d.Result.MediaType
+		if _, ok := groups[mt]; !ok {
+			order = append(order, mt)
+		}
+		groups[mt] = append(groups[mt], d)
+	}
+	if len(order) < 2 {
+		return in
+	}
+	out := make([]indexer.DroppedRelease, 0, len(in))
+	for i := 0; len(out) < len(in); i++ {
+		for _, mt := range order {
+			if i < len(groups[mt]) {
+				out = append(out, groups[mt][i])
+			}
+		}
+	}
+	return out
 }
 
 // LastSearchDebug returns the newest search audit trail the caller may see,

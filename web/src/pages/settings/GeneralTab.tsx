@@ -12,6 +12,7 @@ import { inputCls } from './formStyles'
 import RenameFilesModal from '../../components/RenameFilesModal'
 import NamingTemplateField from './NamingTemplateField'
 import SaveButton from './SaveButton'
+import DatabaseCheckSection from './DatabaseCheckSection'
 import { useSaveResult } from './useSaveResult'
 import { slateFill, primaryFill } from '../../components/buttons'
 
@@ -697,6 +698,9 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           )}
         </div>
       </section>
+
+      {/* Database drift check (#3356): read only, runs only on click. Inside the isAdmin block like Storage, so a non admin never sees it. */}
+      <DatabaseCheckSection />
 
       {/* Library */}
       <section>

@@ -244,5 +244,10 @@ of 30 days, so one bad response doesn't cost a month without a photo or bio.
 
 `internal/metadata/audible` calls an unpublished Amazon endpoint, and Amazon's
 Conditions of Use prohibit unauthorised automated access. This is unresolved and
-tracked in [#2015](https://github.com/vavallee/bindery/issues/2015), which
-proposes an operator opt-out.
+tracked in [#2015](https://github.com/vavallee/bindery/issues/2015). An operator
+who would rather not touch it can turn it off: add `audible` to
+`metadata.enrichers_disabled` (Settings, Metadata, Audiobook sources). While it
+is off Bindery sends api.audible.com no request, and an author's catalogue just
+carries no Audible only audiobooks. The same list can switch off `audnex`, the
+community proxy over the same data, which stops the per book narrator, runtime
+and cover lookups at api.audnex.us.

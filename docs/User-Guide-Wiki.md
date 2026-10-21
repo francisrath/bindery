@@ -829,6 +829,28 @@ to the records. Things worth knowing before you judge the results:
   offered as its suggestion either (#2860).
 - An exact title is attached in preference to a shorter partial one, and two
   near-tied non-exact titles are left for you to choose (#2941).
+- A file is never attached to a book that is a different work with a similar
+  title. Titles in one series share most of their words, so the similarity
+  score alone cannot tell `Harry Potter en de Relieken van de Dood` from
+  `Harry Potter en de Orde van de Feniks`. After the best title is chosen, the
+  scan sets aside the words both titles share and compares what is left. When
+  each title has words the other lacks and none of them is close (`relieken
+  dood` against `orde feniks`), the file is left unmatched for **Import → In
+  your library**, even when the book it really belongs to is excluded. A
+  book that close in title is not offered as the file's suggestion either, so
+  Confirm never points at it. Loose, low scoring guesses are still listed for
+  you to judge. A title with a subtitle added or dropped, a spelling or accent variant
+  (`Æsop` and `Aesop`), a series note in brackets, an abbreviation (`Dr.` and
+  `Doctor`, `Mr.`, `Mrs.`, `St.`, `Jr.`, `vs`) and the Philosopher's Stone and
+  Sorcerer's Stone pair are still the same work. Other alternate titles of one
+  book are not recognised and wait on the Import page. Adding a book runs the
+  same check before it decides you already own the book (#3388). This check
+  only adds rejections: it never makes a file match that did not before, and it
+  does not stop a title that contains the other, such as `Dune` and `Dune
+  Messiah`, from matching as it always did. It can also leave a genuine match
+  unmatched, for example when the file name carries a word the catalogue title
+  does not, such as the author's name, so that file waits on the Import page to
+  be confirmed.
 
 ## Adopting files already in your library
 
@@ -836,7 +858,8 @@ A library scan attaches every file it can match with confidence and leaves
 the rest for you. Those books wait on **Import → In your library**, the page
 `/import` opens on. Each row is one **book**, not one file: a 193 track
 audiobook folder is one row, a folder whose audio subfolders are all discs
-(`CD1`, `Disc 2`, `Disk 3`) is one row named after it, and `Dune.epub` beside
+(`CD1`, `Disc 2`, `Disk 3`, or the book's own title in front, as CD rips name
+them: `Fjellvinden (2002)/Fjellvinden Disc 1`) is one row named after it, and `Dune.epub` beside
 `Dune.mobi` is one row. An `Artwork` folder without audio, or a hidden or
 system folder such as `@eaDir`, does not stop a disc set from grouping.
 Folders named `1`, `2`, `Book 1` or `Part 1` stay separate rows; when they are
@@ -906,7 +929,9 @@ What adopting does to your library:
   adopted them. The author's other books are not added.
 - **Undo** removes exactly the file entries the adoption made, and only while
   each still belongs to the book it was adopted into; a file that has since
-  moved to another book stays with that book. A book or author the adoption
+  moved to another book stays with that book. If the files were adopted into a
+  book that was Skipped, undoing the adoption restores it as Skipped (including
+  when multiple adoptions were made into the same Skipped book). A book or author the adoption
   created is removed too, unless something else now depends on it (another
   file, another book by that author, excluded or not, another adopted row),
   or the book has been used since: monitored, edited, linked to a series, or
@@ -949,7 +974,8 @@ Things worth knowing:
   what it matches into the library, moving or copying the files.
 - It lists one row per **book**, the same idea as the list above. A folder of
   audio is one row, and so is a folder whose audio subfolders are all pieces of
-  one recording (`CD1`, `Disc 2`, `Disk 3`, `Part 4`, `Chapter 5`). Subfolders
+  one recording (`CD1`, `Disc 2`, `Disk 3`, `Part 4`, `Chapter 5`, or the
+  book's own title followed by a CD or disc number, `Fjellvinden Disc 1`). Subfolders
   named `Book 1`, `Vol 2` or a bare `1` are separate books, because a series
   stored that way is several books rather than one long one, so each gets its
   own row and its own match.

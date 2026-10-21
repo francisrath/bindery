@@ -117,6 +117,10 @@ func main() {
 			"bypassLocal", cfg.OutboundProxyBypassLocal)
 	}
 
+	if httpsec.LinkLocalServicesEnabled() {
+		slog.Warn(httpsec.LinkLocalServicesEnvVar + " is on: the service URLs you type (indexers, Prowlarr, download clients, Audiobookshelf, Grimmory, Calibre plugin) may use link-local addresses. Cloud metadata addresses stay blocked.")
+	}
+
 	slog.Info("starting bindery",
 		"version", version,
 		"commit", commit,
@@ -310,6 +314,7 @@ func main() {
 	bootProviders.log("metadata providers configured")
 	metaAgg := metadata.NewAggregator(bootProviders.primary, bootProviders.enrichers...)
 	metaAgg.SetAuthorEnrichers(bootProviders.authorEnrichers...)
+	metaAgg.SetAudiobookSourcesDisabled(bootProviders.audibleOff, bootProviders.audnexOff)
 
 	// Optional CLI subcommand: `bindery migrate {csv,readarr} <path>`.
 	// Runs the import and exits; does not start the HTTP server. Useful
@@ -1192,6 +1197,10 @@ func main() {
 
 		// Storage paths, admin-only (see registerStorageRoutes).
 		registerStorageRoutes(r, api.NewStorageHandler(cfg))
+
+		// Foreign key drift report, admin-only and on demand (see
+		// registerDBIntegrityRoutes).
+		registerDBIntegrityRoutes(r, api.NewDBIntegrityHandler(database, cfg.DBPath, backupHandler))
 
 		// Library. The scan status returns server filesystem paths, so it is
 		// admin only (#2361); see registerLibraryScanStatusRoute.

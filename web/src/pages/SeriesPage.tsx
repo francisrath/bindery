@@ -7,6 +7,7 @@ import { foldedIncludes } from '../util/foldForSearch'
 import AddSeriesBookModal from '../components/AddSeriesBookModal'
 import HardcoverSeriesLinkModal from '../components/HardcoverSeriesLinkModal'
 import SeriesNameModal from '../components/SeriesNameModal'
+import HardcoverSeriesAddSearch from '../components/HardcoverSeriesAddSearch'
 import MergeSeriesModal from '../components/MergeSeriesModal'
 import { btn, btnSize, primaryFill } from '../components/buttons'
 import { useIsAdmin } from '../auth/AuthContext'
@@ -21,6 +22,15 @@ type SeriesFilter = typeof SERIES_FILTERS[number]
 
 function parseSeriesFilter(raw: string | null): SeriesFilter {
   return SERIES_FILTERS.find(f => f === raw) ?? 'all'
+}
+
+// Book count filter (#3317), kept in `?size=`. Computed from series.books.length
+// alone, so a one book series can be told from a longer one without a fetch.
+const SERIES_SIZES = ['any', 'single', 'multi'] as const
+type SeriesSize = typeof SERIES_SIZES[number]
+
+function parseSeriesSize(raw: string | null): SeriesSize {
+  return SERIES_SIZES.find(z => z === raw) ?? 'any'
 }
 
 // How many of a series' split edition parts (#3048) are still monitored, which
@@ -115,6 +125,38 @@ export default function SeriesPage() {
     await refreshSeriesList()
     setExpanded(series.id)
     setShowAddSeries(false)
+  }
+
+  // A series picked from a Hardcover search arrives already linked: open it and
+  // load its diff so the missing books can be added one by one. Nothing is
+  // added automatically (#1706).
+  // A title search or filter that hides the series just created or opened
+  // would make the add look like it did nothing, so both are cleared first.
+  const revealSeries = () => {
+    setSearch('')
+    const params = new URLSearchParams(searchParams)
+    params.delete('filter')
+    params.delete('size')
+    setSearchParams(params, { replace: true })
+  }
+
+  const handleCreatedFromHardcover = async (series: Series) => {
+    await refreshSeriesList()
+    revealSeries()
+    setExpanded(series.id)
+    setShowAddSeries(false)
+    void loadHardcoverDiff(series, true)
+  }
+
+  // The picked Hardcover series is already in the library: open that one.
+  const handleHardcoverAlreadyAdded = async (seriesId: number) => {
+    const list = await refreshSeriesList()
+    revealSeries()
+    setExpanded(seriesId)
+    setShowAddSeries(false)
+    setLinkResult(prev => ({ ...prev, [seriesId]: t('series.addFromHardcover.alreadyAdded') }))
+    const existing = list.find(s => s.id === seriesId)
+    if (existing) void loadHardcoverDiff(existing)
   }
 
   const handleRenameSeries = async (title: string) => {
@@ -337,6 +379,23 @@ export default function SeriesPage() {
     setExpanded(null)
   }
 
+  const size = parseSeriesSize(searchParams.get('size'))
+  const selectSize = (next: SeriesSize) => {
+    const params = new URLSearchParams(searchParams)
+    if (next === 'any') params.delete('size')
+    else params.set('size', next)
+    setSearchParams(params, { replace: true })
+    setExpanded(null)
+  }
+
+  const matchesSize = (series: Series) => {
+    const count = series.books?.length ?? 0
+    if (size === 'single') return count === 1
+    if (size === 'multi') return count >= 2
+    return true
+  }
+  const narrowed = filter !== 'all' || size !== 'any'
+
   const matchesFilter = (series: Series) => {
     switch (filter) {
       case 'missing':
@@ -355,7 +414,7 @@ export default function SeriesPage() {
   }
 
   const filteredSeries = seriesList.filter(series =>
-    foldedIncludes(series.title, search) && (series.id === expanded || matchesFilter(series)))
+    foldedIncludes(series.title, search) && (series.id === expanded || (matchesFilter(series) && matchesSize(series))))
 
   return (
     <div>
@@ -364,7 +423,7 @@ export default function SeriesPage() {
         <h2 className="text-2xl font-bold">{t('series.title')}</h2>
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-600 dark:text-zinc-500">
-            {filter === 'all' ? t('series.count', { count: seriesList.length }) : t('series.countFiltered', { shown: filteredSeries.length, total: seriesList.length })}
+            {!narrowed ? t('series.count', { count: seriesList.length }) : t('series.countFiltered', { shown: filteredSeries.length, total: seriesList.length })}
           </span>
           {isAdmin && (
             <button
@@ -401,6 +460,19 @@ export default function SeriesPage() {
             </button>
           ))}
         </div>
+        <div role="group" aria-label={t('series.sizeLabel')} className="flex gap-1 pointer-coarse:gap-y-5 flex-wrap items-center">
+          {SERIES_SIZES.map(z => (
+            <button
+              key={z}
+              type="button"
+              aria-pressed={size === z}
+              onClick={() => selectSize(z)}
+              className={`touch-target px-3 py-1 rounded-md text-xs font-medium transition-colors ${size === z ? 'bg-slate-300 dark:bg-zinc-700 text-slate-900 dark:text-white' : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            >
+              {t(`series.size.${z}`)}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -413,7 +485,7 @@ export default function SeriesPage() {
       ) : filteredSeries.length === 0 ? (
         <div className="text-center py-16 text-slate-600 dark:text-zinc-500" role="status">
           <p>
-            {filter === 'all'
+            {!narrowed
               ? t('series.noMatch', { query: search })
               : search.trim()
                 ? t('series.noMatchFiltered', { query: search })
@@ -792,6 +864,12 @@ export default function SeriesPage() {
           submitLabel={t('series.addSeries')}
           onClose={() => setShowAddSeries(false)}
           onSubmit={handleCreateSeries}
+          beforeName={enhancedHardcoverApi ? (
+            <HardcoverSeriesAddSearch
+              onCreated={handleCreatedFromHardcover}
+              onExisting={handleHardcoverAlreadyAdded}
+            />
+          ) : undefined}
         />
       )}
       {editingSeries && (

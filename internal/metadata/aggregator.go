@@ -41,8 +41,13 @@ type aggregatorCore struct {
 	authorEnrichers []AuthorEnricher
 	audnex          AudnexBookClient
 	audible         audibleCatalogue
-	cache           *ttlCache
-	requests        *requestCache
+	// audibleOff and audnexOff are the operator's switches for the two
+	// audiobook sources that are not enrichers (#1890, #2015). While set, the
+	// source is not contacted and nothing cached from it is served.
+	audibleOff bool
+	audnexOff  bool
+	cache      *ttlCache
+	requests   *requestCache
 }
 
 // AudnexBookClient is the narrow audnex capability the aggregator needs for

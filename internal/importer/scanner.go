@@ -3324,10 +3324,11 @@ func cleanLayoutTitle(dir string) string {
 // "Title - Author" filename (#754): the first directory under the root is the
 // author, and the file's parent is the book folder.
 //
-// When that parent is one disc of a multi-disc audiobook ("CD1", "Disc 2") it
-// names a part rather than the book, so the folder above it names the book
-// instead (#2723), by the cd/disc rule the library scan's unmatched grouping
-// already uses (discSetNameRe, #2672): "Book 1", "Vol 1" and bare numbers are
+// When that parent is one disc of a multi-disc audiobook ("CD1", "Disc 2", or
+// the book's own title in front, "Fjellvinden Disc 1", #3327) it names a part
+// rather than the book, so the folder above it names the book instead (#2723),
+// by the cd/disc rule the library scan's unmatched grouping already uses
+// (isDiscSetName, #2672): "Book 1", "Vol 1" and bare numbers are
 // left alone, because in a library those name separate books of a series as
 // often as they name discs. The folder above counts only when a book folder
 // separates it from the author: in <root>/<Author>/<disc>/<file> the parent is
@@ -3351,7 +3352,7 @@ func bookFolderFromLayout(path string, roots ...string) (author, bookFolder stri
 			// file's parent names the book — unless it is a disc folder with a
 			// book folder above it.
 			idx := len(parts) - 2
-			if idx > 1 && discSetNameRe.MatchString(parts[idx]) {
+			if idx > 1 && isDiscSetName(parts[idx], parts[idx-1]) {
 				idx--
 			}
 			folder := filepath.Dir(path)
@@ -4389,6 +4390,22 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 						"path", path)
 					return false
 				}
+			}
+			// The winner is settled; now ask whether it is the file's book at
+			// all. A shared series name carries the score: "Harry Potter en de
+			// Relieken van de Dood" against "Harry Potter en de Orde van de
+			// Feniks" is 0.929, and the volume veto has no number to read in a
+			// Dutch catalogue title. With the file's own book excluded nothing
+			// competed and the file went to the next best title (#3388). Words
+			// each title has that the other lacks, none of them close, name two
+			// works, so the file is left unmatched. This runs on the winner and
+			// not on every candidate so the ranking above, and the near ties it
+			// leaves unmatched (#2941), are exactly what they were. A different
+			// work is not a book this file matches, so claimBlocked stays unset.
+			if titlesNameDifferentWorks(title, best.sb.book.Title) {
+				slog.Debug("library scan: title match rejected (different work)",
+					"title", best.sb.book.Title, "path", path, "fileTitle", title, "jw", best.score)
+				return false
 			}
 			return claimTitleHit(best, path, cleanPath, detectedFmt)
 		}

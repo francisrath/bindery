@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState, useId } from 'react'
+import { FormEvent, useEffect, useRef, useState, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useConfirmDialog } from '../../components/useConfirmDialog'
 import { api, AuthorMonitorMode, MetadataProfile } from '../../api/client'
@@ -41,6 +41,28 @@ const KNOWN_LANGUAGES: Array<{ code: string; label: string }> = [
   { code: 'hin', label: 'Hindi' },
 ]
 
+// metadata.enrichers_disabled holds the names of the sources turned off,
+// comma separated (#1890, #2015). Empty, the default, leaves everything on.
+const ENRICHERS_DISABLED_KEY = 'metadata.enrichers_disabled'
+
+const ENRICHER_ROWS = [
+  { name: 'openlibrary', labelKey: 'settings.general.enricherOpenlibraryLabel', label: 'OpenLibrary', hintKey: 'settings.general.enricherOpenlibraryHint', hint: 'Descriptions, covers and subjects.' },
+  { name: 'hardcover', labelKey: 'settings.general.enricherHardcoverLabel', label: 'Hardcover', hintKey: 'settings.general.enricherHardcoverHint', hint: 'Ratings, curated genres and series. Idle until an API token is stored.' },
+  { name: 'googlebooks', labelKey: 'settings.general.enricherGooglebooksLabel', label: 'Google Books', hintKey: 'settings.general.enricherGooglebooksHint', hint: 'Descriptions and covers. Only used once a Google Books API key is stored.' },
+  { name: 'dnb', labelKey: 'settings.general.enricherDnbLabel', label: 'DNB (Deutsche Nationalbibliothek)', hintKey: 'settings.general.enricherDnbHint', hint: 'German language details and covers. Safe to turn off if you read no German.' },
+]
+
+const AUDIOBOOK_SOURCE_ROWS = [
+  { name: 'audible', labelKey: 'settings.general.audibleLabel', label: 'Audible catalogue', hintKey: 'settings.general.audibleHint', hint: 'Adds audiobooks to an author\'s catalogue. It uses an unpublished Amazon endpoint, not a documented API.' },
+  { name: 'audnex', labelKey: 'settings.general.audnexLabel', label: 'audnex', hintKey: 'settings.general.audnexHint', hint: 'Narrator, runtime and cover for audiobooks. A community proxy over the same Audible data.' },
+]
+
+const ALL_TOGGLEABLE = [...ENRICHER_ROWS, ...AUDIOBOOK_SOURCE_ROWS].map(r => r.name)
+
+function parseDisabledSources(value: string): string[] {
+  return value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean)
+}
+
 function formatLanguageList(csv: string): string {
   if (!csv || csv.trim() === '' || csv.trim().toLowerCase() === 'any') return 'any'
   return csv.split(',').map(c => {
@@ -63,6 +85,39 @@ export default function MetadataTab() {
   // never comes back from listSettings — /system/status reports whether one
   // exists.
   const [hardcoverTokenConfigured, setHardcoverTokenConfigured] = useState(false)
+
+  const disabledSources = parseDisabledSources(settings[ENRICHERS_DISABLED_KEY] ?? '')
+  // A stored hardcover primary with no token runs as OpenLibrary on the server.
+  const storedPrimary = settings['metadata.primary_provider'] || 'openlibrary'
+  const effectivePrimary = storedPrimary === 'hardcover' && !hardcoverTokenConfigured ? 'openlibrary' : storedPrimary
+  // One save at a time: a click while a save is in flight is ignored (the boxes
+  // are disabled meanwhile), so the order requests arrive in cannot store a
+  // stale list. A failed save puts the box back to the last saved value.
+  const [savingSources, setSavingSources] = useState(false)
+  const [sourcesError, setSourcesError] = useState(false)
+  const savingSourcesRef = useRef(false)
+  const toggleSource = async (name: string) => {
+    if (savingSourcesRef.current) return
+    const previous = settings[ENRICHERS_DISABLED_KEY] ?? ''
+    const next = disabledSources.includes(name)
+      ? disabledSources.filter(n => n !== name)
+      : [...disabledSources, name]
+    const value = ALL_TOGGLEABLE.filter(n => next.includes(n)).join(',')
+    savingSourcesRef.current = true
+    setSavingSources(true)
+    setSourcesError(false)
+    setSettings(s => ({ ...s, [ENRICHERS_DISABLED_KEY]: value }))
+    try {
+      await api.setSetting(ENRICHERS_DISABLED_KEY, value)
+    } catch (err) {
+      console.error(err)
+      setSettings(s => ({ ...s, [ENRICHERS_DISABLED_KEY]: previous }))
+      setSourcesError(true)
+    } finally {
+      savingSourcesRef.current = false
+      setSavingSources(false)
+    }
+  }
 
   const reload = () => api.listMetadataProfiles().then(setProfiles).catch(console.error)
 
@@ -127,6 +182,70 @@ export default function MetadataTab() {
           <p className="text-xs text-slate-500 dark:text-zinc-600 mt-1">
             {t('settings.general.metadataProviderLiveHint', 'Takes effect from the next lookup, with no restart. Authors already in your library stay linked to the provider they were added from; the new primary applies to authors you add afterwards. To move an existing author, use "Link metadata" on their page.')}
           </p>
+        </div>
+
+        {/* Metadata sources that can be turned off (#1890, #2015). One stored
+            list, metadata.enrichers_disabled, so a checked box means the source
+            is NOT in it. The primary stays on whatever the list says. */}
+        <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900" data-testid="metadata-sources">
+          <h4 className="text-sm font-medium text-slate-800 dark:text-zinc-200 mb-1">
+            {t('settings.general.enrichersHeading', 'Enrichers')}
+          </h4>
+          <p className="text-xs text-slate-600 dark:text-zinc-500 mb-2">
+            {t('settings.general.enrichersHint', 'These providers fill in what the primary leaves empty. Untick one and Bindery stops using it as an enricher, which means fewer requests but less fill in: DNB also supplies covers through its cover service, and Hardcover also supplies curated genres, series and edition language evidence. Takes effect from the next lookup, with no restart.')}
+          </p>
+          <div className="space-y-2">
+            {ENRICHER_ROWS.map(row => {
+              const isPrimary = row.name === effectivePrimary
+              return (
+                <label key={row.name} className="flex items-start gap-2 text-sm text-slate-800 dark:text-zinc-200">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    aria-label={t(row.labelKey, row.label)}
+                    checked={isPrimary || !disabledSources.includes(row.name)}
+                    disabled={isPrimary || savingSources}
+                    onChange={() => toggleSource(row.name)}
+                  />
+                  <span>
+                    {t(row.labelKey, row.label)}
+                    <span className="block text-xs text-slate-600 dark:text-zinc-500">
+                      {isPrimary
+                        ? t('settings.general.enricherPrimaryNote', 'This is the primary provider, so it cannot be turned off.')
+                        : t(row.hintKey, row.hint)}
+                    </span>
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+
+          <h4 className="text-sm font-medium text-slate-800 dark:text-zinc-200 mt-4 mb-1">
+            {t('settings.general.audiobookSourcesHeading', 'Audiobook sources')}
+          </h4>
+          <div className="space-y-2">
+            {AUDIOBOOK_SOURCE_ROWS.map(row => (
+              <label key={row.name} className="flex items-start gap-2 text-sm text-slate-800 dark:text-zinc-200">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  aria-label={t(row.labelKey, row.label)}
+                  checked={!disabledSources.includes(row.name)}
+                  disabled={savingSources}
+                  onChange={() => toggleSource(row.name)}
+                />
+                <span>
+                  {t(row.labelKey, row.label)}
+                  <span className="block text-xs text-slate-600 dark:text-zinc-500">{t(row.hintKey, row.hint)}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          {sourcesError && (
+            <p className="text-xs text-red-600 dark:text-red-400 mt-2" role="alert">
+              {t('settings.general.sourcesSaveFailed', 'Could not save that change, so it was put back. Try again.')}
+            </p>
+          )}
         </div>
 
         {/* Author defaults */}

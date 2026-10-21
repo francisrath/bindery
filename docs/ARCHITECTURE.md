@@ -29,6 +29,14 @@ and BnF, which are wired only when primary. Switching the primary away from eith
 therefore leaves its `nb:` or `bnf:` authors with no provider to sync from until
 they are relinked.
 
+`metadata.enrichers_disabled` takes any of the non primary enrichers out of that
+set (`openlibrary`, `hardcover`, `googlebooks`, `dnb`), and also switches off the
+two audiobook sources that are not enrichers, the `audible` catalogue and
+`audnex` (#1890, #2015). It is read by the same rebuild that handles the primary
+provider, so a save applies to the next lookup. Because the provider set is part
+of the cache keys, a smaller set never serves answers cached under a larger one;
+the two audiobook sources return before their cache is read while off.
+
 An author's photo and bio come from the author's own provider. When it has none,
 the optional *author enrichers* fill the gap on the staggered `refresh-metadata`
 job and on the two single author actions, adding an author and its Refresh

@@ -77,6 +77,10 @@ func (s *Scheduler) searchBookWithOutcomes(ctx context.Context, idxs []models.In
 		if dbg == nil {
 			return results, nil, nil
 		}
+		// Dropped releases are for the interactive search's "filtered"
+		// section (#2334); an automatic search never acts on them, and the
+		// debug log should not hold their raw URLs.
+		dbg.Dropped = nil
 		return results, dbg.Indexers, dbg
 	}
 	if os, ok := s.searcher.(outcomeSearcher); ok {
