@@ -35,21 +35,18 @@ const SURFACES = {
 // Built through PostCSS like indexCss.test.ts: a ?raw import of a CSS file is
 // empty under Vitest.
 type Token = 'fg-muted' | 'accent-text'
-const TOKENS: Record<Token, { light: string; dark: string }> = {
-  'fg-muted': { light: '', dark: '' },
-  'accent-text': { light: '', dark: '' },
-}
+type Theme = 'light' | 'dark'
+const TOKEN_NAMES: Token[] = ['fg-muted', 'accent-text']
+const TOKENS = new Map<Token, Record<Theme, string>>()
+const token = (name: Token, theme: Theme) => (theme === 'dark' ? TOKENS.get(name)?.dark : TOKENS.get(name)?.light) ?? ''
 
 beforeAll(async () => {
   const { css } = await postcss([tailwindcss()]).process('@import "./index.css";', { from: 'src/contrast.test.css' })
-  const values = (selector: string) => {
-    const body = css.match(new RegExp(`(?:^|[}\\s])${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`))?.[1] ?? ''
-    return Object.fromEntries([...body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map(m => [m[1], m[2]]))
-  }
-  const light = values(':root')
-  const dark = values('html.dark')
-  for (const token of Object.keys(TOKENS) as Token[]) {
-    TOKENS[token] = { light: light[token], dark: dark[token] }
+  const values = (body = '') => new Map([...body.matchAll(/--([\w-]+):\s*(#[0-9a-fA-F]{6})/g)].map(m => [m[1], m[2]]))
+  const light = values(css.match(/(?:^|[}\s]):root\s*\{([^}]*)\}/)?.[1])
+  const dark = values(css.match(/(?:^|[}\s])html\.dark\s*\{([^}]*)\}/)?.[1])
+  for (const name of TOKEN_NAMES) {
+    TOKENS.set(name, { light: light.get(name) ?? '', dark: dark.get(name) ?? '' })
   }
 }, 60_000)
 
@@ -57,13 +54,13 @@ const AA_NORMAL = 4.5
 
 describe('theme text tokens meet WCAG AA on app surfaces', () => {
   it('reads both tokens for both themes from index.css', () => {
-    for (const t of Object.values(TOKENS)) {
-      expect(t.light).toMatch(/^#[0-9a-f]{6}$/i)
-      expect(t.dark).toMatch(/^#[0-9a-f]{6}$/i)
+    for (const name of TOKEN_NAMES) {
+      expect(token(name, 'light')).toMatch(/^#[0-9a-f]{6}$/i)
+      expect(token(name, 'dark')).toMatch(/^#[0-9a-f]{6}$/i)
     }
   })
 
-  const cases: Array<[string, Token, 'light' | 'dark', string]> = [
+  const cases: Array<[string, Token, Theme, string]> = [
     ['fg-muted light on slate-50', 'fg-muted', 'light', SURFACES.lightPage],
     ['fg-muted light on slate-100', 'fg-muted', 'light', SURFACES.lightCard],
     ['fg-muted dark on zinc-950', 'fg-muted', 'dark', SURFACES.darkPage],
@@ -73,9 +70,9 @@ describe('theme text tokens meet WCAG AA on app surfaces', () => {
     ['accent-text dark on zinc-950', 'accent-text', 'dark', SURFACES.darkPage],
     ['accent-text dark on zinc-900', 'accent-text', 'dark', SURFACES.darkCard],
   ]
-  for (const [name, token, theme, bg] of cases) {
+  for (const [name, tokenName, theme, bg] of cases) {
     it(`${name} >= ${AA_NORMAL}:1`, () => {
-      expect(contrast(TOKENS[token][theme], bg)).toBeGreaterThanOrEqual(AA_NORMAL)
+      expect(contrast(token(tokenName, theme), bg)).toBeGreaterThanOrEqual(AA_NORMAL)
     })
   }
 
@@ -92,23 +89,30 @@ describe('theme text tokens meet WCAG AA on app surfaces', () => {
 // string that overrides the token's colour for a theme (dark:text-zinc-300)
 // is measured with the override. A background set in a different string, as
 // a ternary often does, is not seen: this guards the common badge shape.
-const PALETTE: Record<string, string> = {
-  white: '#ffffff',
-  'slate-50': '#f8fafc',
-  'slate-100': '#f1f5f9',
-  'slate-200': '#e2e8f0',
-  'slate-300': '#cad5e2',
-  'zinc-700': '#3f3f46',
-  'zinc-800': '#27272a',
-  'zinc-900': '#18181b',
-  'zinc-950': '#09090b',
-}
 // Tailwind v4 palette values, from tailwindcss/theme.css converted to sRGB.
-const TEXT_OVERRIDE: Record<string, string> = {
-  'zinc-200': '#e4e4e7',
-  'zinc-300': '#d4d4d8',
-  'slate-700': '#314158',
-  'slate-800': '#1d293d',
+const PALETTE = new Map([
+  ['white', '#ffffff'],
+  ['slate-50', '#f8fafc'],
+  ['slate-100', '#f1f5f9'],
+  ['slate-200', '#e2e8f0'],
+  ['slate-300', '#cad5e2'],
+  ['zinc-700', '#3f3f46'],
+  ['zinc-800', '#27272a'],
+  ['zinc-900', '#18181b'],
+  ['zinc-950', '#09090b'],
+])
+const TEXT_OVERRIDE = new Map([
+  ['zinc-200', '#e4e4e7'],
+  ['zinc-300', '#d4d4d8'],
+  ['slate-700', '#314158'],
+  ['slate-800', '#1d293d'],
+])
+// A background, and an override of the token's colour, as each theme spells
+// them, the colour in group 1. A background's opacity (bg-zinc-800/50) is
+// split off before matching.
+const CLASSES: Record<Theme, { bg: RegExp; text: RegExp }> = {
+  light: { bg: /^bg-((?:slate|zinc)-\d+|white)$/, text: /^text-((?:slate|zinc)-\d+)$/ },
+  dark: { bg: /^dark:bg-((?:slate|zinc)-\d+|white)$/, text: /^dark:text-((?:slate|zinc)-\d+)$/ },
 }
 
 function mix(fg: string, bg: string, alpha: number): string {
@@ -126,21 +130,22 @@ describe('tokens on the backgrounds the source puts them on', () => {
       if (/\.test\.tsx?$/.test(file)) continue
       for (const [, str] of source.matchAll(/["'`]([^"'`]*\btext-(?:fg-muted|accent-text)\b[^"'`]*)["'`]/g)) {
         const classes = str.split(/\s+/)
-        const token = classes.find(c => c === 'text-fg-muted' || c === 'text-accent-text')!.slice(5) as Token
+        const tokenName = classes.find(c => c === 'text-fg-muted' || c === 'text-accent-text')!.slice(5) as Token
         for (const theme of ['light', 'dark'] as const) {
-          const prefix = theme === 'dark' ? 'dark:' : ''
-          const bgClass = classes.find(c => new RegExp(`^${prefix}bg-((?:slate|zinc)-\\d+|white)(?:/(\\d+))?$`).test(c))
-          if (!bgClass) continue
-          const [, name, pct] = bgClass.match(/bg-([a-z]+(?:-\d+)?)(?:\/(\d+))?$/)!
-          if (!PALETTE[name]) continue
+          const { bg: bgPattern, text: textPattern } = theme === 'dark' ? CLASSES.dark : CLASSES.light
+          const bgClass = classes.find(c => bgPattern.test(c.split('/')[0]))
+          const [bgBase, opacity] = bgClass?.split('/') ?? []
+          const ground = bgBase && PALETTE.get(bgBase.match(bgPattern)![1])
+          if (!bgClass || !ground) continue
           const card = theme === 'dark' ? SURFACES.darkCard : SURFACES.lightCard
-          const bg = pct ? mix(PALETTE[name], card, Number(pct) / 100) : PALETTE[name]
-          const override = classes.find(c => new RegExp(`^${prefix}text-(slate|zinc)-\\d+$`).test(c))
-          const fg = override ? TEXT_OVERRIDE[override.slice(prefix.length + 5)] : TOKENS[token][theme]
+          const bg = opacity ? mix(ground, card, Number(opacity) / 100) : ground
+          const overrideMatch = classes.map(c => c.match(textPattern)).find(m => m)
+          const override = overrideMatch?.[0]
+          const fg = overrideMatch ? TEXT_OVERRIDE.get(overrideMatch[1]) : token(tokenName, theme)
           if (!fg) continue
           checked++
           const ratio = contrast(fg, bg)
-          if (ratio < AA_NORMAL) failures.push(`${file}: ${theme} ${override ?? 'text-' + token} on ${bgClass} is ${ratio.toFixed(2)}:1 in "${str.trim()}"`)
+          if (ratio < AA_NORMAL) failures.push(`${file}: ${theme} ${override ?? 'text-' + tokenName} on ${bgClass} is ${ratio.toFixed(2)}:1 in "${str.trim()}"`)
         }
       }
     }
