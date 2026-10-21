@@ -1758,7 +1758,8 @@
       "coldStart": "Legg til flere bøker for å få personlige sjangeranbefalinger.",
       "goToSettings": "Gå til bokanbefalinger"
     },
-    "moreActionsFor": "Flere handlinger for {{title}}"
+    "moreActionsFor": "Flere handlinger for {{title}}",
+    "ratingLabel": "Vurdert til {{rating}} av 5"
   },
   "gettingStarted": {
     "title": "Kom i gang",

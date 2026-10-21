@@ -2027,7 +2027,8 @@
       "coldStart": "Add more books to unlock personalized genre recommendations.",
       "goToSettings": "Go to book recommendations"
     },
-    "moreActionsFor": "More actions for {{title}}"
+    "moreActionsFor": "More actions for {{title}}",
+    "ratingLabel": "Rated {{rating}} out of 5"
   },
   "gettingStarted": {
     "title": "Getting started",
