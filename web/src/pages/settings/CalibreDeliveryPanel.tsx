@@ -95,7 +95,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
       tone: 'text-amber-600 dark:text-amber-400',
     }
   } else {
-    reach = { text: t('settings.calibre.deliveries.reachableUnknown'), tone: 'text-slate-500 dark:text-zinc-500' }
+    reach = { text: t('settings.calibre.deliveries.reachableUnknown'), tone: 'text-fg-muted' }
   }
   // In pull (#2833) Bindery never probes Calibre; the plugin checks in.
   const pulling = summary?.mode === 'plugin' && summary?.transport === 'pull'
@@ -114,7 +114,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
         <label className="block text-sm font-medium text-slate-800 dark:text-zinc-200">
           {t('settings.calibre.deliveries.heading')}
         </label>
-        <p className="text-xs text-slate-600 dark:text-zinc-500 mt-0.5">{t('settings.calibre.deliveries.description')}</p>
+        <p className="text-xs text-fg-muted mt-0.5">{t('settings.calibre.deliveries.description')}</p>
       </div>
 
       {loadError && (
@@ -123,7 +123,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
         </p>
       )}
       {!summary && !loadError && (
-        <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.deliveries.loading')}</p>
+        <p className="text-xs text-fg-muted">{t('settings.calibre.deliveries.loading')}</p>
       )}
 
       {summary && (
@@ -145,7 +145,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
           <span data-testid="calibre-delivery-reachability" className={`break-all ${reach.tone}`}>
             {reach.text}
             {!pulling && target?.checkedAt && (
-              <span className="text-slate-500 dark:text-zinc-500">
+              <span className="text-fg-muted">
                 {' '}({t('settings.calibre.deliveries.checkedAt', { time: when(target.checkedAt) })})
               </span>
             )}
@@ -188,7 +188,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
             {t('settings.calibre.deliveries.failedHeading')}
           </p>
           {items.length === 0 ? (
-            <p className="text-xs text-slate-500 dark:text-zinc-500">{t('settings.calibre.deliveries.failedEmpty')}</p>
+            <p className="text-xs text-fg-muted">{t('settings.calibre.deliveries.failedEmpty')}</p>
           ) : (
             <>
               <div
@@ -199,7 +199,7 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
                   <thead className="bg-slate-100 dark:bg-zinc-800 sticky top-0">
                     <tr>
                       {(['colTitle', 'colAuthor', 'colCode', 'colError', 'colAttempts', 'colLastTry'] as const).map(k => (
-                        <th key={k} className="text-left px-2 py-1 text-slate-600 dark:text-zinc-400 font-medium">
+                        <th key={k} className="text-left px-2 py-1 text-fg-muted font-medium">
                           {t(`settings.calibre.deliveries.${k}`)}
                         </th>
                       ))}
@@ -209,18 +209,18 @@ export default function CalibreDeliveryPanel({ refreshKey }: { refreshKey?: unkn
                     {items.map(d => (
                       <tr key={d.id} className="border-t border-slate-200 dark:border-zinc-800 align-top">
                         <td className="px-2 py-1 text-slate-800 dark:text-zinc-200">{d.bookTitle || `#${d.bookId}`}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400">{d.authorName}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400 font-mono">{d.lastErrorCode}</td>
+                        <td className="px-2 py-1 text-fg-muted">{d.authorName}</td>
+                        <td className="px-2 py-1 text-fg-muted font-mono">{d.lastErrorCode}</td>
                         <td className="px-2 py-1 text-red-600 dark:text-red-400 break-all">{d.lastError}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400">{d.attempts}</td>
-                        <td className="px-2 py-1 text-slate-600 dark:text-zinc-400 whitespace-nowrap">{when(d.updatedAt)}</td>
+                        <td className="px-2 py-1 text-fg-muted">{d.attempts}</td>
+                        <td className="px-2 py-1 text-fg-muted whitespace-nowrap">{when(d.updatedAt)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               {failed && failed.total > items.length && (
-                <p className="text-xs text-slate-500 dark:text-zinc-500 mt-1">
+                <p className="text-xs text-fg-muted mt-1">
                   {t('settings.calibre.deliveries.failedMore', { shown: items.length, total: failed.total })}
                 </p>
               )}
