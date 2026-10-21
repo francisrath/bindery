@@ -285,20 +285,31 @@ func TestClearPhoto(t *testing.T) {
 			t.Errorf("response imageUrl %q, want the proxied provider photo", resp.ImageURL)
 		}
 	})
-	t.Run("a provider photo is refused", func(t *testing.T) {
-		f, a := newAuthor(t, nil)
-		if rec := del(f.h, a.ID); rec.Code != http.StatusConflict {
+	// The refusal carries its own code, so the page can say why rather than
+	// show the author-changed message every other 409 here means.
+	refusedCode := func(t *testing.T, rec *httptest.ResponseRecorder) {
+		t.Helper()
+		if rec.Code != http.StatusConflict {
 			t.Fatalf("status %d, want 409", rec.Code)
 		}
+		var body struct{ Error, Code string }
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatal(err)
+		}
+		if body.Code != codePhotoNotUploaded || body.Error == errAuthorChanged {
+			t.Errorf("409 body %+v, want code %q", body, codePhotoNotUploaded)
+		}
+	}
+	t.Run("a provider photo is refused", func(t *testing.T) {
+		f, a := newAuthor(t, nil)
+		refusedCode(t, del(f.h, a.ID))
 		if got, _ := f.authors.GetByID(t.Context(), a.ID); got.ImageURL != a.ImageURL {
 			t.Errorf("photo changed to %q", got.ImageURL)
 		}
 	})
 	t.Run("an enriched photo is refused", func(t *testing.T) {
 		f, a := newAuthor(t, &models.ProfileSource{Provider: "wikimedia-commons"})
-		if rec := del(f.h, a.ID); rec.Code != http.StatusConflict {
-			t.Fatalf("status %d, want 409", rec.Code)
-		}
+		refusedCode(t, del(f.h, a.ID))
 	})
 	t.Run("unknown author", func(t *testing.T) {
 		f, _ := newAuthor(t, nil)

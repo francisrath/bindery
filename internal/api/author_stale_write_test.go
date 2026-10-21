@@ -1,11 +1,17 @@
 package api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"github.com/vavallee/bindery/internal/db"
+	"github.com/vavallee/bindery/internal/metadata"
 	"github.com/vavallee/bindery/internal/models"
 )
 
@@ -91,4 +97,49 @@ func TestStaleAuthorSnapshotDoesNotOverwriteUserSave(t *testing.T) {
 		}
 		keptUserBio(t, f, author.ID)
 	})
+}
+
+// Adding an author whose name matches one already in the library relinks
+// that author in place (createAuthorCore). A save landing between the read of
+// that author and the relink's write is kept, and the add answers 409 with
+// the reload message, not a 500 or a silent overwrite (#3287). The trigger
+// plays the concurrent save: it fires on the identifier row the relink updates
+// just before its guarded author write.
+func TestCreateRelinkAnswersConflictWhenTheAuthorChanged(t *testing.T) {
+	const name = "Kari Nordmann"
+	database, err := db.OpenMemory()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	authors := db.NewAuthorRepo(database)
+	provider := &searchableAuthorProvider{
+		stubMetaProvider:     stubMetaProvider{name: "openlibrary"},
+		searchAuthorsByQuery: map[string][]models.Author{name: {{Name: name, ForeignID: "OL1A"}}},
+		authors:              map[string]*models.Author{"OL1A": {Name: name, ForeignID: "OL1A", Description: "From the provider."}},
+	}
+	h := NewAuthorHandler(authors, db.NewAuthorAliasRepo(database), db.NewBookRepo(database), nil, metadata.NewAggregator(provider), nil, db.NewMetadataProfileRepo(database), nil)
+	existing := &models.Author{Name: name, SortName: "Nordmann, Kari", ForeignID: "abs:kari"}
+	if err := authors.Create(t.Context(), existing); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.Exec(`CREATE TRIGGER user_saves_during_relink AFTER UPDATE ON author_identifiers
+		WHEN NEW.foreign_id = 'abs:kari'
+		BEGIN UPDATE authors SET description = 'Written by hand.', updated_at = '2099-01-01T00:00:00Z' WHERE id = NEW.author_id; END`); err != nil {
+		t.Fatal(err)
+	}
+
+	body, _ := json.Marshal(map[string]any{"foreignAuthorId": "OL1A", "authorName": name, "monitored": true})
+	rec := httptest.NewRecorder()
+	h.Create(rec, httptest.NewRequest(http.MethodPost, "/api/v1/author", bytes.NewReader(body)))
+	if rec.Code != http.StatusConflict || !strings.Contains(rec.Body.String(), errAuthorChanged) {
+		t.Fatalf("status %d: %s; want 409 with the reload message", rec.Code, rec.Body.String())
+	}
+	got, err := authors.GetByID(t.Context(), existing.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Description != "Written by hand." || got.ForeignID != "abs:kari" {
+		t.Errorf("author now %q with bio %q; the save made during the add should stand", got.ForeignID, got.Description)
+	}
 }
