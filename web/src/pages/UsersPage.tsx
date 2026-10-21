@@ -33,9 +33,9 @@ export default function UsersPage() {
   const [deleteBusy, setDeleteBusy] = useState(false)
 
   useEffect(() => {
-    document.title = 'Users · Bindery'
+    document.title = `${t('nav.users', 'Users')} · Bindery`
     return () => { document.title = 'Bindery' }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (!isAdmin) return
@@ -121,13 +121,13 @@ export default function UsersPage() {
   }
 
   async function handleReset(id: number) {
-    const pw = prompt('New password (min 8 characters):')
+    const pw = prompt(t('users.resetPrompt', 'New password (min 8 characters):'))
     if (!pw) return
     try {
       await api.resetUserPassword(id, pw)
       setResetError(prev => ({ ...prev, [id]: '' }))
     } catch (e: unknown) {
-      setResetError(prev => ({ ...prev, [id]: e instanceof Error ? e.message : 'Failed' }))
+      setResetError(prev => ({ ...prev, [id]: e instanceof Error ? e.message : t('users.resetFailed', 'Failed') }))
     }
   }
 
@@ -185,7 +185,7 @@ export default function UsersPage() {
   if (!isAdmin) {
     return (
       <div className="text-center py-20 text-fg-muted">
-        Admin access required.
+        {t('users.adminRequired', 'Admin access required.')}
       </div>
     )
   }

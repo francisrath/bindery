@@ -167,9 +167,9 @@ export default function BooksPage() {
   }, [somePageSelected])
 
   useEffect(() => {
-    document.title = 'Books · Bindery'
+    document.title = `${t('nav.books', 'Books')} · Bindery`
     return () => { document.title = 'Bindery' }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     if (addBookWasOpenRef.current && !showAddBook) addBookButtonRef.current?.focus()
@@ -210,7 +210,7 @@ export default function BooksPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Bulk action failed')
+      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
     } finally {
       setBulkBusy(false)
     }
@@ -420,7 +420,7 @@ export default function BooksPage() {
                       checked={allPageSelected}
                       onChange={e => e.target.checked ? selectAllOnPage() : clearSelection()}
                       className="rounded-full border-slate-400 dark:border-zinc-600"
-                      title="Select all on this page"
+                      title={t('common.selectAllPage', 'Select all on this page')}
                     />
                   </th>
                   <SortableHeader label={t('books.colTitle')} asc="title-az" desc="title-za" />
@@ -563,7 +563,7 @@ export default function BooksPage() {
                   {!book.language && (
                     <span
                       className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-200 text-amber-900 dark:bg-amber-900/50 dark:text-amber-300"
-                      title="Metadata source did not report a language for this book."
+                      title={t('books.languageUnknown', 'Metadata source did not report a language for this book.')}
                     >
                       ?
                     </span>

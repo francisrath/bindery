@@ -115,7 +115,7 @@ export default function FolderImportView() {
         return n
       })
     } catch (e) {
-      setImportError(e instanceof Error ? e.message : 'Import failed')
+      setImportError(e instanceof Error ? e.message : t('manualImport.importFailed', 'Import failed'))
     } finally {
       setImportingPaths(prev => { const n = new Set(prev); batch.forEach(b => n.delete(b.path)); return n })
     }

@@ -240,9 +240,9 @@ export default function AuthorsPage() {
   }, [somePageSelected])
 
   useEffect(() => {
-    document.title = 'Authors · Bindery'
+    document.title = `${t('nav.authors', 'Authors')} · Bindery`
     return () => { document.title = 'Bindery' }
-  }, [])
+  }, [t])
 
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => {
@@ -287,7 +287,7 @@ export default function AuthorsPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Bulk action failed')
+      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
     } finally {
       setBulkBusy(false)
     }
@@ -307,7 +307,7 @@ export default function AuthorsPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Bulk action failed')
+      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
     } finally {
       setBulkBusy(false)
     }
@@ -582,7 +582,7 @@ export default function AuthorsPage() {
                       checked={allPageSelected}
                       onChange={e => e.target.checked ? selectAllOnPage() : clearSelection()}
                       className="rounded-full border-slate-400 dark:border-zinc-600"
-                      title="Select all on this page"
+                      title={t('common.selectAllPage', 'Select all on this page')}
                     />
                   </th>
                   <SortableHeader label={t('authors.colName')} asc="az" desc="za" />

@@ -158,7 +158,7 @@ export default function WantedPage() {
       const updated = await api.updateBook(book.id, { mediaType })
       setBooks(books.map(b => b.id === book.id ? updated : b))
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to update')
+      alert(err instanceof Error ? err.message : t('wanted.updateFailed', 'Failed to update'))
     }
   }
 
@@ -173,7 +173,7 @@ export default function WantedPage() {
     } catch {
       setBooks(prev)
       setTotal(prevTotal)
-      showToast("Couldn't update wanted list — reverted.")
+      showToast(t('wanted.unmonitorReverted', 'Couldn\'t update wanted list — reverted.'))
     } finally {
       setUnmonitoringId(null)
     }
@@ -201,7 +201,7 @@ export default function WantedPage() {
         load()
       }, 1200)
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : 'Grab failed')
+      alert(err instanceof Error ? err.message : t('wanted.grabFailed', 'Grab failed'))
     } finally {
       setGrabbingGuid(null)
     }
@@ -225,9 +225,9 @@ export default function WantedPage() {
   }, [somePageSelected])
 
   useEffect(() => {
-    document.title = 'Wanted · Bindery'
+    document.title = `${t('nav.wanted', 'Wanted')} · Bindery`
     return () => { document.title = 'Bindery' }
-  }, [])
+  }, [t])
 
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => {
@@ -256,7 +256,7 @@ export default function WantedPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Bulk action failed')
+      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
     } finally {
       setBulkBusy(false)
     }
@@ -472,7 +472,7 @@ export default function WantedPage() {
                                   rel="noopener noreferrer"
                                   className="text-sky-600 dark:text-sky-400 hover:underline"
                                 >
-                                  ↗ indexer
+                                  ↗ {t('search.indexerLink', 'indexer')}
                                 </a>
                               </>
                             )}

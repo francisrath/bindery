@@ -162,6 +162,7 @@ function ReleaseRow({
   grabbing: string | null
   onGrab: (r: SearchResult) => void
 }) {
+  const { t } = useTranslation()
   return (
     <div className={resultRowCls(r.approved)}>
       <div className="min-w-0 mr-3">
@@ -170,7 +171,7 @@ function ReleaseRow({
           <span className="truncate text-slate-800 dark:text-zinc-200">{r.title}</span>
         </div>
         <span className="text-fg-muted truncate block">
-          {r.indexerName} · {formatBytes(r.size)} · {r.grabs} grabs
+          {r.indexerName} · {formatBytes(r.size)} · {t('bookDetail.releaseGrabs', { n: r.grabs, defaultValue: '{{n}} grabs' })}
           {safeHref(r.infoUrl) && (
             <>
               {' · '}
@@ -181,7 +182,7 @@ function ReleaseRow({
                 onClick={e => e.stopPropagation()}
                 className="text-sky-600 dark:text-sky-400 hover:underline"
               >
-                ↗ indexer
+                ↗ {t('search.indexerLink', 'indexer')}
               </a>
             </>
           )}
@@ -193,7 +194,7 @@ function ReleaseRow({
         disabled={grabbing !== null}
         className={`px-3 py-2 ${primaryFill} disabled:opacity-50 rounded text-[11px] font-medium flex-shrink-0`}
       >
-        {grabbing === r.guid ? 'Grabbing…' : 'Grab'}
+        {grabbing === r.guid ? t('search.grabbing', 'Grabbing…') : t('search.grab', 'Grab')}
       </button>
     </div>
   )

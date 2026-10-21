@@ -25,6 +25,8 @@ vi.mock('react-i18next', () => ({
     t: (key: string, opts?: Record<string, unknown> & { defaultValue?: string }) => {
       const labels: Record<string, string> = {
         'common.loading': 'Loading...',
+        'common.ebook': 'Ebook',
+        'common.audiobook': 'Audiobook',
         'history.events.grabbed': 'Grabbed',
         'history.events.downloadFailed': 'Download Failed',
         'history.events.importFailed': 'Import Failed',

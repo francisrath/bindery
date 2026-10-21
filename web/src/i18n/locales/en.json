@@ -59,7 +59,8 @@
     "showDetails": "Show details",
     "hideDetails": "Hide details",
     "apply": "Apply",
-    "unknownError": "Unknown error"
+    "unknownError": "Unknown error",
+    "bulkActionFailed": "Bulk action failed"
   },
   "monitorMode": {
     "all": "All books",
@@ -162,7 +163,8 @@
     "metadataNoResults": "No metadata results for that search.",
     "metadataAuthorMissing": "Author name missing on this result",
     "metadataAdd": "Add and use",
-    "metadataAdding": "Adding…"
+    "metadataAdding": "Adding…",
+    "importFailed": "Import failed"
   },
   "importPage": {
     "title": "Import",
@@ -335,6 +337,12 @@
       "sentence": "Author not in your library yet",
       "show": "Show books",
       "hide": "Hide books"
+    },
+    "errors": {
+      "loadFailed": "Could not load the list",
+      "adoptFailed": "Could not adopt this book",
+      "ignoreFailed": "Could not ignore this book",
+      "undoFailed": "Could not undo"
     }
   },
   "search": {
@@ -355,7 +363,11 @@
     },
     "forceTitle": "Grab this release again?",
     "forceBody": "Bindery already imported this release once. Grab it anyway only if the files from that import are missing: while they are still there, the new download is skipped as a duplicate. Nothing is removed from your download client and the book's current files stay where they are.",
-    "forceConfirm": "Grab anyway"
+    "forceConfirm": "Grab anyway",
+    "pageTitle": "Search",
+    "searchFailed": "Search failed",
+    "grabFailed": "Grab failed",
+    "indexerLink": "indexer"
   },
   "login": {
     "title": "Sign in",
@@ -581,7 +593,25 @@
       "removing": "Removing…",
       "removeFailed": "Could not remove the photo"
     },
-    "photoNotUploaded": "Only a photo you uploaded can be removed. Reload the page to see the current photo."
+    "photoNotUploaded": "Only a photo you uploaded can be removed. Reload the page to see the current photo.",
+    "loadFailed": "Failed to load",
+    "refreshFailed": "Refresh failed",
+    "updateFailed": "Update failed",
+    "searchFailed": "Search failed",
+    "deleteFailed": "Delete failed",
+    "reloadFailed": "Reload failed",
+    "unknownError": "unknown error",
+    "standalone": "Standalone",
+    "notFound": "Author not found",
+    "sortByTitle": "Sort by title",
+    "sortByDate": "Sort by publication date",
+    "colPublished": "Published",
+    "audioBadge": "Audio",
+    "back": "Back",
+    "aliasesHeading": "Also known as",
+    "aliasSource": "From {{source}}",
+    "noBooks": "No books tracked for this author yet.",
+    "noFilterMatch": "No books match the current filters."
   },
   "catalogueReconciliation": {
     "title": "Reconcile catalogue",
@@ -719,7 +749,8 @@
     "showExcluded": "Show excluded",
     "sortByColumn": "Sort by {{column}}",
     "reviewDuplicates": "Review duplicates",
-    "reviewDuplicatesHint": "Find titles across the library that look like the same book; nothing changes until you exclude a row"
+    "reviewDuplicatesHint": "Find titles across the library that look like the same book; nothing changes until you exclude a row",
+    "languageUnknown": "Metadata source did not report a language for this book."
   },
   "wanted": {
     "title": "Wanted",
@@ -750,7 +781,10 @@
     "noCover": "No cover",
     "authorUnknown": "Author unknown",
     "changeFormat": "Change format for {{title}}",
-    "authorNotMonitored": "Author not monitored, so this is not searched automatically"
+    "authorNotMonitored": "Author not monitored, so this is not searched automatically",
+    "updateFailed": "Failed to update",
+    "unmonitorReverted": "Couldn't update wanted list — reverted.",
+    "grabFailed": "Grab failed"
   },
   "history": {
     "title": "History",
@@ -786,7 +820,8 @@
     "colSize": "Size",
     "colDate": "Date",
     "blocklist": "Blocklist",
-    "delete": "Delete"
+    "delete": "Delete",
+    "blocklistHint": "Add to blocklist — prevents this release from being grabbed again"
   },
   "queue": {
     "title": "Queue",
@@ -850,7 +885,26 @@
     "matchBookSearch": "Search for a book",
     "matchBookSearching": "Searching…",
     "matchBookSearchBtn": "Search",
-    "matchBookCancel": "Cancel"
+    "matchBookCancel": "Cancel",
+    "retryFailed": "Retry failed",
+    "matchFailed": "Match failed",
+    "bulkRetryFailed": "Bulk retry failed",
+    "bulkRemoveFailed": "Bulk remove failed",
+    "age": {
+      "seconds": "{{n}}s ago",
+      "minutes": "{{n}}m ago",
+      "hours": "{{n}}h ago",
+      "days": "{{n}}d ago"
+    },
+    "importRequeued": "Queued for another import attempt — the scanner picks it up on its next check.",
+    "importBlockedHint": "Import blocked — manual intervention required (check library path permissions)",
+    "errorPrefix": {
+      "importFailed": "Import failed:",
+      "importBlocked": "Import blocked:",
+      "error": "Error:"
+    },
+    "pendingGrabbing": "Grabbing…",
+    "pendingGrab": "Grab Now"
   },
   "series": {
     "searchPlaceholder": "Search series…",
@@ -2633,7 +2687,10 @@
     "countQualityProfiles": "Quality profiles",
     "countMetadataProfiles": "Metadata profiles",
     "countRootFolders": "Root folders",
-    "countImportLists": "Import lists"
+    "countImportLists": "Import lists",
+    "resetPrompt": "New password (min 8 characters):",
+    "resetFailed": "Failed",
+    "adminRequired": "Admin access required."
   },
   "requests": {
     "kindBook": "Book",
@@ -2926,7 +2983,8 @@
       "pending": "Waiting for Calibre",
       "delivered": "In Calibre",
       "failed": "Calibre failed"
-    }
+    },
+    "releaseGrabs": "{{n}} grabs"
   },
   "bookRebind": {
     "title": "Re-bind metadata",

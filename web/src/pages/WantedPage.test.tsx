@@ -33,6 +33,8 @@ vi.mock('react-i18next', () => ({
 
       const labels: Record<string, string> = {
         'wanted.title': 'Wanted',
+        'search.grab': 'Grab',
+        'search.grabbing': 'Grabbing…',
         'wanted.searchPlaceholder': 'Search by title or author...',
         'wanted.empty': 'No wanted books. Add an author to start tracking.',
         'importHints.heading': 'Already have files on disk?',

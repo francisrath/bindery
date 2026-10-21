@@ -24,9 +24,9 @@ export default function SearchPage() {
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    document.title = 'Search · Bindery'
+    document.title = `${t('search.pageTitle', 'Search')} · Bindery`
     return () => { document.title = 'Bindery' }
-  }, [])
+  }, [t])
 
   const search = async () => {
     const q = query.trim()
@@ -39,7 +39,7 @@ export default function SearchPage() {
       const r = await api.searchIndexers(q)
       setResults(r)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Search failed')
+      setError(e instanceof Error ? e.message : t('search.searchFailed', 'Search failed'))
     } finally {
       setSearching(false)
     }
@@ -64,7 +64,7 @@ export default function SearchPage() {
       if (isNoDownloadClientError(e)) {
         setNeedsClient(true)
       } else {
-        setError(e instanceof Error ? e.message : 'Grab failed')
+        setError(e instanceof Error ? e.message : t('search.grabFailed', 'Grab failed'))
       }
     } finally {
       setGrabbing(null)
