@@ -522,3 +522,36 @@ func TestEnrichAuthorLooksUpOneAuthorAtATime(t *testing.T) {
 		t.Errorf("%d requests for 4 distinct authors; the repeat should come from the cache", searches)
 	}
 }
+
+// A caller waiting for the lookup slot answers to its context, so one with a
+// deadline does not sit behind a slow lookup (#3398).
+func TestEnrichAuthorWaitHonoursContext(t *testing.T) {
+	f := newFake(t)
+	release := make(chan struct{})
+	started := make(chan struct{})
+	f.search = func(w http.ResponseWriter, _ string) {
+		close(started)
+		<-release
+		fmt.Fprint(w, `{"query":{"search":[]}}`)
+	}
+	c := f.client()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = c.EnrichAuthor(context.Background(), &models.Author{ForeignID: "OL1A"})
+	}()
+	<-started
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
+	defer cancel()
+	begin := time.Now()
+	_, err := c.EnrichAuthor(ctx, &models.Author{ForeignID: "OL2A"})
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Errorf("err %v, want the waiter's deadline", err)
+	}
+	if waited := time.Since(begin); waited > time.Second {
+		t.Errorf("waited %v behind the slow lookup", waited)
+	}
+	close(release)
+	<-done
+}

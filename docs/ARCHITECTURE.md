@@ -43,8 +43,9 @@ job and on the two single author actions, adding an author and its Refresh
 button, never inside `GetAuthor`. Bulk refresh, Refresh all and scheduled
 discovery ask too, but only for an author whose enrichment is due: they stamp
 the profile fresh, which takes the author out of `refresh-metadata`, so leaving
-enrichment to that job postponed it by a day each time they ran (#3398). The
-imports send them nothing.
+enrichment to that job postponed it by a day each time they ran (#3398).
+Between them they enrich at most 100 authors an hour, leaving the rest due for
+`refresh-metadata`. The imports send them nothing.
 Today that is
 Wikidata, found by the authority ID the author already carries (NORAF, GND, BnF
 or OpenLibrary) and only while `metadata.author_enrichment.wikidata` is on

@@ -17,9 +17,11 @@ import (
 // returns (nil, nil) when it has nothing, and an error only for a failure
 // worth logging: enrichment is best effort and never fails a refresh.
 //
-// Enrichment runs only on the author profile refreshes (the staggered one and
-// the manual one), never inside GetAuthor, so an import or an add that looks
-// up many authors at once sends the enrichers nothing.
+// Enrichment runs only on author profile refreshes, never inside GetAuthor:
+// the staggered refresh, an add and the Refresh button, and Refresh all, bulk
+// refresh and discovery for an author that is due, within an hourly budget
+// (#3398). An import that looks up many authors at once sends the enrichers
+// nothing.
 type AuthorEnricher interface {
 	Name() string
 	EnrichAuthor(ctx context.Context, author *models.Author) (*AuthorProfile, error)

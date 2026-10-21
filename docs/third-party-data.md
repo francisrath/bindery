@@ -234,7 +234,9 @@ author refresh (#3275), so a library is spread over the day. Outside that
 refresh, adding an author and its Refresh button always ask; bulk refresh,
 Refresh all and scheduled discovery ask only for an author that is due, the
 same 30-day rule as below, because they take the author out of the staggered
-refresh for a day (#3398); imports ask nothing. Lookups run one author at a
+refresh for a day (#3398), and between them at most 100 authors an hour, so
+Refresh all on a large library asks about the first 100 due authors and leaves
+the rest to the staggered refresh; imports ask nothing. Lookups run one author at a
 time whoever asks, so a bulk refresh of several authors at once still sends
 Wikimedia one request after another. An answer, a miss included, is stamped on the
 author (`last_enrichment_at`) and the refresh asks again only after 30 days,
