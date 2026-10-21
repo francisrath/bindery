@@ -15,7 +15,7 @@ const EVENT_TYPE_COLORS: Record<string, string> = {
   importFailed: 'bg-red-500/20 text-red-700 dark:text-red-400',
   deleted: 'bg-red-500/20 text-red-700 dark:text-red-400',
   renamed: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
-  ignored: 'bg-slate-300 dark:bg-zinc-700 text-fg-muted',
+  ignored: 'bg-slate-300 dark:bg-zinc-700 text-fg-muted dark:text-zinc-300',
   bookFileRenamed: 'bg-purple-500/20 text-purple-700 dark:text-purple-400',
   // Amber rather than green: the import worked, but the file turned out not to
   // be the edition the catalogue described, which is worth a second look.
@@ -280,7 +280,7 @@ export default function HistoryPage() {
                     return (
                       <tr key={event.id} className="bg-slate-100/50 dark:bg-zinc-900/50 hover:bg-slate-200/50 dark:hover:bg-zinc-800/50 transition-colors">
                         <td className="px-4 py-3 align-top">
-                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-fg-muted'}`}>
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-fg-muted dark:text-zinc-300'}`}>
                             {eventLabel(event.eventType)}
                           </span>
                         </td>
@@ -347,7 +347,7 @@ export default function HistoryPage() {
                 <div key={event.id} className="border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100/50 dark:bg-zinc-900/50 p-3">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-fg-muted'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${EVENT_TYPE_COLORS[event.eventType] ?? 'bg-slate-300 dark:bg-zinc-700 text-fg-muted dark:text-zinc-300'}`}>
                         {eventLabel(event.eventType)}
                       </span>
                       {mt === 'audiobook' && (

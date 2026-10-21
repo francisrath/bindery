@@ -683,7 +683,7 @@ export default function SeriesPage() {
                                 ? 'bg-emerald-500/20 text-emerald-400'
                                 : entry.book.status === 'wanted'
                                 ? 'bg-amber-500/20 text-amber-400'
-                                : 'bg-slate-300 dark:bg-zinc-700 text-fg-muted'
+                                : 'bg-slate-300 dark:bg-zinc-700 text-fg-muted dark:text-zinc-300'
                             }`}>
                               {t(`bookStatus.${entry.book.status}`, { defaultValue: entry.book.status })}
                             </span>
@@ -695,7 +695,7 @@ export default function SeriesPage() {
                           )}
                           {splitPartIds.has(entry.bookId) && (
                             <span
-                              className="text-xs px-2 py-0.5 rounded bg-slate-300 dark:bg-zinc-700 text-fg-muted"
+                              className="text-xs px-2 py-0.5 rounded bg-slate-300 dark:bg-zinc-700 text-fg-muted dark:text-zinc-300"
                               title={t('series.splitParts.badgeHint')}
                             >
                               {t('series.splitParts.badge')}
