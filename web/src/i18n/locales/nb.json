@@ -561,7 +561,18 @@
       "bioNoLicense": "Biografi fra {{source}}"
     },
     "syncing": "Henter katalogen til denne forfatteren. Bøkene vises her når det er ferdig, og for en stor katalog kan det ta noen minutter.",
-    "syncingMore": "Henter katalogen til denne forfatteren. Eventuelle nye bøker vises her når det er ferdig."
+    "syncingMore": "Henter katalogen til denne forfatteren. Eventuelle nye bøker vises her når det er ferdig.",
+    "saveConflict": "Forfatteren ble endret mens du lagret. Last inn siden på nytt og prøv igjen.",
+    "photo": {
+      "upload": "Last opp bilde",
+      "change": "Bytt bilde",
+      "uploading": "Laster opp…",
+      "uploadFailed": "Kunne ikke laste opp bildet",
+      "remove": "Fjern bildet",
+      "removing": "Fjerner…",
+      "removeFailed": "Kunne ikke fjerne bildet"
+    },
+    "photoNotUploaded": "Bare et bilde du har lastet opp, kan fjernes. Last inn siden på nytt for å se det gjeldende bildet."
   },
   "catalogueReconciliation": {
     "title": "Avstem katalogen",
@@ -2502,6 +2513,8 @@
     "genreOverride": "Sjangeroverstyring",
     "genreOverrideHint": "Sett de samme sjangrene på alle bøkene av denne forfatteren og lås dem, slik at metadataoppdatering beholder verdiene dine. Kommaseparert.",
     "genreOverrideApply": "Bruk på alle bøker",
-    "genreOverrideDone": "Bøker oppdatert: {{count}}."
+    "genreOverrideDone": "Bøker oppdatert: {{count}}.",
+    "bio": "Biografi",
+    "bioHint": "En biografi du skriver her, blir stående slik du skrev den: ingen oppdatering erstatter den. Tøm feltet for å la metadatakilden fylle den inn igjen."
   }
 }

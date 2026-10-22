@@ -561,7 +561,18 @@
       "photoNoCredit": "Photo: {{license}}, via {{source}}",
       "bio": "Bio from {{source}}, {{license}}",
       "bioNoLicense": "Bio from {{source}}"
-    }
+    },
+    "saveConflict": "This author changed while you were saving. Reload the page and try again.",
+    "photo": {
+      "upload": "Upload photo",
+      "change": "Change photo",
+      "uploading": "Uploading…",
+      "uploadFailed": "Could not upload the photo",
+      "remove": "Remove photo",
+      "removing": "Removing…",
+      "removeFailed": "Could not remove the photo"
+    },
+    "photoNotUploaded": "Only a photo you uploaded can be removed. Reload the page to see the current photo."
   },
   "catalogueReconciliation": {
     "title": "Reconcile catalogue",
@@ -2502,6 +2513,8 @@
     "genreOverride": "Genre override",
     "genreOverrideHint": "Set the same genres on every book by this author and lock them so metadata refresh keeps your values. Comma-separated.",
     "genreOverrideApply": "Apply to all books",
-    "genreOverrideDone": "Updated {{count}} book(s)."
+    "genreOverrideDone": "Updated {{count}} book(s).",
+    "bio": "Bio",
+    "bioHint": "A bio you write here stays as you wrote it: no refresh replaces it. Clear it to let the metadata provider fill it again."
   }
 }

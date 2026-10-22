@@ -102,7 +102,7 @@ export default function DatabaseCheckSection() {
       <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">{t('settings.general.dbCheck')}</h3>
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-3">
         <div className="flex items-center justify-between gap-4">
-          <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCheckHint')}</p>
+          <p className="text-xs text-fg-muted">{t('settings.general.dbCheckHint')}</p>
           <button
             type="button"
             onClick={run}
@@ -129,7 +129,7 @@ export default function DatabaseCheckSection() {
               {t('settings.general.dbCheckFound', { count: report.total })}
             </p>
             <table className="w-full text-xs text-left">
-              <thead className="text-slate-600 dark:text-zinc-400">
+              <thead className="text-fg-muted">
                 <tr>
                   <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRelationship')}</th>
                   <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRows')}</th>
@@ -144,7 +144,7 @@ export default function DatabaseCheckSection() {
                   <tr key={`${r.childTable}->${r.parentTable}->${r.onDelete}#${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                     <td className="py-1 pr-3 font-mono">
                       {r.childTable} {'->'} {r.parentTable}
-                      {r.onDelete && <span className="text-slate-500 dark:text-zinc-500"> ({r.onDelete})</span>}
+                      {r.onDelete && <span className="text-fg-muted"> ({r.onDelete})</span>}
                     </td>
                     <td className="py-1 pr-3 font-mono">{r.violations}</td>
                     <td className="py-1">{onDeleteLabel(r.onDelete)}</td>
@@ -166,7 +166,7 @@ export default function DatabaseCheckSection() {
         )}
 
         {report && (
-          <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+          <p className="text-[11px] text-fg-muted">
             {t('settings.general.dbCheckCheckedAt', { time: new Date(report.checkedAt).toLocaleString() })}
           </p>
         )}
@@ -176,7 +176,7 @@ export default function DatabaseCheckSection() {
             <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200">{t('settings.general.dbCleanupPreviewTitle')}</p>
             {preview.relationships.length > 0 && (
               <table className="w-full text-xs text-left">
-                <thead className="text-slate-600 dark:text-zinc-400">
+                <thead className="text-fg-muted">
                   <tr>
                     <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRelationship')}</th>
                     <th className="py-1 pr-3 font-medium">{t('settings.general.dbCheckColRows')}</th>
@@ -188,13 +188,13 @@ export default function DatabaseCheckSection() {
                     <tr key={`${r.childTable}->${r.parentTable}->${r.onDelete}#${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                       <td className="py-1 pr-3 font-mono">
                         {r.childTable} {'->'} {r.parentTable}
-                        {r.onDelete && <span className="text-slate-500 dark:text-zinc-500"> ({r.onDelete})</span>}
+                        {r.onDelete && <span className="text-fg-muted"> ({r.onDelete})</span>}
                       </td>
                       <td className="py-1 pr-3 font-mono">{r.violations}</td>
                       <td className="py-1">
                         {actionLabel(r.action)}
                         {r.fixable > 0 && r.fixable < r.violations && (
-                          <span className="block text-slate-500 dark:text-zinc-500">
+                          <span className="block text-fg-muted">
                             {t('settings.general.dbCleanupPartial', { count: r.violations - r.fixable })}
                           </span>
                         )}
@@ -209,9 +209,9 @@ export default function DatabaseCheckSection() {
             </p>
             {preview.previewToken ? (
               <>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupCascadeNote')}</p>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupBackupNote')}</p>
-                <p className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupSlowNote')}</p>
+                <p className="text-xs text-fg-muted">{t('settings.general.dbCleanupCascadeNote')}</p>
+                <p className="text-xs text-fg-muted">{t('settings.general.dbCleanupBackupNote')}</p>
+                <p className="text-xs text-fg-muted">{t('settings.general.dbCleanupSlowNote')}</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -232,7 +232,7 @@ export default function DatabaseCheckSection() {
                 </div>
               </>
             ) : (
-              <p role="status" className="text-xs text-slate-600 dark:text-zinc-500">{t('settings.general.dbCleanupNothing')}</p>
+              <p role="status" className="text-xs text-fg-muted">{t('settings.general.dbCleanupNothing')}</p>
             )}
           </div>
         )}
@@ -262,7 +262,7 @@ export default function DatabaseCheckSection() {
                       <tr key={`${r.childTable}->${r.parentTable}->${r.onDelete}#${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                         <td className="py-1 pr-3 font-mono">
                           {r.childTable} {'->'} {r.parentTable}
-                          {r.onDelete && <span className="text-slate-500 dark:text-zinc-500"> ({r.onDelete})</span>}
+                          {r.onDelete && <span className="text-fg-muted"> ({r.onDelete})</span>}
                         </td>
                         <td className="py-1 pr-3 font-mono">{r.violations}</td>
                         <td className="py-1">{actionLabel(r.action)}</td>
@@ -275,7 +275,7 @@ export default function DatabaseCheckSection() {
           </div>
         )}
 
-        <p className="text-xs text-slate-600 dark:text-zinc-500 border-t border-slate-200 dark:border-zinc-800 pt-3">
+        <p className="text-xs text-fg-muted border-t border-slate-200 dark:border-zinc-800 pt-3">
           {t('settings.general.dbCheckRepairNote')}{' '}
           <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">
             {t('settings.general.dbCheckDocsLink')}
