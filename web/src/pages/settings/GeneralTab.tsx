@@ -684,7 +684,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           </div>
           {storage && (
             storage.hardlinkable ? (
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 border-t border-slate-200 dark:border-zinc-800 pt-3">
+              <p className="text-xs text-accent-text border-t border-slate-200 dark:border-zinc-800 pt-3">
                 {t('settings.general.storageHardlinkOk')}
               </p>
             ) : (
@@ -727,7 +727,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               <p className="font-medium text-slate-700 dark:text-zinc-300 mb-1">{t('settings.general.lastScan')}</p>
               <div className="flex gap-4">
                 <span>{t('settings.general.filesFound')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.files_found}</span></span>
-                <span>{t('settings.general.reconciled')} <span className="font-mono text-emerald-700 dark:text-emerald-400">{lastScan.reconciled}</span></span>
+                <span>{t('settings.general.reconciled')} <span className="font-mono text-accent-text">{lastScan.reconciled}</span></span>
                 <span>{t('settings.general.unmatched')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.unmatched}</span></span>
                 {(lastScan.already_tracked ?? 0) > 0 && (
                   <span>{t('settings.general.alreadyTracked')} <span className="font-mono text-slate-800 dark:text-zinc-200">{lastScan.already_tracked}</span></span>
@@ -769,7 +769,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
               {(lastScan.unmatched_units ?? 0) > 0 && (
                 <p className="mt-2 flex flex-wrap items-center gap-x-2 text-slate-700 dark:text-zinc-300">
                   <span>{t('settings.general.unmatchedUnits', { count: lastScan.unmatched_units, defaultValue: '{{count}} books need a decision.' })}</span>
-                  <a href={`${BINDERY_BASE}/import`} className="font-medium text-emerald-700 dark:text-emerald-400 hover:underline">
+                  <a href={`${BINDERY_BASE}/import`} className="font-medium text-accent-text hover:underline">
                     {t('settings.general.reviewUnmatched', { count: lastScan.unmatched_units, defaultValue: 'Review {{count}} unmatched books' })}
                   </a>
                 </p>
@@ -926,7 +926,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
           </p>
           <button
             onClick={() => onNavigate ? onNavigate('rootfolders') : window.location.assign('/settings?tab=rootfolders')}
-            className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline"
+            className="text-sm text-accent-text hover:underline"
           >
             {t('settings.general.defaultLibraryLocationLink')}
           </button>
@@ -1182,7 +1182,7 @@ function ChangePasswordForm({ username }: { username: string }) {
       <input type="password" autoComplete="new-password" placeholder="New password" value={next} onChange={e => setNext(e.target.value)} className={inputCls} />
       <input type="password" autoComplete="new-password" placeholder="Confirm new password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={inputCls} />
       {error && <div className="text-xs text-red-700 dark:text-red-400">{error}</div>}
-      {success && <div className="text-xs text-emerald-600 dark:text-emerald-400">Password updated</div>}
+      {success && <div className="text-xs text-accent-text">Password updated</div>}
       <button type="submit" disabled={submitting || !current || !next} className={`px-3 py-2 ${primaryFill} rounded text-xs font-medium disabled:opacity-50`}>
         {submitting ? 'Updating…' : 'Change password'}
       </button>

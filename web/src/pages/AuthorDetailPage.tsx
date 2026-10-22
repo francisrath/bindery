@@ -17,6 +17,7 @@ import MarkdownDescription from '../components/MarkdownDescription'
 import { authorProviderKey, canLinkAuthorMetadata } from '../util/authorMetadata'
 import { metadataRetrievedDate, metadataSourceLink } from '../util/metadataSource'
 import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
+import { authorSaveError } from '../util/authorSaveError'
 import { canonicalLanguage, languageName } from '../util/language'
 import { btn, btnSize } from '../components/buttons'
 import Switch from '../components/Switch'
@@ -153,6 +154,25 @@ export default function AuthorDetailPage() {
   const [showCatalogueReconciliation, setShowCatalogueReconciliation] = useState(false)
   const [showDuplicateCandidates, setShowDuplicateCandidates] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Sets the photo from an image the user picks, like a book cover (#3017,
+  // #3287). The response is the bare author, so only its photo fields are
+  // taken: the page keeps its books, stats and series as they are.
+  const [uploadingPhoto, setUploadingPhoto] = useState<'upload' | 'remove' | null>(null)
+  const changePhoto = async (action: 'upload' | 'remove', file?: File) => {
+    if (!author || (action === 'upload' && !file)) return
+    setUploadingPhoto(action)
+    setError(null)
+    try {
+      const updated = action === 'upload' ? await api.uploadAuthorPhoto(author.id, file as File) : await api.clearAuthorPhoto(author.id)
+      setAuthor(a => (a ? { ...a, imageUrl: updated.imageUrl, imageSource: updated.imageSource } : a))
+    } catch (e) {
+      setError(authorSaveError(e, t, action === 'upload'
+        ? t('authorDetail.photo.uploadFailed', 'Could not upload the photo')
+        : t('authorDetail.photo.removeFailed', 'Could not remove the photo')))
+    } finally {
+      setUploadingPhoto(null)
+    }
+  }
   // The sync poll stopped trying (#3058): a 404/403, or a few failures in a row.
   const [syncGaveUp, setSyncGaveUp] = useState(false)
   const syncFailures = useRef(0)
@@ -448,7 +468,7 @@ export default function AuthorDetailPage() {
       await api.updateAuthor(author.id, { monitored: !author.monitored })
       setAuthor({ ...author, monitored: !author.monitored })
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Update failed')
+      setError(authorSaveError(e, t, 'Update failed'))
     }
   }
 
@@ -1070,6 +1090,31 @@ export default function AuthorDetailPage() {
               </div>
             }
           />
+          <label className={`touch-target mt-2 block text-center text-xs text-accent-text hover:underline cursor-pointer has-[:focus-visible]:underline ${uploadingPhoto ? 'opacity-50 pointer-events-none' : ''}`}>
+            {uploadingPhoto === 'upload'
+              ? t('authorDetail.photo.uploading', 'Uploading…')
+              : author.imageUrl ? t('authorDetail.photo.change', 'Change photo') : t('authorDetail.photo.upload', 'Upload photo')}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              disabled={uploadingPhoto !== null}
+              onChange={e => { void changePhoto('upload', e.target.files?.[0]); e.target.value = '' }}
+            />
+          </label>
+          {/* Only an uploaded photo can be removed: the provider's or an
+              enricher's would come straight back on the refresh that
+              removing runs (#3287). */}
+          {author.imageSource?.provider === 'user' && (
+            <button
+              type="button"
+              className="touch-target block w-full text-center text-xs text-slate-600 dark:text-zinc-400 hover:underline disabled:opacity-50"
+              disabled={uploadingPhoto !== null}
+              onClick={() => { void changePhoto('remove') }}
+            >
+              {uploadingPhoto === 'remove' ? t('authorDetail.photo.removing', 'Removing…') : t('authorDetail.photo.remove', 'Remove photo')}
+            </button>
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold mb-1 [overflow-wrap:anywhere]">{author.authorName}</h2>
@@ -1087,7 +1132,7 @@ export default function AuthorDetailPage() {
                   href={src.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                  className="text-accent-text hover:underline"
                 >
                   {t('common.viewOnSource', { source: src.label, defaultValue: 'View on {{source}} ↗' })}
                 </a>
@@ -1106,7 +1151,7 @@ export default function AuthorDetailPage() {
             {/* A photo or bio an author enricher filled in carries the credit
                 its licence asks for: a Commons photo names its photographer
                 and licence, Wikipedia text its source and licence (#3287). */}
-            {author.imageSource && (
+            {author.imageSource && author.imageSource.provider !== 'user' && (
               <a
                 data-testid="author-photo-credit"
                 href={safeHref(author.imageSource.url) || undefined}
@@ -1119,7 +1164,7 @@ export default function AuthorDetailPage() {
                   : t('authorDetail.credit.photoNoCredit', { license: author.imageSource.license ?? '', source: profileSourceLabel(author.imageSource.provider), defaultValue: 'Photo: {{license}}, via {{source}}' })}
               </a>
             )}
-            {author.descriptionSource && (
+            {author.descriptionSource && author.descriptionSource.provider !== 'user' && (
               <a
                 data-testid="author-bio-credit"
                 href={safeHref(author.descriptionSource.url) || undefined}

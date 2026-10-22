@@ -215,7 +215,7 @@ export default function GrimmoryTab() {
       {saveError && <p className="text-red-700 dark:text-red-400 text-xs">{saveError}</p>}
       {testError && <p className="text-red-700 dark:text-red-400 text-xs">{testError}</p>}
       {testResult && (
-        <p className={`text-xs ${testResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+        <p className={`text-xs ${testResult.ok ? 'text-accent-text' : 'text-red-700 dark:text-red-400'}`}>
           {testResult.message}
         </p>
       )}

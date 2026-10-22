@@ -33,7 +33,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
   const accepted = result?.accepted
 
   const badgeCls: Record<ScanItem['match'], string> = {
-    confident: 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400',
+    confident: 'bg-emerald-100 dark:bg-emerald-950 text-accent-text',
     ambiguous: 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400',
     none: 'bg-slate-200 dark:bg-zinc-800 text-fg-muted',
   }
@@ -75,7 +75,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
           <div className="mt-2 space-y-2">
             {chosen && !overriding && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="text-emerald-700 dark:text-emerald-400">→ {bookLabel(chosen)}</span>
+                <span className="text-accent-text">→ {bookLabel(chosen)}</span>
                 {!accepted && (
                   <button
                     type="button"
@@ -89,7 +89,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
                   <button
                     type="button"
                     onClick={onApplyToSiblings}
-                    className="text-emerald-700 dark:text-emerald-400 hover:underline"
+                    className="text-accent-text hover:underline"
                   >
                     {t('manualImport.applyToTracks', { count: siblingCount, defaultValue: `Use this book for the other ${siblingCount} tracks in this folder` })}
                   </button>
@@ -168,7 +168,7 @@ export default function FolderImportRow({ item, row, result, importing, onPick, 
       </div>
 
       {result && (
-        <p className={`mt-2 text-xs ${accepted ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}`}>
+        <p className={`mt-2 text-xs ${accepted ? 'text-accent-text' : 'text-red-700 dark:text-red-400'}`}>
           {accepted
             ? t('manualImport.queued', 'Queued — importing in the background; watch the Queue for progress.')
             : t('manualImport.failed', { error: result.error || 'failed', defaultValue: `Failed: ${result.error || 'failed'}` })}

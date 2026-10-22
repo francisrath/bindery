@@ -201,7 +201,7 @@ export default function LogsTab() {
         <button
           onClick={() => setLogAutoRefresh(v => !v)}
           className={`text-xs px-2.5 py-1 rounded border transition-colors ${logAutoRefresh
-            ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+            ? 'border-emerald-500 text-accent-text'
             : 'border-slate-300 dark:border-zinc-700 text-fg-muted'}`}
         >
           {logAutoRefresh ? `⏸ ${t('settings.logs.autoRefresh')}` : `▶ ${t('settings.logs.autoRefresh')}`}
@@ -297,7 +297,7 @@ export default function LogsTab() {
               e.level === 'ERROR' ? 'text-red-700 dark:text-red-400' :
               e.level === 'WARN'  ? 'text-amber-600 dark:text-amber-400' :
               e.level === 'DEBUG' ? 'text-fg-muted' :
-              'text-emerald-600 dark:text-emerald-400'
+              'text-accent-text'
             // Support both ring buffer (time/msg/attrs) and DB (ts/message/fields) shapes.
             const rawTs = e.ts ?? e.time ?? ''
             const d = new Date(rawTs)

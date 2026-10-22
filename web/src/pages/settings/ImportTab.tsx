@@ -304,7 +304,7 @@ function ManualImportSection() {
       )}
 
       {success && (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">{t('settings.import.manualImportSuccess')}</p>
+        <p className="text-sm text-accent-text">{t('settings.import.manualImportSuccess')}</p>
       )}
       {err && (
         <p className="text-sm text-red-700 dark:text-red-400">{err}</p>
@@ -743,7 +743,7 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
               {/* Live sync line: shown while this list is syncing and left in
                   place afterwards so the run's outcome is visible (#1854). */}
               {il && syncProgress?.listId === il.id && (
-                <p className={`mt-2 text-xs ${syncProgress.error ? 'text-red-700 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                <p className={`mt-2 text-xs ${syncProgress.error ? 'text-red-700 dark:text-red-400' : 'text-accent-text'}`}>
                   {syncProgress.running
                     ? `${syncProgress.message ?? t('settings.import.hardcoverSyncing', 'Syncing…')}${syncProgress.stats.total > 0 ? ` (${syncProgress.stats.processed}/${syncProgress.stats.total})` : ''}`
                     : syncProgress.error
@@ -796,7 +796,7 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
             <span className="block mt-1 text-xs">
               <button
                 onClick={() => onNavigate ? onNavigate('api-keys') : window.location.assign('/settings?tab=api-keys')}
-                className="text-emerald-600 dark:text-emerald-400 hover:underline"
+                className="text-accent-text hover:underline"
               >
                 {t('settings.import.configureHardcoverToken', 'Configure the Hardcover API token in API Keys settings →')}
               </button>

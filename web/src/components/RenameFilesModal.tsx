@@ -21,7 +21,7 @@ interface Props {
 
 const statusStyles: Record<string, string> = {
   move: 'text-sky-600 dark:text-sky-400',
-  moved: 'text-emerald-600 dark:text-emerald-400',
+  moved: 'text-accent-text',
   noop: 'text-fg-muted',
   collision: 'text-amber-600 dark:text-amber-400',
   missing: 'text-amber-600 dark:text-amber-400',

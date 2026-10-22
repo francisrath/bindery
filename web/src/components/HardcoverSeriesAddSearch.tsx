@@ -151,7 +151,7 @@ export default function HardcoverSeriesAddSearch({ onCreated, onExisting }: Prop
                     onClick={() => void add(result)}
                     disabled={addingId !== null}
                     aria-label={t('series.addFromHardcover.addResult', { title: result.title })}
-                    className="px-3 py-1.5 text-sm rounded-md border border-emerald-600 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 flex-shrink-0"
+                    className="px-3 py-1.5 text-sm rounded-md border border-emerald-600 text-accent-text hover:bg-emerald-500/10 disabled:opacity-50 flex-shrink-0"
                   >
                     {addingId === result.foreignId ? t('series.addFromHardcover.adding') : t('series.addFromHardcover.add')}
                   </button>

@@ -9,8 +9,8 @@ import { formatBytes } from '../util/format'
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   grabbed: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
-  bookImported: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
-  imported: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',
+  bookImported: 'bg-emerald-500/20 text-accent-text',
+  imported: 'bg-emerald-500/20 text-accent-text',
   downloadFailed: 'bg-red-500/20 text-red-700 dark:text-red-400',
   importFailed: 'bg-red-500/20 text-red-700 dark:text-red-400',
   deleted: 'bg-red-500/20 text-red-700 dark:text-red-400',

@@ -142,7 +142,7 @@ export default function SearchPage() {
                   </span>
                 </div>
                 {grabbed.has(r.guid) ? (
-                  <span className="px-3 py-2 text-emerald-600 dark:text-emerald-400 text-[11px] font-medium flex-shrink-0">
+                  <span className="px-3 py-2 text-accent-text text-[11px] font-medium flex-shrink-0">
                     {t('search.grabbed')}
                   </span>
                 ) : (

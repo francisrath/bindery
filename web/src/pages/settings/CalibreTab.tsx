@@ -338,7 +338,7 @@ function CalibreSection({
         register it with Calibre after import (Write integration below), copy it into a CWA ingest folder (the CWA section below),
         or let CWA or Calibre own the library and feed it from a drop folder (Import Mode External, under File Naming on the General tab).
         Neither the write integration nor the CWA mirror runs in External import mode.
-        The <a href="https://github.com/vavallee/bindery/blob/main/docs/Calibre-Integration-Wiki.md" target="_blank" rel="noopener noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">Calibre integration guide</a> compares them.
+        The <a href="https://github.com/vavallee/bindery/blob/main/docs/Calibre-Integration-Wiki.md" target="_blank" rel="noopener noreferrer" className="text-accent-text underline">Calibre integration guide</a> compares them.
       </p>
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
 
@@ -400,7 +400,7 @@ function CalibreSection({
             <button
               type="button"
               onClick={() => setMode('plugin')}
-              className="mt-2 text-emerald-700 dark:text-emerald-400 underline"
+              className="mt-2 text-accent-text underline"
             >
               {t('settings.calibre.calibredbMissing.switchToBridge')}
             </button>
@@ -546,7 +546,7 @@ function CalibreSection({
           <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-zinc-800">
             <div className="text-xs">
               {testResult && (
-                <span className={testResult.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-700 dark:text-red-400'}>
+                <span className={testResult.ok ? 'text-accent-text' : 'text-red-700 dark:text-red-400'}>
                   {testResult.msg}
                 </span>
               )}
@@ -712,7 +712,7 @@ function CalibreSection({
         <h3 className="text-base font-semibold mb-3 text-slate-800 dark:text-zinc-200">Calibre-Web-Automated (CWA)</h3>
         <p className="text-xs text-fg-muted mb-4">
           When set, every successful ebook import is also copied into this directory so a sibling{' '}
-          <a href="https://github.com/crocodilestick/Calibre-Web-Automated" target="_blank" rel="noopener noreferrer" className="text-emerald-700 dark:text-emerald-400 underline">CWA</a>{' '}
+          <a href="https://github.com/crocodilestick/Calibre-Web-Automated" target="_blank" rel="noopener noreferrer" className="text-accent-text underline">CWA</a>{' '}
           container can ingest it. Bindery keeps its own copy. Audiobooks are not mirrored. This mirror is independent of the
           write integration above, and it does nothing in External import mode; use the Drop folder on the General tab for that setup.
           Leave blank to disable.
@@ -1001,7 +1001,7 @@ export function CalibreRollbackModal({
               </div>
 
               {applied && (
-                <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                <p className="text-xs text-accent-text">
                   {t('settings.calibre.runs.appliedSummary', {
                     deleted: applied.stats.entitiesDeleted,
                     unlinked: applied.stats.provenanceUnlinked,
@@ -1088,7 +1088,7 @@ export function CalibreSyncModal({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
                   <div className="text-fg-muted">{t('settings.calibre.pushAll.pushed')}</div>
-                  <div className="font-semibold text-emerald-600 dark:text-emerald-400">{stats?.pushed ?? 0}</div>
+                  <div className="font-semibold text-accent-text">{stats?.pushed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
                   <div className="text-fg-muted">{t('settings.calibre.pushAll.alreadyInCalibre')}</div>
@@ -1112,7 +1112,7 @@ export function CalibreSyncModal({
                 <p className="text-xs text-red-700 dark:text-red-400">{t('settings.calibre.pushAll.syncFailed', { error: progress.error })}</p>
               )}
               {!running && progress.finishedAt && !progress.error && (
-                <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                <p className="text-xs text-accent-text">
                   {t('settings.calibre.pushAll.done', {
                     pushed: stats?.pushed ?? 0,
                     already: stats?.alreadyInCalibre ?? 0,
