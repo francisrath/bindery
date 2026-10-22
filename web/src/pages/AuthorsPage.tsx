@@ -22,6 +22,7 @@ import { useIsAdmin } from '../auth/AuthContext'
 import Switch from '../components/Switch'
 import { ModalPanel } from '../components/useModal'
 import CoverImage from '../components/CoverImage'
+import { errorText } from '../util/errorText'
 
 // 'az' | 'za' sort by name and back the existing toolbar buttons; the rest are
 // the column-header sorts (#1349), whitelisted server-side by authorSortOrder.
@@ -287,7 +288,7 @@ export default function AuthorsPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
+      alert(errorText(err, t('common.bulkActionFailed', 'Bulk action failed')))
     } finally {
       setBulkBusy(false)
     }
@@ -307,7 +308,7 @@ export default function AuthorsPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
+      alert(errorText(err, t('common.bulkActionFailed', 'Bulk action failed')))
     } finally {
       setBulkBusy(false)
     }

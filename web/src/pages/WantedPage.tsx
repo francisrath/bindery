@@ -16,6 +16,7 @@ import { isAutoGrabRefusal } from '../util/autoGrabRefusal'
 import CoverImage from '../components/CoverImage'
 import { primaryFill } from '../components/buttons'
 import { FilteredResultsSection } from './BookDetailPage'
+import { errorText } from '../util/errorText'
 
 // Shared grid template so the header row and every list row line up exactly.
 // columns: checkbox · cover · title+author · format · actions
@@ -158,7 +159,7 @@ export default function WantedPage() {
       const updated = await api.updateBook(book.id, { mediaType })
       setBooks(books.map(b => b.id === book.id ? updated : b))
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('wanted.updateFailed', 'Failed to update'))
+      alert(errorText(err, t('wanted.updateFailed', 'Failed to update')))
     }
   }
 
@@ -201,7 +202,7 @@ export default function WantedPage() {
         load()
       }, 1200)
     } catch (err: unknown) {
-      alert(err instanceof Error ? err.message : t('wanted.grabFailed', 'Grab failed'))
+      alert(errorText(err, t('wanted.grabFailed', 'Grab failed')))
     } finally {
       setGrabbingGuid(null)
     }
@@ -256,7 +257,7 @@ export default function WantedPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
+      alert(errorText(err, t('common.bulkActionFailed', 'Bulk action failed')))
     } finally {
       setBulkBusy(false)
     }

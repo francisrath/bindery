@@ -4,6 +4,7 @@ import { api, Series, SeriesHardcoverLink, SeriesHardcoverSearchResult } from '.
 import { hardcoverSeriesUrl } from '../util/metadataSource'
 import { useModal } from './useModal'
 import { primaryFill } from './buttons'
+import { errorText } from '../util/errorText'
 
 interface HardcoverSeriesLinkModalProps {
   series: Series
@@ -76,7 +77,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
           if (cancelled) return
           setResults([])
           setSelectedId('')
-          setError(err instanceof Error ? err.message : t('series.hardcoverLink.searchFailed', 'Search failed'))
+          setError(errorText(err, t('series.hardcoverLink.searchFailed', 'Search failed')))
         })
         .finally(() => {
           if (!cancelled) setSearching(false)
@@ -101,7 +102,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
       onLinked(series.id, link)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('series.hardcoverLink.linkFailed', 'Failed to link series'))
+      setError(errorText(err, t('series.hardcoverLink.linkFailed', 'Failed to link series')))
     } finally {
       setSaving(false)
     }
@@ -115,7 +116,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
       setCurrentLink(null)
       onLinked(series.id, undefined)
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('series.hardcoverLink.unlinkFailed', 'Failed to remove link'))
+      setError(errorText(err, t('series.hardcoverLink.unlinkFailed', 'Failed to remove link')))
     } finally {
       setSaving(false)
     }

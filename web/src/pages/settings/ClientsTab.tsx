@@ -11,6 +11,7 @@ import { dangerLink, primaryFill } from '../../components/buttons'
 import ClientDiagnosePanel from './ClientDiagnosePanel'
 import RemapAssistant from './RemapAssistant'
 import { literalInputAttrs, portInputAttrs, secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
+import { errorText } from '../../util/errorText'
 
 // clients is owned by SettingsPage so it can be fetched eagerly on page mount
 // (matching the pre-refactor monolith), not on tab open.
@@ -341,7 +342,7 @@ function EditClientForm({ client, onClose, onSaved }: { client: DownloadClient; 
       const updated = await api.updateDownloadClient(client.id, data)
       onSaved(updated)
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t('settings.clients.saveFailed', 'Failed to save'))
+      setSaveError(errorText(err, t('settings.clients.saveFailed', 'Failed to save')))
     } finally {
       setSaving(false)
     }
@@ -585,7 +586,7 @@ function AddClientForm({ onClose, onAdded }: { onClose: () => void; onAdded: (c:
       const c = await api.addDownloadClient(data)
       onAdded(c)
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t('settings.clients.saveFailed', 'Failed to save'))
+      setSaveError(errorText(err, t('settings.clients.saveFailed', 'Failed to save')))
     } finally {
       setSaving(false)
     }

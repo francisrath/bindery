@@ -10,6 +10,7 @@ import { useSaveResult } from './useSaveResult'
 import { usePolling } from '../../components/usePolling'
 import { BELOW_SM, useMediaQuery } from '../../components/useMediaQuery'
 import { primaryFill } from '../../components/buttons'
+import { errorText } from '../../util/errorText'
 
 // <input type="datetime-local"> produces "2026-08-12T14:03" — no zone, which
 // the API's RFC3339 parse rejects, so the range was silently ignored. The
@@ -109,7 +110,7 @@ export default function LogsTab() {
       setBackupLabel('')
       alert(t('settings.logs.backupCreated', 'Backup created:') + ' ' + result.name)
     } catch (err) {
-      alert(t('settings.logs.backupFailed', 'Backup failed:') + ' ' + (err instanceof Error ? err.message : t('common.unknownError', 'Unknown error')))
+      alert(t('settings.logs.backupFailed', 'Backup failed:') + ' ' + (errorText(err, t('common.unknownError', 'Unknown error'))))
     } finally {
       setCreatingBackup(false)
     }
@@ -126,7 +127,7 @@ export default function LogsTab() {
       await api.deleteBackup(filename)
       setBackups(prev => prev.filter(b => b.name !== filename))
     } catch (err) {
-      alert(t('settings.logs.deleteFailed', 'Delete failed:') + ' ' + (err instanceof Error ? err.message : t('common.unknownError', 'Unknown error')))
+      alert(t('settings.logs.deleteFailed', 'Delete failed:') + ' ' + (errorText(err, t('common.unknownError', 'Unknown error'))))
     } finally {
       setDeletingBackup(null)
     }

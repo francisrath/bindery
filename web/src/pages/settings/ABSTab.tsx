@@ -7,6 +7,7 @@ import { inputCls } from './formStyles'
 import PathRemapField from './PathRemapField'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
 import { slateFill, primaryFill } from '../../components/buttons'
+import { errorText } from '../../util/errorText'
 
 const absReviewResultLimit = 10
 
@@ -116,7 +117,7 @@ function AudiobookshelfSection() {
       const page = await api.absConflicts()
       setConflicts(page.items)
     } catch (err: unknown) {
-      setConflictError(err instanceof Error ? err.message : t('settings.abs.errors.loadConflicts', 'Failed to load enrichment conflicts'))
+      setConflictError(errorText(err, t('settings.abs.errors.loadConflicts', 'Failed to load enrichment conflicts')))
     }
   }
 
@@ -126,7 +127,7 @@ function AudiobookshelfSection() {
       const page = await api.absReviewItems()
       setReviewItems(page.items)
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.loadReview', 'Failed to load review items'))
+      setReviewError(errorText(err, t('settings.abs.errors.loadReview', 'Failed to load review items')))
     }
   }
 
@@ -145,7 +146,7 @@ function AudiobookshelfSection() {
       const next = await api.absLibraries(payload)
       setLibraries(next)
     } catch (err: unknown) {
-      setLibraryError(err instanceof Error ? err.message : t('settings.abs.errors.loadLibraries', 'Failed to load libraries'))
+      setLibraryError(errorText(err, t('settings.abs.errors.loadLibraries', 'Failed to load libraries')))
     } finally {
       setListing(false)
     }
@@ -161,7 +162,7 @@ function AudiobookshelfSection() {
             .catch(() => {})
         }
       })
-      .catch(err => setSaveError(err instanceof Error ? err.message : t('settings.abs.errors.loadConfig', 'Failed to load Audiobookshelf config')))
+      .catch(err => setSaveError(errorText(err, t('settings.abs.errors.loadConfig', 'Failed to load Audiobookshelf config'))))
       .finally(() => setLoading(false))
     api.absImportStatus().then(setImportProgress).catch(() => {})
     refreshRuns().catch(() => {})
@@ -210,7 +211,7 @@ function AudiobookshelfSection() {
         loadLibraries(probePayload()).catch(() => {})
       }
     } catch (err: unknown) {
-      setSaveError(err instanceof Error ? err.message : t('settings.abs.errors.save', 'Failed to save Audiobookshelf settings'))
+      setSaveError(errorText(err, t('settings.abs.errors.save', 'Failed to save Audiobookshelf settings')))
     } finally {
       setSaving(false)
     }
@@ -230,7 +231,7 @@ function AudiobookshelfSection() {
         loadLibraries(probePayload()).catch(() => {})
       }
     } catch (err: unknown) {
-      setTestError(err instanceof Error ? err.message : t('settings.abs.errors.test', 'Connection test failed'))
+      setTestError(errorText(err, t('settings.abs.errors.test', 'Connection test failed')))
     } finally {
       setTesting(false)
     }
@@ -250,7 +251,7 @@ function AudiobookshelfSection() {
       })
       setImportProgress(next)
     } catch (err: unknown) {
-      setImportError(err instanceof Error ? err.message : t('settings.abs.errors.importStart', 'Import failed to start'))
+      setImportError(errorText(err, t('settings.abs.errors.importStart', 'Import failed to start')))
     }
   }
 
@@ -260,7 +261,7 @@ function AudiobookshelfSection() {
     try {
       setRollbackResult(await api.absImportRollbackPreview(runId))
     } catch (err: unknown) {
-      setRollbackError(err instanceof Error ? err.message : t('settings.abs.errors.rollbackPreview', 'Failed to preview rollback'))
+      setRollbackError(errorText(err, t('settings.abs.errors.rollbackPreview', 'Failed to preview rollback')))
     } finally {
       setRollbackPreviewingRunId(null)
     }
@@ -275,7 +276,7 @@ function AudiobookshelfSection() {
       setRuns(prev => prev.map(run => run.id === runId ? { ...run, status: result.status } : run))
       await refreshRuns()
     } catch (err: unknown) {
-      setRollbackError(err instanceof Error ? err.message : t('settings.abs.errors.rollback', 'Failed to roll back import run'))
+      setRollbackError(errorText(err, t('settings.abs.errors.rollback', 'Failed to roll back import run')))
     } finally {
       setRollbackApplyingRunId(null)
     }
@@ -288,7 +289,7 @@ function AudiobookshelfSection() {
       const updated = await api.resolveAbsConflict(id, source)
       setConflicts(prev => prev.map(conflict => conflict.id === id ? updated : conflict))
     } catch (err: unknown) {
-      setConflictError(err instanceof Error ? err.message : t('settings.abs.errors.resolveConflict', 'Failed to resolve conflict'))
+      setConflictError(errorText(err, t('settings.abs.errors.resolveConflict', 'Failed to resolve conflict')))
     } finally {
       setResolvingConflictId(null)
     }
@@ -301,7 +302,7 @@ function AudiobookshelfSection() {
       await api.relinkAuthorUpstream(localId)
       await refreshConflicts()
     } catch (err: unknown) {
-      setConflictError(err instanceof Error ? err.message : t('settings.abs.errors.relink', 'Failed to relink author'))
+      setConflictError(errorText(err, t('settings.abs.errors.relink', 'Failed to relink author')))
     } finally {
       setRelinkingAuthorId(null)
     }
@@ -335,7 +336,7 @@ function AudiobookshelfSection() {
       api.absImportStatus().then(setImportProgress).catch(() => {})
       refreshRuns().catch(() => {})
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.reviewImport', 'Failed to import review item'))
+      setReviewError(errorText(err, t('settings.abs.errors.reviewImport', 'Failed to import review item')))
     } finally {
       setReviewActionId(null)
     }
@@ -348,7 +349,7 @@ function AudiobookshelfSection() {
       await api.dismissAbsReviewItem(id)
       await refreshReviewItems()
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.reviewDismiss', 'Failed to dismiss review item'))
+      setReviewError(errorText(err, t('settings.abs.errors.reviewDismiss', 'Failed to dismiss review item')))
     } finally {
       setReviewActionId(null)
     }
@@ -365,7 +366,7 @@ function AudiobookshelfSection() {
       await api.dismissAbsReviewRun(runId)
       await refreshReviewItems()
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.reviewDismissRun', 'Failed to dismiss review run'))
+      setReviewError(errorText(err, t('settings.abs.errors.reviewDismissRun', 'Failed to dismiss review run')))
     } finally {
       setDismissingRunId(null)
     }
@@ -380,7 +381,7 @@ function AudiobookshelfSection() {
       const results = await api.searchAuthors(query)
       setAuthorResults(prev => ({ ...prev, [item.id]: results }))
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.authorSearch', 'Author search failed'))
+      setReviewError(errorText(err, t('settings.abs.errors.authorSearch', 'Author search failed')))
     } finally {
       setAuthorSearchId(null)
     }
@@ -398,7 +399,7 @@ function AudiobookshelfSection() {
       await refreshReviewItems()
       setAuthorResults(prev => ({ ...prev, [item.id]: [] }))
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.resolveAuthor', 'Failed to resolve author'))
+      setReviewError(errorText(err, t('settings.abs.errors.resolveAuthor', 'Failed to resolve author')))
     } finally {
       setReviewActionId(null)
     }
@@ -413,7 +414,7 @@ function AudiobookshelfSection() {
       const results = await api.searchBooks(query)
       setBookResults(prev => ({ ...prev, [item.id]: results }))
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.bookSearch', 'Book search failed'))
+      setReviewError(errorText(err, t('settings.abs.errors.bookSearch', 'Book search failed')))
     } finally {
       setBookSearchId(null)
     }
@@ -462,7 +463,7 @@ function AudiobookshelfSection() {
       setReviewItems(prev => prev.map(current => current.id === item.id ? updated : current))
       setBookResults(prev => ({ ...prev, [item.id]: [] }))
     } catch (err: unknown) {
-      setReviewError(err instanceof Error ? err.message : t('settings.abs.errors.resolveBook', 'Failed to resolve book'))
+      setReviewError(errorText(err, t('settings.abs.errors.resolveBook', 'Failed to resolve book')))
     } finally {
       setReviewActionId(null)
     }

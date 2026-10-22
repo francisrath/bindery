@@ -5,6 +5,7 @@ import { inputCls } from './formStyles'
 import Toggle from './Toggle'
 import { dangerLink, primaryFill } from '../../components/buttons'
 import { urlInputAttrs } from '../../util/inputAttrs'
+import { errorText } from '../../util/errorText'
 
 // The seven trigger chips, in the order both forms render them, paired with the
 // hint that says what actually sends the event. Wording checked against the
@@ -105,7 +106,7 @@ export default function NotificationsTab() {
                           await api.testNotification(n.id)
                           setNotificationTestResult(prev => ({ ...prev, [n.id]: { ok: true, msg: t('settings.notifications.testSent') } }))
                         } catch (err: unknown) {
-                          setNotificationTestResult(prev => ({ ...prev, [n.id]: { ok: false, msg: t('common.connFail', { error: err instanceof Error ? err.message : t('common.unknownError', 'Unknown error') }) } }))
+                          setNotificationTestResult(prev => ({ ...prev, [n.id]: { ok: false, msg: t('common.connFail', { error: errorText(err, t('common.unknownError', 'Unknown error')) }) } }))
                         }
                       }}
                       className="text-xs text-fg-muted hover:text-slate-900 dark:hover:text-white"
@@ -196,7 +197,7 @@ function EditNotificationForm({ notification, onClose, onSaved }: { notification
       const updated = await api.updateNotification(notification.id, { ...notification, name, url, topic, method, headers: headersJSON, onGrab, onImport, onFailure, onUpgrade, onHealth, onBookAnnounced, onRequestCreated })
       onSaved(updated)
     } catch (err: unknown) {
-      setSaveError(t('settings.notifications.saveFailed', { error: err instanceof Error ? err.message : t('common.unknownError', 'Unknown error') }))
+      setSaveError(t('settings.notifications.saveFailed', { error: errorText(err, t('common.unknownError', 'Unknown error')) }))
     } finally {
       setSaving(false)
     }
@@ -297,7 +298,7 @@ function AddNotificationForm({ onClose, onAdded }: { onClose: () => void; onAdde
       })
       onAdded(n)
     } catch (err: unknown) {
-      setSaveError(t('settings.notifications.saveFailed', { error: err instanceof Error ? err.message : t('common.unknownError', 'Unknown error') }))
+      setSaveError(t('settings.notifications.saveFailed', { error: errorText(err, t('common.unknownError', 'Unknown error')) }))
     } finally {
       setSaving(false)
     }

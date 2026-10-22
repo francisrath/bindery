@@ -13,6 +13,7 @@ import { btn, btnSize, primaryFill } from '../components/buttons'
 import { formatBytes } from '../util/format'
 import { downloadStatusBadge, isFailed, isMatchable, isResendable, isRetryable } from '../components/downloadStatus'
 import { ModalPanel } from '../components/useModal'
+import { errorText } from '../util/errorText'
 
 export default function QueuePage() {
   const { t } = useTranslation()
@@ -163,7 +164,7 @@ export default function QueuePage() {
     } catch (e) {
       setRetryImportErrors(prev => ({
         ...prev,
-        [id]: e instanceof Error ? e.message : t('queue.retryFailed', 'Retry failed'),
+        [id]: errorText(e, t('queue.retryFailed', 'Retry failed')),
       }))
     } finally {
       setRetryingImportIds(prev => {
@@ -186,7 +187,7 @@ export default function QueuePage() {
     } catch (e) {
       setRetryImportErrors(prev => ({
         ...prev,
-        [id]: e instanceof Error ? e.message : t('queue.retryFailed', 'Retry failed'),
+        [id]: errorText(e, t('queue.retryFailed', 'Retry failed')),
       }))
     } finally {
       setRetryingImportIds(prev => {
@@ -216,7 +217,7 @@ export default function QueuePage() {
     } catch (e) {
       setRetryImportErrors(prev => ({
         ...prev,
-        [id]: e instanceof Error ? e.message : t('queue.matchFailed', 'Match failed'),
+        [id]: errorText(e, t('queue.matchFailed', 'Match failed')),
       }))
     } finally {
       setRetryingImportIds(prev => {
@@ -293,7 +294,7 @@ export default function QueuePage() {
       load()
     } catch (e) {
       console.error(e)
-      setBulkResult(e instanceof Error ? e.message : t('queue.bulkRetryFailed', 'Bulk retry failed'))
+      setBulkResult(errorText(e, t('queue.bulkRetryFailed', 'Bulk retry failed')))
     } finally {
       setBulkBusy(false)
     }
@@ -329,7 +330,7 @@ export default function QueuePage() {
       load()
     } catch (e) {
       console.error(e)
-      setBulkResult(e instanceof Error ? e.message : t('queue.bulkRemoveFailed', 'Bulk remove failed'))
+      setBulkResult(errorText(e, t('queue.bulkRemoveFailed', 'Bulk remove failed')))
     } finally {
       setBulkBusy(false)
     }

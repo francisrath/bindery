@@ -5,6 +5,7 @@ import { api, GrimmoryConfig, GrimmorySyncStatus, GrimmoryTestResult } from '../
 import { inputCls } from './formStyles'
 import { literalInputAttrs, secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
 import { primaryFill } from '../../components/buttons'
+import { errorText } from '../../util/errorText'
 
 export default function GrimmoryTab() {
   const { t } = useTranslation()
@@ -70,7 +71,7 @@ export default function GrimmoryTab() {
       setConfig(next)
       setDraft(prev => ({ ...prev, apiKey: '', password: '' }))
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : t('settings.grimmory.errors.save', 'Save failed'))
+      setSaveError(errorText(err, t('settings.grimmory.errors.save', 'Save failed')))
     } finally {
       setSaving(false)
     }
@@ -90,7 +91,7 @@ export default function GrimmoryTab() {
       const r = await api.grimmoryTest(payload)
       setTestResult(r)
     } catch (err) {
-      setTestError(err instanceof Error ? err.message : t('settings.grimmory.errors.test', 'Test failed'))
+      setTestError(errorText(err, t('settings.grimmory.errors.test', 'Test failed')))
     } finally {
       setTesting(false)
     }
@@ -103,7 +104,7 @@ export default function GrimmoryTab() {
       setSync(s)
       pollSync()
     } catch (err) {
-      setSyncError(err instanceof Error ? err.message : t('settings.grimmory.errors.syncStart', 'Sync failed to start'))
+      setSyncError(errorText(err, t('settings.grimmory.errors.syncStart', 'Sync failed to start')))
     }
   }
 

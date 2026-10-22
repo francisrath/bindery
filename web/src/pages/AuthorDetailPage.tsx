@@ -30,6 +30,7 @@ import AuthorSyncNotice from '../components/AuthorSyncNotice'
 import CatalogueReconciliationModal from '../components/CatalogueReconciliationModal'
 import DuplicateCandidatesModal from '../components/DuplicateCandidatesModal'
 import CoverImage from '../components/CoverImage'
+import { errorText } from '../util/errorText'
 
 type MediaFilter = '' | 'ebook' | 'audiobook'
 // 'excluded' folds in what used to be a separate "Show excluded" checkbox. It
@@ -339,7 +340,7 @@ export default function AuthorDetailPage() {
         setSyncGaveUp(false)
       })
       .catch(err => {
-        setError(err instanceof Error ? err.message : t('authorDetail.loadFailed', 'Failed to load'))
+        setError(errorText(err, t('authorDetail.loadFailed', 'Failed to load')))
         if (!cancelled) noteSyncFailure(err)
       })
       .finally(() => { if (!cancelled) setLoading(false) })
@@ -457,7 +458,7 @@ export default function AuthorDetailPage() {
       quietReload.current = true
       setReloadKey(k => k + 1)
     } catch (e) {
-      if (session.active) setError(e instanceof Error ? e.message : t('authorDetail.refreshFailed', 'Refresh failed'))
+      if (session.active) setError(errorText(e, t('authorDetail.refreshFailed', 'Refresh failed')))
     } finally {
       setRefreshingAuthorId(current => (current === refreshedId ? null : current))
     }
@@ -494,7 +495,7 @@ export default function AuthorDetailPage() {
         throw new Error(item.error || t('authorDetail.searchFailed', 'Search failed'))
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('authorDetail.searchFailed', 'Search failed'))
+      setError(errorText(e, t('authorDetail.searchFailed', 'Search failed')))
     } finally {
       setSearchingWanted(false)
     }
@@ -516,7 +517,7 @@ export default function AuthorDetailPage() {
       await api.deleteAuthor(author.id, withFiles.length > 0)
       navigate('/')
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('authorDetail.deleteFailed', 'Delete failed'))
+      setError(errorText(e, t('authorDetail.deleteFailed', 'Delete failed')))
     }
   }
 
@@ -560,7 +561,7 @@ export default function AuthorDetailPage() {
       const items = await api.listAllBooks({ authorId, includeExcluded: showExcluded })
       setBooks(items)
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('authorDetail.reloadFailed', 'Reload failed'))
+      setError(errorText(e, t('authorDetail.reloadFailed', 'Reload failed')))
     }
   }
 

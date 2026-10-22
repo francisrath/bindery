@@ -16,6 +16,7 @@ import SaveButton from './SaveButton'
 import DatabaseCheckSection from './DatabaseCheckSection'
 import { useSaveResult } from './useSaveResult'
 import { slateFill, primaryFill } from '../../components/buttons'
+import { errorText } from '../../util/errorText'
 
 // Tab identifiers used by onNavigate for soft (no-reload) cross-tab links.
 // Kept loose (string) so GeneralTab doesn't need to import SettingsPage's Tab
@@ -167,7 +168,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
     try {
       await api.setSetting('import.drop_folder', settings['import.drop_folder'] ?? '')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t('settings.general.saveFailed', 'Save failed')
+      const msg = errorText(err, t('settings.general.saveFailed', 'Save failed'))
       setDropErr(msg)
       throw err
     } finally {
@@ -183,7 +184,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
     try {
       await api.setSetting('import.audiobook.drop_folder', settings['import.audiobook.drop_folder'] ?? '')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t('settings.general.saveFailed', 'Save failed')
+      const msg = errorText(err, t('settings.general.saveFailed', 'Save failed'))
       setAudiobookDropErr(msg)
       throw err
     } finally {
@@ -202,7 +203,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
     try {
       await api.setSetting('search.preferredLanguage', settings['search.preferredLanguage'] ?? '')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : t('settings.general.saveFailed', 'Save failed')
+      const msg = errorText(err, t('settings.general.saveFailed', 'Save failed'))
       setLangErr(msg)
       throw err
     } finally {
@@ -257,7 +258,7 @@ export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
         setScanMessage(t('settings.general.scanQueued'))
       }
     } catch (err) {
-      setScanMessage(t('settings.general.scanFailed', 'Scan failed:') + ' ' + (err instanceof Error ? err.message : t('common.unknownError', 'Unknown error')))
+      setScanMessage(t('settings.general.scanFailed', 'Scan failed:') + ' ' + (errorText(err, t('common.unknownError', 'Unknown error'))))
       setScanningLibrary(false)
     }
   }
@@ -1021,7 +1022,7 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
       setCfg(c => c ? { ...c, apiKey: r.apiKey } : c)
       setShowKey(true)
     } catch (e) {
-      alert(t('settings.general.auth.regenerateFailed', 'Regenerate failed:') + ' ' + (e instanceof Error ? e.message : t('settings.general.auth.unknown', 'unknown')))
+      alert(t('settings.general.auth.regenerateFailed', 'Regenerate failed:') + ' ' + (errorText(e, t('settings.general.auth.unknown', 'unknown'))))
     } finally {
       setRegenerating(false)
     }
@@ -1038,7 +1039,7 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
       await api.authRotateSessionSecret()
       alert(t('settings.general.auth.secretRotated', 'Session secret rotated. New logins sign with the new secret; existing sessions remain valid until the next rotation.'))
     } catch (e) {
-      alert(t('settings.general.auth.rotateFailed', 'Rotate failed:') + ' ' + (e instanceof Error ? e.message : t('settings.general.auth.unknown', 'unknown')))
+      alert(t('settings.general.auth.rotateFailed', 'Rotate failed:') + ' ' + (errorText(e, t('settings.general.auth.unknown', 'unknown'))))
     } finally {
       setRotatingSecret(false)
     }
@@ -1053,7 +1054,7 @@ function SecuritySection({ initialCfg }: { initialCfg: AuthConfig }) {
       await refresh()
       loadCfg()
     } catch (e) {
-      alert(t('settings.general.auth.modeChangeFailed', 'Mode change failed:') + ' ' + (e instanceof Error ? e.message : t('settings.general.auth.unknown', 'unknown')))
+      alert(t('settings.general.auth.modeChangeFailed', 'Mode change failed:') + ' ' + (errorText(e, t('settings.general.auth.unknown', 'unknown'))))
     } finally {
       setSavingMode(false)
     }
@@ -1176,7 +1177,7 @@ function ChangePasswordForm({ username }: { username: string }) {
       setCurrent(''); setNext(''); setConfirmPw('')
       setSuccess(true)
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : t('settings.general.password.changeFailed', 'Change failed'))
+      setError(errorText(e, t('settings.general.password.changeFailed', 'Change failed')))
     } finally {
       setSubmitting(false)
     }

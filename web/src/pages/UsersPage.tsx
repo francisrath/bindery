@@ -8,6 +8,7 @@ import { useAuth } from '../auth/AuthContext'
 import type { UserRole } from '../auth/AuthContext'
 import { literalInputAttrs } from '../util/inputAttrs'
 import { BELOW_SM, useMediaQuery } from '../components/useMediaQuery'
+import { errorText } from '../util/errorText'
 
 const inputCls = 'w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded px-3 py-2 text-sm'
 const btnCls = 'px-3 py-1.5 rounded text-sm font-medium transition-colors'
@@ -127,7 +128,7 @@ export default function UsersPage() {
       await api.resetUserPassword(id, pw)
       setResetError(prev => ({ ...prev, [id]: '' }))
     } catch (e: unknown) {
-      setResetError(prev => ({ ...prev, [id]: e instanceof Error ? e.message : t('users.resetFailed', 'Failed') }))
+      setResetError(prev => ({ ...prev, [id]: errorText(e, t('users.resetFailed', 'Failed')) }))
     }
   }
 

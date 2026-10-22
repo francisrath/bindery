@@ -20,6 +20,7 @@ import AddToLibraryModal from '../components/AddToLibraryModal'
 import BookRating from '../components/BookRating'
 import CoverImage from '../components/CoverImage'
 import { primaryFill } from '../components/buttons'
+import { errorText } from '../util/errorText'
 
 type SortMode =
   | 'title-az' | 'title-za'
@@ -210,7 +211,7 @@ export default function BooksPage() {
       clearSelection()
       load()
     } catch (err) {
-      alert(err instanceof Error ? err.message : t('common.bulkActionFailed', 'Bulk action failed'))
+      alert(errorText(err, t('common.bulkActionFailed', 'Bulk action failed')))
     } finally {
       setBulkBusy(false)
     }

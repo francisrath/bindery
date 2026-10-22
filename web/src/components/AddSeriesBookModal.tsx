@@ -5,6 +5,7 @@ import { foldedIncludes } from '../util/foldForSearch'
 import { useModal } from './useModal'
 import CoverImage from './CoverImage'
 import { primaryFill } from './buttons'
+import { errorText } from '../util/errorText'
 
 interface Props {
   series: Series
@@ -35,7 +36,7 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
         setAuthors(authorList)
       })
       .catch(err => {
-        if (active) setError(err instanceof Error ? err.message : t('series.addBookModal.loadFailed', 'Failed to load books'))
+        if (active) setError(errorText(err, t('series.addBookModal.loadFailed', 'Failed to load books')))
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -85,7 +86,7 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
       onLinked(updated)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('series.addBookModal.addFailed', 'Failed to add book'))
+      setError(errorText(err, t('series.addBookModal.addFailed', 'Failed to add book')))
     } finally {
       setSaving(false)
     }

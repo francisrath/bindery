@@ -17,6 +17,7 @@ import { useSaveResult } from './useSaveResult'
 import { secretInputAttrs, urlInputAttrs } from '../../util/inputAttrs'
 import { useModal } from '../../components/useModal'
 import { slateFill } from '../../components/buttons'
+import { errorText } from '../../util/errorText'
 
 // The code the server puts on a calibredb mode it cannot run because there is
 // no calibredb where Bindery runs (#1940), on a Test failure and on a save.
@@ -65,7 +66,7 @@ export default function CalibreTab() {
       onSaved?.(res)
       return null
     } catch (err) {
-      return err instanceof Error ? err.message : t('settings.calibre.errors.save', 'Save failed')
+      return errorText(err, t('settings.calibre.errors.save', 'Save failed'))
     } finally {
       setSaving(null)
     }
@@ -236,7 +237,7 @@ function CalibreSection({
       const p = await api.calibreImportStart()
       setImportProgress(p)
     } catch (err) {
-      setImportError(err instanceof Error ? err.message : t('settings.calibre.errors.importStart', 'Import failed to start'))
+      setImportError(errorText(err, t('settings.calibre.errors.importStart', 'Import failed to start')))
     }
   }
 
@@ -311,7 +312,7 @@ function CalibreSection({
       // calibredb answered, so whatever the banner said no longer holds.
       else setCalibredbMissing(null)
     } catch (err) {
-      const reason = err instanceof Error ? err.message : t('settings.calibre.test.failed', 'Test failed')
+      const reason = errorText(err, t('settings.calibre.test.failed', 'Test failed'))
       const missing = calibredbMissingReason(err)
       if (missing) setCalibredbMissing(missing)
       const prefix = isPlugin ? t('settings.calibre.test.pluginUnreachable', '✗ Could not reach plugin') : t('settings.calibre.test.calibredbUnreachable', '✗ calibredb unreachable')

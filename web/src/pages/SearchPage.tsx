@@ -6,6 +6,7 @@ import { formatBytes } from '../util/format'
 import { useConfirmDialog } from '../components/useConfirmDialog'
 import { grabWithForceConfirm } from '../util/forceGrab'
 import { primaryFill } from '../components/buttons'
+import { errorText } from '../util/errorText'
 
 export default function SearchPage() {
   const { t } = useTranslation()
@@ -39,7 +40,7 @@ export default function SearchPage() {
       const r = await api.searchIndexers(q)
       setResults(r)
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('search.searchFailed', 'Search failed'))
+      setError(errorText(e, t('search.searchFailed', 'Search failed')))
     } finally {
       setSearching(false)
     }
@@ -64,7 +65,7 @@ export default function SearchPage() {
       if (isNoDownloadClientError(e)) {
         setNeedsClient(true)
       } else {
-        setError(e instanceof Error ? e.message : t('search.grabFailed', 'Grab failed'))
+        setError(errorText(e, t('search.grabFailed', 'Grab failed')))
       }
     } finally {
       setGrabbing(null)

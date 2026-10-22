@@ -2,6 +2,7 @@ import { useCallback, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api } from '../api/client'
 import type { ScanItem } from '../api/client'
+import { errorText } from '../util/errorText'
 
 export interface UseFolderScanResult {
   path: string
@@ -53,7 +54,7 @@ export function useFolderScan(onItems?: (items: ScanItem[]) => void): UseFolderS
       setTruncated(r.truncated)
       onItems?.(r.items)
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('importPage.folderScan.failed', 'Scan failed'))
+      setError(errorText(e, t('importPage.folderScan.failed', 'Scan failed')))
     } finally {
       setScanning(false)
     }

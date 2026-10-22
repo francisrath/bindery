@@ -4,6 +4,7 @@ import { useConfirmDialog } from './useConfirmDialog'
 import { api, Author } from '../api/client'
 import { useModal } from './useModal'
 import { primaryFill } from './buttons'
+import { errorText } from '../util/errorText'
 
 interface Props {
   authors: Author[]
@@ -74,7 +75,7 @@ export default function MergeAuthorsModal({ authors, initialTargetId, onClose, o
       onMerged()
       onClose()
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('mergeAuthorsModal.failed', 'Merge failed'))
+      setError(errorText(e, t('mergeAuthorsModal.failed', 'Merge failed')))
     } finally {
       setBusy(false)
     }

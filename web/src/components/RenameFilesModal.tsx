@@ -8,6 +8,7 @@ import {
 } from '../api/reorganize'
 import { useModal } from './useModal'
 import RichText from './RichText'
+import { errorText } from '../util/errorText'
 
 interface Props {
   scope: ReorganizeScope
@@ -58,7 +59,7 @@ export default function RenameFilesModal({ scope, id, label, onClose, onApplied 
         if (!cancelled) setPreview(res)
       })
       .catch(err => {
-        if (!cancelled) setError(err instanceof Error ? err.message : t('renameFiles.previewFailed', 'Preview failed'))
+        if (!cancelled) setError(errorText(err, t('renameFiles.previewFailed', 'Preview failed')))
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -79,7 +80,7 @@ export default function RenameFilesModal({ scope, id, label, onClose, onApplied 
       setApplied(res)
       if (res.summary.moved > 0) onApplied?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('renameFiles.renameFailed', 'Rename failed'))
+      setError(errorText(err, t('renameFiles.renameFailed', 'Rename failed')))
     } finally {
       setApplying(false)
     }
