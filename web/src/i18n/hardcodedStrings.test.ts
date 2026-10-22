@@ -25,7 +25,7 @@ const ALLOWED = new Set([
 // A naming template, or a single token holding a path, URL, key or digit, or
 // written in capitals, is input syntax or an acronym rather than prose.
 function codeLike(text: string): boolean {
-  if (/\{\w+(:\d+)?\}/.test(text)) return true
+  if (/\{\w+\}/.test(text) || /\{\w+:\d+\}/.test(text)) return true
   return !/\s/.test(text) && (/[/:_{.@\d]/.test(text) || text === text.toUpperCase())
 }
 

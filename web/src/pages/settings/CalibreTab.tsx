@@ -687,12 +687,15 @@ function CalibreSection({
                   {!importProgress.running && importProgress.stats && (
                     <p className="text-xs text-slate-700 dark:text-zinc-300">
                       {t('settings.calibre.import.complete', 'Import complete')} —{' '}
-                      {CALIBRE_IMPORT_STATS.map(([field, key], i) => (
-                        <span key={field}>
-                          <span className="font-medium">{importProgress.stats![field]}</span> {t(key, { count: importProgress.stats![field] })}
-                          {i < CALIBRE_IMPORT_STATS.length - 1 ? ', ' : '.'}
-                        </span>
-                      ))}
+                      {CALIBRE_IMPORT_STATS.map(([field, key], i) => {
+                        const count = new Map(Object.entries(importProgress.stats!)).get(field)
+                        return (
+                          <span key={field}>
+                            <span className="font-medium">{count}</span> {t(key, { count })}
+                            {i < CALIBRE_IMPORT_STATS.length - 1 ? ', ' : '.'}
+                          </span>
+                        )
+                      })}
                     </p>
                   )}
                 </div>

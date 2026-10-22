@@ -40,13 +40,15 @@ const AUTH_CONFIG_WAIT_MS = 2500
 export default function GeneralTab({ onNavigate }: GeneralTabProps = {}) {
   const fid = useId()
   const { t } = useTranslation()
-  const importModeLabel = (mode: 'auto' | 'move' | 'copy' | 'hardlink' | 'external') => ({
-    auto: t('settings.general.importMode.auto', 'Auto'),
-    move: t('settings.general.importMode.move', 'Move'),
-    copy: t('settings.general.importMode.copy', 'Copy'),
-    hardlink: t('settings.general.importMode.hardlink', 'Hardlink'),
-    external: t('settings.general.importMode.external', 'External'),
-  })[mode]
+  const importModeLabel = (mode: 'auto' | 'move' | 'copy' | 'hardlink' | 'external') => {
+    switch (mode) {
+      case 'auto': return t('settings.general.importMode.auto', 'Auto')
+      case 'move': return t('settings.general.importMode.move', 'Move')
+      case 'copy': return t('settings.general.importMode.copy', 'Copy')
+      case 'hardlink': return t('settings.general.importMode.hardlink', 'Hardlink')
+      case 'external': return t('settings.general.importMode.external', 'External')
+    }
+  }
   const { isAdmin } = useAuth()
   const [settings, setSettings] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)

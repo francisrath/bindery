@@ -784,12 +784,15 @@ function AudiobookshelfSection() {
               {!importProgress.running && importProgress.stats && (
                 <p className="text-xs text-slate-700 dark:text-zinc-300">
                   {importProgress.dryRun ? t('settings.abs.import.dryRunComplete', 'Dry-run complete') : t('settings.abs.import.complete', 'Import complete')} —{' '}
-                  {IMPORT_STATS.map(([field, key], i) => (
-                    <span key={field}>
-                      <span className="font-medium">{importProgress.stats![field]}</span> {t(key, { count: importProgress.stats![field] })}
-                      {i < IMPORT_STATS.length - 1 ? ', ' : '.'}
-                    </span>
-                  ))}
+                  {IMPORT_STATS.map(([field, key], i) => {
+                    const count = new Map(Object.entries(importProgress.stats!)).get(field)
+                    return (
+                      <span key={field}>
+                        <span className="font-medium">{count}</span> {t(key, { count })}
+                        {i < IMPORT_STATS.length - 1 ? ', ' : '.'}
+                      </span>
+                    )
+                  })}
                 </p>
               )}
               {importProgress.results && importProgress.results.length > 0 && (

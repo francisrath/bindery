@@ -10,8 +10,8 @@ vi.mock('react-i18next', () => ({
     t: (key: string, opts?: unknown) => {
       if (typeof opts === 'string') return opts
       if (opts && typeof opts === 'object' && 'defaultValue' in opts) {
-        const vars = opts as Record<string, unknown>
-        return String(vars.defaultValue).replace(/\{\{(\w+)\}\}/g, (_m, k: string) => String(vars[k]))
+        const vars = new Map(Object.entries(opts))
+        return String(vars.get('defaultValue')).replace(/\{\{(\w+)\}\}/g, (_m, k: string) => String(vars.get(k)))
       }
       if (opts && typeof opts === 'object' && 'page' in opts) return `${key}:${(opts as { page: number }).page}`
       return key

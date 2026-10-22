@@ -87,7 +87,8 @@ vi.mock('react-i18next', () => ({
         'queue.errorPrefix.error': 'Error:',
       }
       if (key.startsWith('queue.age.') && typeof options?.defaultValue === 'string') {
-        return options.defaultValue.replace(/\{\{(\w+)\}\}/g, (_m, k: string) => String(options[k]))
+        const vars = new Map(Object.entries(options))
+        return options.defaultValue.replace(/\{\{(\w+)\}\}/g, (_m, k: string) => String(vars.get(k)))
       }
       return labels[key] ?? key
     },
