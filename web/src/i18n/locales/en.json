@@ -940,14 +940,14 @@
       "searchLabel": "Search Hardcover for a series",
       "searchPlaceholder": "Search Hardcover for a series",
       "search": "Search",
-      "searching": "Searching...",
+      "searching": "Searching…",
       "noResults": "No Hardcover series found.",
       "searchFailed": "Hardcover search failed",
       "bookCount_one": "{{count}} book",
       "bookCount_other": "{{count}} books",
       "viewOnHardcover": "View on Hardcover ↗",
       "add": "Add",
-      "adding": "Adding...",
+      "adding": "Adding…",
       "addResult": "Add {{title}}",
       "addFailed": "Could not add the series",
       "alreadyAdded": "Already in your library"
@@ -1065,12 +1065,12 @@
       "selectBook": "Select a book",
       "addFailed": "Failed to add book",
       "title": "Add Book to Series",
-      "searchPlaceholder": "Search library books...",
-      "loading": "Loading...",
+      "searchPlaceholder": "Search library books…",
+      "loading": "Loading…",
       "noMatch": "No matching books found.",
       "position": "Position (optional)",
       "primarySeries": "Primary series",
-      "adding": "Adding...",
+      "adding": "Adding…",
       "add": "Add"
     },
     "hardcoverLink": {
@@ -1089,9 +1089,9 @@
       "readers": "{{n}} readers",
       "match": "{{confidence}} match",
       "noPage": "No Hardcover page for this result",
-      "searching": "Searching...",
+      "searching": "Searching…",
       "noResults": "No Hardcover series found.",
-      "saving": "Saving...",
+      "saving": "Saving…",
       "confirm": "Confirm Selection"
     }
   },
@@ -1196,7 +1196,7 @@
         "resolvedAuthor": "Author: {{name}}",
         "resolvedBook": "Book: {{title}}",
         "fileMappingFound": "File Mapping Found",
-        "searching": "Searching...",
+        "searching": "Searching…",
         "searchAuthor": "Author",
         "searchBook": "Book",
         "importing": "Importing…",
@@ -1677,7 +1677,7 @@
         },
         "previewLabel": "Preview",
         "apply": "Apply this remap",
-        "applying": "Applying...",
+        "applying": "Applying…",
         "failed": "Could not save the remap: {{error}}"
       },
       "diagnose": {

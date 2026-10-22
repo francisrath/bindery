@@ -244,7 +244,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
                 </div>
               )
             })}
-            {searching && <p className="text-sm text-fg-muted text-center py-4">{t('series.hardcoverLink.searching', 'Searching...')}</p>}
+            {searching && <p className="text-sm text-fg-muted text-center py-4">{t('series.hardcoverLink.searching', 'Searching…')}</p>}
             {!searching && results.length === 0 && !error && (
               <p className="text-sm text-fg-muted text-center py-4">{t('series.hardcoverLink.noResults', 'No Hardcover series found.')}</p>
             )}
@@ -261,7 +261,7 @@ export default function HardcoverSeriesLinkModal({ series, initialResults, onClo
             disabled={!selected || saving}
             className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
           >
-            {saving ? t('series.hardcoverLink.saving', 'Saving...') : t('series.hardcoverLink.confirm', 'Confirm Selection')}
+            {saving ? t('series.hardcoverLink.saving', 'Saving…') : t('series.hardcoverLink.confirm', 'Confirm Selection')}
           </button>
         </div>
       </div>

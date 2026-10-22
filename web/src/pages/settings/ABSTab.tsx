@@ -1100,7 +1100,7 @@ function AudiobookshelfSection() {
                           disabled={authorSearchId === item.id}
                           className={`px-3 py-2 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                         >
-                          {authorSearchId === item.id ? t('settings.abs.review.searching', 'Searching...') : t('settings.abs.review.searchAuthor', 'Author')}
+                          {authorSearchId === item.id ? t('settings.abs.review.searching', 'Searching…') : t('settings.abs.review.searchAuthor', 'Author')}
                         </button>
                       </div>
                       {(authorResults[item.id] ?? []).length > 0 && (
@@ -1133,7 +1133,7 @@ function AudiobookshelfSection() {
                           disabled={bookSearchId === item.id}
                           className={`px-3 py-2 ${slateFill} rounded text-xs font-medium disabled:opacity-50`}
                         >
-                          {bookSearchId === item.id ? t('settings.abs.review.searching', 'Searching...') : t('settings.abs.review.searchBook', 'Book')}
+                          {bookSearchId === item.id ? t('settings.abs.review.searching', 'Searching…') : t('settings.abs.review.searchBook', 'Book')}
                         </button>
                       </div>
                       {(bookResults[item.id] ?? []).length > 0 && (

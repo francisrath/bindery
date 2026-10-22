@@ -120,14 +120,14 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
               type="search"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder={t('series.addBookModal.searchPlaceholder', 'Search library books...')}
+              placeholder={t('series.addBookModal.searchPlaceholder', 'Search library books…')}
               className="w-full bg-slate-200 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 rounded-md px-3 py-2 text-sm"
               autoFocus
             />
 
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {loading ? (
-                <p className="text-sm text-fg-muted text-center py-4">{t('series.addBookModal.loading', 'Loading...')}</p>
+                <p className="text-sm text-fg-muted text-center py-4">{t('series.addBookModal.loading', 'Loading…')}</p>
               ) : availableBooks.length === 0 ? (
                 <p className="text-sm text-fg-muted text-center py-4">{t('series.addBookModal.noMatch', 'No matching books found.')}</p>
               ) : (
@@ -201,7 +201,7 @@ export default function AddSeriesBookModal({ series, onClose, onLinked }: Props)
               disabled={saving || !bookId}
               className={`px-4 py-2 ${primaryFill} disabled:opacity-50 rounded-md text-sm font-medium`}
             >
-              {saving ? t('series.addBookModal.adding', 'Adding...') : t('series.addBookModal.add', 'Add')}
+              {saving ? t('series.addBookModal.adding', 'Adding…') : t('series.addBookModal.add', 'Add')}
             </button>
           </div>
         </form>
