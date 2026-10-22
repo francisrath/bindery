@@ -166,12 +166,12 @@ export default function NamingTemplateField({
         </p>
       )}
       {validation.traversal && (
-        <p className="text-xs text-red-600 dark:text-red-400 mt-1.5" role="alert">
+        <p className="text-xs text-red-700 dark:text-red-400 mt-1.5" role="alert">
           {t('settings.general.naming.errorTraversal')}
         </p>
       )}
       {validation.extInAudiobook && (
-        <p className="text-xs text-red-600 dark:text-red-400 mt-1.5" role="alert">
+        <p className="text-xs text-red-700 dark:text-red-400 mt-1.5" role="alert">
           {t('settings.general.naming.errorExtInAudiobook')}
         </p>
       )}

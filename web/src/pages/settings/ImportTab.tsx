@@ -95,7 +95,7 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
         </div>
         {r.failures && Object.keys(r.failures).length > 0 && (
           <details className="text-xs">
-            <summary className="cursor-pointer text-red-600 dark:text-red-400">{t('settings.import.showFailures', { count: Object.keys(r.failures).length, defaultValue: 'Show {{count}} failures' })}</summary>
+            <summary className="cursor-pointer text-red-700 dark:text-red-400">{t('settings.import.showFailures', { count: Object.keys(r.failures).length, defaultValue: 'Show {{count}} failures' })}</summary>
             <ul className="mt-2 space-y-0.5 font-mono">
               {Object.entries(r.failures).map(([name, reason]) => (
                 <li key={name}><span className="text-slate-800 dark:text-zinc-200">{name}</span>: <span className="text-fg-muted">{reason}</span></li>
@@ -146,7 +146,7 @@ export default function ImportTab({ onNavigate }: ImportTabProps = {}) {
           <p className="mt-3 text-xs text-fg-muted">{t('settings.import.importingReadarr')}</p>
         )}
         {readarrProgress?.error && !readarrProgress.running && (
-          <p className="mt-3 text-xs text-red-600 dark:text-red-400">{readarrProgress.error}</p>
+          <p className="mt-3 text-xs text-red-700 dark:text-red-400">{readarrProgress.error}</p>
         )}
         {readarrResult && (
           <div className="mt-4 space-y-2">
@@ -308,7 +308,7 @@ function ManualImportSection() {
         <p className="text-sm text-accent-text">{t('settings.import.manualImportSuccess')}</p>
       )}
       {err && (
-        <p className="text-sm text-red-600 dark:text-red-400">{err}</p>
+        <p className="text-sm text-red-700 dark:text-red-400">{err}</p>
       )}
     </section>
   )
@@ -737,14 +737,14 @@ function HardcoverListsSection({ onNavigate }: { onNavigate?: (tab: string) => v
                     >
                       {t('settings.import.hardcoverTokenOverride', 'Token override')}
                     </button>
-                    <button onClick={() => handleDelete(il.id)} className="text-xs text-red-600 dark:text-red-400 hover:underline">{t('common.delete')}</button>
+                    <button onClick={() => handleDelete(il.id)} className="text-xs text-red-700 dark:text-red-400 hover:underline">{t('common.delete')}</button>
                   </div>
                 )}
               </div>
               {/* Live sync line: shown while this list is syncing and left in
                   place afterwards so the run's outcome is visible (#1854). */}
               {il && syncProgress?.listId === il.id && (
-                <p className={`mt-2 text-xs ${syncProgress.error ? 'text-red-600 dark:text-red-400' : 'text-accent-text'}`}>
+                <p className={`mt-2 text-xs ${syncProgress.error ? 'text-red-700 dark:text-red-400' : 'text-accent-text'}`}>
                   {syncProgress.running
                     ? `${syncProgress.message ?? t('settings.import.hardcoverSyncing', 'Syncing…')}${syncProgress.stats.total > 0 ? ` (${syncProgress.stats.processed}/${syncProgress.stats.total})` : ''}`
                     : syncProgress.error

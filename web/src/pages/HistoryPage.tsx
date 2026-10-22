@@ -9,8 +9,8 @@ import { formatBytes } from '../util/format'
 
 const EVENT_TYPE_COLORS: Record<string, string> = {
   grabbed: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',
-  bookImported: 'bg-emerald-500/20 text-accent-text',
-  imported: 'bg-emerald-500/20 text-accent-text',
+  bookImported: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-400',
+  imported: 'bg-emerald-500/20 text-emerald-800 dark:text-emerald-400',
   downloadFailed: 'bg-red-500/20 text-red-700 dark:text-red-400',
   importFailed: 'bg-red-500/20 text-red-700 dark:text-red-400',
   deleted: 'bg-red-500/20 text-red-700 dark:text-red-400',
@@ -290,7 +290,7 @@ export default function HistoryPage() {
                           </div>
                           <BookAuthorLink book={event.book} />
                           {detail && (
-                            <div className={`mt-1 text-xs break-words ${isError ? 'text-red-600 dark:text-red-400' : 'text-fg-muted'}`}>
+                            <div className={`mt-1 text-xs break-words ${isError ? 'text-red-700 dark:text-red-400' : 'text-fg-muted'}`}>
                               {detail}
                             </div>
                           )}
@@ -314,7 +314,7 @@ export default function HistoryPage() {
                           {BLOCKLISTABLE.has(event.eventType) && (
                             <button
                               onClick={() => handleBlocklist(event.id)}
-                              className="text-xs text-amber-400 hover:text-amber-300 transition-colors mr-3"
+                              className="text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors mr-3"
                               title={t('history.blocklistHint', 'Add to blocklist — prevents this release from being grabbed again')}
                             >
                               {t('history.blocklist')}
@@ -367,7 +367,7 @@ export default function HistoryPage() {
                   </p>
                   <BookAuthorLink book={event.book} />
                   {detail && (
-                    <p className={`text-xs break-words mb-2 ${isError ? 'text-red-600 dark:text-red-400' : 'text-fg-muted'}`}>
+                    <p className={`text-xs break-words mb-2 ${isError ? 'text-red-700 dark:text-red-400' : 'text-fg-muted'}`}>
                       {detail}
                     </p>
                   )}
@@ -375,7 +375,7 @@ export default function HistoryPage() {
                     {BLOCKLISTABLE.has(event.eventType) && (
                       <button
                         onClick={() => handleBlocklist(event.id)}
-                        className="touch-target text-xs text-amber-400 hover:text-amber-300 transition-colors py-1"
+                        className="touch-target text-xs text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors py-1"
                       >
                         {t('history.blocklist')}
                       </button>

@@ -512,7 +512,7 @@ export default function QueuePage() {
                       <DownloadStatusChip status={item.status} />
                       <span className="text-fg-muted">{formatBytes(item.size)}</span>
                       {item.percentage && (
-                        <span className="text-blue-400">{item.percentage}%</span>
+                        <span className="text-blue-700 dark:text-blue-400">{item.percentage}%</span>
                       )}
                       {item.timeLeft && (
                         <span className="text-fg-muted">{t('queue.remaining', { time: item.timeLeft })}</span>
@@ -581,7 +581,7 @@ export default function QueuePage() {
                       </div>
                     )}
                     {retryImportErrors[item.id] && (
-                      <div className="mt-1 text-xs text-red-600 dark:text-red-400 bg-red-400/10 rounded px-2 py-1 break-words">
+                      <div className="mt-1 text-xs text-red-700 dark:text-red-400 bg-red-400/10 rounded px-2 py-1 break-words">
                         {t('queue.retryImportError', { error: retryImportErrors[item.id] })}
                       </div>
                     )}

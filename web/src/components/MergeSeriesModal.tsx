@@ -139,7 +139,7 @@ export default function MergeSeriesModal({ target, series, onClose, onMerged }: 
             </div>
           )}
 
-          {error && <p className="text-xs text-red-600 dark:text-red-400" role="alert">{error}</p>}
+          {error && <p className="text-xs text-red-700 dark:text-red-400" role="alert">{error}</p>}
         </div>
 
         <div className="p-4 border-t border-slate-200 dark:border-zinc-800 flex justify-end gap-2">

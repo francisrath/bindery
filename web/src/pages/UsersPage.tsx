@@ -176,7 +176,7 @@ export default function UsersPage() {
       </button>
       <button
         onClick={() => handleDelete(u)}
-        className={`${btnCls} text-xs bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 pointer-coarse:py-2.5`}
+        className={`${btnCls} text-xs bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-700 dark:text-red-400 pointer-coarse:py-2.5`}
       >
         {t('common.delete')}
       </button>
@@ -208,7 +208,7 @@ export default function UsersPage() {
       )}
 
       {loading && <p className="text-sm text-fg-muted">{t('common.loading')}</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-sm text-red-700 dark:text-red-400">{error}</p>}
       {!loading && <p className="text-xs text-fg-muted">{t('users.autoApproveHint')}</p>}
 
       {!loading && narrow && (
@@ -326,7 +326,7 @@ export default function UsersPage() {
             </select>
             <p className="mt-1 text-xs text-fg-muted">{t('users.roleRequesterHint')}</p>
           </div>
-          {createError && <p className="text-sm text-red-500">{createError}</p>}
+          {createError && <p className="text-sm text-red-700 dark:text-red-400">{createError}</p>}
           <button
             type="submit"
             disabled={creating || !newUsername || !newPassword}

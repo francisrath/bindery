@@ -84,8 +84,10 @@ describe('theme text tokens meet WCAG AA on app surfaces', () => {
 // The tokens are AA on the page and on cards, but not on every background a
 // class string can put them on: fg-muted's zinc-400 is 4.08:1 on zinc-700.
 // So every class string in the source that sets a token together with a
-// slate or zinc background is measured, in each theme, against that
-// background; a translucent one is mixed over the card of its theme. A
+// slate, zinc or emerald background is measured, in each theme, against that
+// background; a translucent one is mixed over the card of its theme, and one
+// with no dark: variant counts for both themes. Emerald is here because
+// accent-text sits on green tints: emerald-700 is 4.19:1 on emerald-500/20. A
 // string that overrides the token's colour for a theme (dark:text-zinc-300)
 // is measured with the override. A background set in a different string, as
 // a ternary often does, is not seen: this guards the common badge shape.
@@ -100,6 +102,8 @@ const PALETTE = new Map([
   ['zinc-800', '#27272a'],
   ['zinc-900', '#18181b'],
   ['zinc-950', '#09090b'],
+  ['emerald-400', '#00d492'],
+  ['emerald-500', '#00bc7d'],
 ])
 const TEXT_OVERRIDE = new Map([
   ['zinc-200', '#e4e4e7'],
@@ -111,8 +115,8 @@ const TEXT_OVERRIDE = new Map([
 // them, the colour in group 1. A background's opacity (bg-zinc-800/50) is
 // split off before matching.
 const CLASSES: Record<Theme, { bg: RegExp; text: RegExp }> = {
-  light: { bg: /^bg-((?:slate|zinc)-\d+|white)$/, text: /^text-((?:slate|zinc)-\d+)$/ },
-  dark: { bg: /^dark:bg-((?:slate|zinc)-\d+|white)$/, text: /^dark:text-((?:slate|zinc)-\d+)$/ },
+  light: { bg: /^bg-((?:slate|zinc|emerald)-\d+|white)$/, text: /^text-((?:slate|zinc)-\d+)$/ },
+  dark: { bg: /^dark:bg-((?:slate|zinc|emerald)-\d+|white)$/, text: /^dark:text-((?:slate|zinc)-\d+)$/ },
 }
 
 function mix(fg: string, bg: string, alpha: number): string {
@@ -133,9 +137,13 @@ describe('tokens on the backgrounds the source puts them on', () => {
         const tokenName = classes.find(c => c === 'text-fg-muted' || c === 'text-accent-text')!.slice(5) as Token
         for (const theme of ['light', 'dark'] as const) {
           const { bg: bgPattern, text: textPattern } = theme === 'dark' ? CLASSES.dark : CLASSES.light
-          const bgClass = classes.find(c => bgPattern.test(c.split('/')[0]))
+          const ownBg = classes.find(c => bgPattern.test(c.split('/')[0]))
+          const sharedBg = theme === 'dark' && !classes.some(c => c.startsWith('dark:bg-'))
+            ? classes.find(c => CLASSES.light.bg.test(c.split('/')[0]))
+            : undefined
+          const bgClass = ownBg ?? sharedBg
           const [bgBase, opacity] = bgClass?.split('/') ?? []
-          const ground = bgBase && PALETTE.get(bgBase.match(bgPattern)![1])
+          const ground = bgBase && PALETTE.get(bgBase.match(ownBg ? bgPattern : CLASSES.light.bg)![1])
           if (!bgClass || !ground) continue
           const card = theme === 'dark' ? SURFACES.darkCard : SURFACES.lightCard
           const bg = opacity ? mix(ground, card, Number(opacity) / 100) : ground
@@ -151,6 +159,14 @@ describe('tokens on the backgrounds the source puts them on', () => {
     }
     expect(checked).toBeGreaterThan(20)
     expect(failures, failures.join('\n')).toEqual([])
+  })
+
+  // Why the green tints spell out emerald-800 for light rather than use
+  // accent-text: the token is AA on surfaces, not on its own hue (#3084).
+  it('regression: accent-text fails on the emerald-500/20 tint, emerald-800 passes', () => {
+    const tint = mix(PALETTE.get('emerald-500')!, SURFACES.lightCard, 0.2)
+    expect(contrast(token('accent-text', 'light'), tint)).toBeLessThan(AA_NORMAL)
+    expect(contrast('#006045', tint)).toBeGreaterThanOrEqual(AA_NORMAL)
   })
 })
 

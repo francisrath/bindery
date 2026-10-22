@@ -331,7 +331,13 @@ func TestManualImport_SymlinkLoopIsFastAndForbidden(t *testing.T) {
 // inside a configured root, so no directory outside the library is ever read.
 // Not parallel: it swaps the package level listing seam.
 func TestManualImport_WordingNeverListsOutsideTheRoots(t *testing.T) {
-	base := t.TempDir()
+	// Resolved, because the check lists resolved directories and the prefix
+	// test below compares strings: on macOS t.TempDir() is under /var, a link
+	// to /private/var.
+	base, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
 	root := filepath.Join(base, "root")
 	outside := filepath.Join(base, "outside")
 	for _, d := range []string{root, outside, filepath.Join(outside, "sub")} {

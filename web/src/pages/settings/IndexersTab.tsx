@@ -580,7 +580,7 @@ export default function IndexersTab({ indexers, setIndexers, prowlarrInstances, 
                     <p className="text-xs text-accent-text mt-0.5">{prowlarrSyncResult[p.id]}</p>
                   )}
                   {prowlarrTestResult[p.id] && (
-                    <p className={`text-xs mt-0.5 ${prowlarrTestResult[p.id].ok ? 'text-accent-text' : 'text-red-600 dark:text-red-400'}`}>{prowlarrTestResult[p.id].msg}</p>
+                    <p className={`text-xs mt-0.5 ${prowlarrTestResult[p.id].ok ? 'text-accent-text' : 'text-red-700 dark:text-red-400'}`}>{prowlarrTestResult[p.id].msg}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
@@ -902,7 +902,7 @@ function EditProwlarrForm({ instance, onClose, onSaved }: { instance: ProwlarrIn
         <span className="text-xs text-fg-muted">{t('settings.prowlarr.syncOnStartup')}</span>
       </div>
       {error && (
-        <div className="text-xs text-red-600 dark:text-red-400 break-words">{error}</div>
+        <div className="text-xs text-red-700 dark:text-red-400 break-words">{error}</div>
       )}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>
@@ -971,7 +971,7 @@ function AddProwlarrForm({ onClose, onAdded }: { onClose: () => void; onAdded: (
         <span className="text-xs text-fg-muted">{t('settings.prowlarr.syncOnStartup')}</span>
       </div>
       {error && (
-        <div className="text-xs text-red-600 dark:text-red-400 break-words">{error}</div>
+        <div className="text-xs text-red-700 dark:text-red-400 break-words">{error}</div>
       )}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1.5 text-sm text-fg-muted">{t('common.cancel')}</button>

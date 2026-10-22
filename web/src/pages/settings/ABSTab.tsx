@@ -626,7 +626,7 @@ function AudiobookshelfSection() {
             {t('settings.abs.libraries.none', 'No libraries selected. Use Test connection or List libraries to discover accessible book libraries.')}
           </p>
         )}
-        {libraryError && <div className="mt-2 text-sm text-red-600 dark:text-red-400">{libraryError}</div>}
+        {libraryError && <div className="mt-2 text-sm text-red-700 dark:text-red-400">{libraryError}</div>}
       </div>
 
       <div className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-slate-100 dark:bg-zinc-900 space-y-4">
@@ -676,9 +676,9 @@ function AudiobookshelfSection() {
             {testResult.defaultLibraryId ? ' · ' + t('settings.abs.test.defaultLibrary', { id: testResult.defaultLibraryId, defaultValue: 'default library {{id}}' }) : ''}
           </div>
         )}
-        {saveError && <div className="text-sm text-red-600 dark:text-red-400">{saveError}</div>}
-        {testError && <div className="text-sm text-red-600 dark:text-red-400">{testError}</div>}
-        {libraryError && <div className="text-sm text-red-600 dark:text-red-400">{libraryError}</div>}
+        {saveError && <div className="text-sm text-red-700 dark:text-red-400">{saveError}</div>}
+        {testError && <div className="text-sm text-red-700 dark:text-red-400">{testError}</div>}
+        {libraryError && <div className="text-sm text-red-700 dark:text-red-400">{libraryError}</div>}
 
         <PathRemapField
           id="abs-path-remap"
@@ -762,7 +762,7 @@ function AudiobookshelfSection() {
             </p>
           )}
 
-          {importError && <div className="text-sm text-red-600 dark:text-red-400">{importError}</div>}
+          {importError && <div className="text-sm text-red-700 dark:text-red-400">{importError}</div>}
 
           {importProgress && (importProgress.running || importProgress.stats || importProgress.error) && (
             <div className="rounded border border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 px-3 py-2 space-y-2">
@@ -780,7 +780,7 @@ function AudiobookshelfSection() {
                 </p>
               )}
               {!importProgress.running && importProgress.error && (
-                <p className="text-xs text-red-600 dark:text-red-400">{importProgress.dryRun ? t('settings.abs.import.dryRunFailed', { error: importProgress.error, defaultValue: 'Dry-run failed: {{error}}' }) : t('settings.abs.import.failed', { error: importProgress.error, defaultValue: 'Import failed: {{error}}' })}</p>
+                <p className="text-xs text-red-700 dark:text-red-400">{importProgress.dryRun ? t('settings.abs.import.dryRunFailed', { error: importProgress.error, defaultValue: 'Dry-run failed: {{error}}' }) : t('settings.abs.import.failed', { error: importProgress.error, defaultValue: 'Import failed: {{error}}' })}</p>
               )}
               {!importProgress.running && importProgress.stats && (
                 <p className="text-xs text-slate-700 dark:text-zinc-300">
@@ -979,7 +979,7 @@ function AudiobookshelfSection() {
               )
             })}
 
-            {rollbackError && <div className="text-sm text-red-600 dark:text-red-400">{rollbackError}</div>}
+            {rollbackError && <div className="text-sm text-red-700 dark:text-red-400">{rollbackError}</div>}
           </div>
         </div>
 
@@ -1177,7 +1177,7 @@ function AudiobookshelfSection() {
             </>
           )}
 
-          {reviewError && <div className="text-sm text-red-600 dark:text-red-400">{reviewError}</div>}
+          {reviewError && <div className="text-sm text-red-700 dark:text-red-400">{reviewError}</div>}
         </div>
 
         <ABSConflictPanel

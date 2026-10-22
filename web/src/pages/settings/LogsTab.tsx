@@ -296,7 +296,7 @@ export default function LogsTab() {
           }
           const rows = logEntries.map((e, i) => {
             const levelCls =
-              e.level === 'ERROR' ? 'text-red-500 dark:text-red-400' :
+              e.level === 'ERROR' ? 'text-red-700 dark:text-red-400' :
               e.level === 'WARN'  ? 'text-amber-600 dark:text-amber-400' :
               e.level === 'DEBUG' ? 'text-fg-muted' :
               'text-accent-text'
@@ -467,7 +467,7 @@ export default function LogsTab() {
                     <button
                       onClick={() => handleDeleteBackup(b.name)}
                       disabled={deletingBackup === b.name}
-                      className="ml-4 text-red-600 dark:text-red-400 hover:underline disabled:opacity-50"
+                      className="ml-4 text-red-700 dark:text-red-400 hover:underline disabled:opacity-50"
                     >
                       {deletingBackup === b.name ? '…' : t('common.delete')}
                     </button>

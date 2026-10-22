@@ -107,7 +107,7 @@ export default function HardcoverSeriesAddSearch({ onCreated, onExisting }: Prop
         </button>
       </div>
 
-      {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-700 dark:text-red-400">{error}</p>}
 
       {results && results.length === 0 && !error && (
         <p className="text-sm text-fg-muted">{t('series.addFromHardcover.noResults')}</p>

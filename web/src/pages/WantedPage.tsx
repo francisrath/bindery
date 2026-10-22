@@ -488,7 +488,7 @@ export default function WantedPage() {
                           disabled={grabbingGuid === r.guid || grabbedGuid === r.guid}
                           className={`px-2 py-2 rounded text-[10px] font-medium flex-shrink-0 touch-manipulation transition-colors disabled:cursor-default ${
                             grabbedGuid === r.guid
-                              ? 'bg-emerald-700 text-emerald-200'
+                              ? 'bg-emerald-700 text-white'
                               : grabbingGuid === r.guid
                               ? 'bg-emerald-600/60 text-white/70'
                               : `${primaryFill}`

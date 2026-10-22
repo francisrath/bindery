@@ -369,7 +369,7 @@ function CalibreSection({
             />
           </div>
           {saveError?.key === 'calibre.library_path' && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{saveError.msg}</p>
+            <p className="text-xs text-red-700 dark:text-red-400 mt-1">{saveError.msg}</p>
           )}
         </div>
 
@@ -431,7 +431,7 @@ function CalibreSection({
               />
             </div>
             {saveError?.key === 'calibre.binary_path' && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{saveError.msg}</p>
+              <p className="text-xs text-red-700 dark:text-red-400 mt-1">{saveError.msg}</p>
             )}
           </div>
         )}
@@ -484,7 +484,7 @@ function CalibreSection({
               />
             </div>
             {saveError?.key === 'calibre.plugin_url' && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{saveError.msg}</p>
+              <p className="text-xs text-red-700 dark:text-red-400 mt-1">{saveError.msg}</p>
             )}
           </div>
         )}
@@ -513,7 +513,7 @@ function CalibreSection({
               />
             </div>
             {saveError?.key === 'calibre.plugin_api_key' && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{saveError.msg}</p>
+              <p className="text-xs text-red-700 dark:text-red-400 mt-1">{saveError.msg}</p>
             )}
           </div>
         )}
@@ -538,7 +538,7 @@ function CalibreSection({
               />
             </div>
             {saveError?.key === 'calibre.push_path_remap' && (
-              <p className="text-xs text-red-600 dark:text-red-400 mt-1">{saveError.msg}</p>
+              <p className="text-xs text-red-700 dark:text-red-400 mt-1">{saveError.msg}</p>
             )}
           </div>
         )}
@@ -547,7 +547,7 @@ function CalibreSection({
           <div className="flex items-center justify-between pt-1 border-t border-slate-200 dark:border-zinc-800">
             <div className="text-xs">
               {testResult && (
-                <span className={testResult.ok ? 'text-accent-text' : 'text-red-600 dark:text-red-400'}>
+                <span className={testResult.ok ? 'text-accent-text' : 'text-red-700 dark:text-red-400'}>
                   {testResult.msg}
                 </span>
               )}
@@ -659,7 +659,7 @@ function CalibreSection({
               </div>
 
               {importError && (
-                <p className="text-xs text-red-600 dark:text-red-400">{importError}</p>
+                <p className="text-xs text-red-700 dark:text-red-400">{importError}</p>
               )}
 
               {importProgress && (importProgress.running || importProgress.stats || importProgress.error) && (
@@ -683,7 +683,7 @@ function CalibreSection({
                     </>
                   )}
                   {!importProgress.running && importProgress.error && (
-                    <p className="text-xs text-red-600 dark:text-red-400">{t('settings.calibre.import.failed', { error: importProgress.error, defaultValue: 'Import failed: {{error}}' })}</p>
+                    <p className="text-xs text-red-700 dark:text-red-400">{t('settings.calibre.import.failed', { error: importProgress.error, defaultValue: 'Import failed: {{error}}' })}</p>
                   )}
                   {!importProgress.running && importProgress.stats && (
                     <p className="text-xs text-slate-700 dark:text-zinc-300">
@@ -734,7 +734,7 @@ function CalibreSection({
             />
           </div>
           {saveError?.key === 'cwa.ingest_path' && (
-            <p className="text-xs text-red-600 dark:text-red-400 mt-1">{saveError.msg}</p>
+            <p className="text-xs text-red-700 dark:text-red-400 mt-1">{saveError.msg}</p>
           )}
         </div>
       </div>
@@ -931,7 +931,7 @@ export function CalibreRollbackModal({
           )}
 
           {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">
+            <p className="text-sm text-red-700 dark:text-red-400">
               {t('settings.calibre.runs.error', { error })}
             </p>
           )}
@@ -1074,7 +1074,7 @@ export function CalibreSyncModal({
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3">
           {error && (
-            <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-xs text-red-700 dark:text-red-400">{error}</p>
           )}
           {progress && (
             <>
@@ -1096,7 +1096,7 @@ export function CalibreSyncModal({
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
                   <div className="text-fg-muted">{t('settings.calibre.pushAll.failed')}</div>
-                  <div className="font-semibold text-red-600 dark:text-red-400">{stats?.failed ?? 0}</div>
+                  <div className="font-semibold text-red-700 dark:text-red-400">{stats?.failed ?? 0}</div>
                 </div>
                 <div className="rounded border border-slate-200 dark:border-zinc-800 px-2 py-1.5">
                   <div className="text-fg-muted">{t('settings.calibre.pushAll.skipped')}</div>
@@ -1109,7 +1109,7 @@ export function CalibreSyncModal({
                 </div>
               </div>
               {!running && progress.error && (
-                <p className="text-xs text-red-600 dark:text-red-400">{t('settings.calibre.pushAll.syncFailed', { error: progress.error })}</p>
+                <p className="text-xs text-red-700 dark:text-red-400">{t('settings.calibre.pushAll.syncFailed', { error: progress.error })}</p>
               )}
               {!running && progress.finishedAt && !progress.error && (
                 <p className="text-xs text-accent-text">
@@ -1134,7 +1134,7 @@ export function CalibreSyncModal({
                       {progress.errors.map((e, i) => (
                         <tr key={`${e.bookId}-${i}`} className="border-t border-slate-200 dark:border-zinc-800">
                           <td className="px-2 py-1 text-slate-800 dark:text-zinc-200">{e.title || `#${e.bookId}`}</td>
-                          <td className="px-2 py-1 text-red-600 dark:text-red-400">{e.reason}</td>
+                          <td className="px-2 py-1 text-red-700 dark:text-red-400">{e.reason}</td>
                         </tr>
                       ))}
                     </tbody>

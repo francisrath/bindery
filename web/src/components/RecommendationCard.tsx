@@ -12,13 +12,17 @@ interface RecommendationCardProps {
 }
 
 export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAuthor }: RecommendationCardProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const imageUrl = rec.imageUrl
     ? `${BINDERY_BASE}/api/v1/images?url=${encodeURIComponent(rec.imageUrl)}`
     : ''
 
   const stars = Math.round(rec.rating * 2) / 2
+  // The number carries the rating; the stars beside it are decoration. On the
+  // light card no amber is both still gold and 3:1 against the empty stars
+  // (#3084), so the stars no longer have to carry it alone.
+  const rating = rec.rating.toLocaleString(i18n?.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
   return (
     <div className="bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg overflow-hidden flex flex-col">
@@ -45,11 +49,11 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
         {/* Star rating */}
         {rec.rating > 0 && (
           <div className="flex items-center gap-1 mt-1.5">
-            <div className="flex">
+            <div className="flex" aria-hidden="true">
               {[1, 2, 3, 4, 5].map(i => (
                 <svg
                   key={i}
-                  className={`w-3 h-3 ${i <= stars ? 'text-amber-400' : 'text-slate-300 dark:text-zinc-700'}`}
+                  className={`w-3 h-3 ${i <= stars ? 'text-amber-500 dark:text-amber-400' : 'text-slate-300 dark:text-zinc-700'}`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -57,6 +61,10 @@ export default function RecommendationCard({ rec, onDismiss, onAdd, onExcludeAut
                 </svg>
               ))}
             </div>
+            <span className="text-[10px] text-fg-muted">
+              <span aria-hidden="true">{rating}</span>
+              <span className="sr-only">{t('discover.ratingLabel', 'Rated {{rating}} out of 5', { rating })}</span>
+            </span>
             {rec.ratingsCount > 0 && (
               <span className="text-[10px] text-fg-muted">({rec.ratingsCount})</span>
             )}
