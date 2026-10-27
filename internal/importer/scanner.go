@@ -4607,13 +4607,20 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 		// flip is taken only for a folder author the catalogue knows, so a
 		// flat book folder (It/It - Stephen King.epub) still reconciles as it
 		// is.
-		if !matched && canFlip && len(matchingAuthors(flipped.Author)) > 0 {
+		flipTried := canFlip && len(matchingAuthors(flipped.Author)) > 0
+		if !matched && flipTried {
 			if matched = reconcileByTitle(path, cleanPath, detectedFmt, flipped.Title, flipped.Author, layoutAuthor); matched {
 				slog.Debug("library scan: reconciled a backwards filename in its author folder",
 					"path", path, "title", flipped.Title, "author", flipped.Author)
 			}
 		}
-		if !matched && parsed.Title != "" {
+		// When the flip was tried and found no book, the plain reading's title
+		// is the author's own name, which only fuzzy-matches catalogue rows
+		// named after them ("Stephen King 8"). Do not try it: take the title
+		// side as the parsed title and let the book folder tier go next.
+		if flipTried && !matched {
+			parsed.Title = flipped.Title
+		} else if !matched && parsed.Title != "" {
 			matched = reconcileByTitle(path, cleanPath, detectedFmt, parsed.Title, parsed.Author, fallbackAuthor)
 		}
 		// The book folder's title, one tier down (#2171). The filename now

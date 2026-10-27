@@ -469,3 +469,51 @@ func TestScanLibrary_TagAuthorNotTheFolderCancelsTheFlip(t *testing.T) {
 		})
 	}
 }
+
+// TestScanLibrary_BackwardsFilenameWithNoBookIsNotMatchedOnTheAuthorsName: when
+// the flipped reading of "Author - Title" finds no book, the plain reading's
+// title is the author's own name and must not be fuzzy-matched against catalogue
+// rows named after the author ("Stephen King 8"). The book folder's title is
+// tried next, and otherwise the file stays unmatched.
+func TestScanLibrary_BackwardsFilenameWithNoBookIsNotMatchedOnTheAuthorsName(t *testing.T) {
+	const king = "Stephen King"
+	t.Run("stays unmatched", func(t *testing.T) {
+		libDir := t.TempDir()
+		s, books, authors, ctx := scannerFixture(t, libDir)
+		seeded := seedAuthorBooks(t, books, authors, ctx, king, "Stephen King 8", "Carrie")
+		p := filepath.Join(libDir, king, "The Waste Lands", king+" - The Waste Lands.epub")
+		writeFileAt(t, p)
+
+		s.ScanLibrary(ctx)
+
+		if got := fileOwners(t, books, ctx, seeded, p); len(got) != 0 {
+			t.Errorf("file went to %q, want no book", got)
+		}
+	})
+	t.Run("book folder title still matches", func(t *testing.T) {
+		libDir := t.TempDir()
+		s, books, authors, ctx := scannerFixture(t, libDir)
+		seeded := seedAuthorBooks(t, books, authors, ctx, king, "Stephen King 8", "The Waste Lands")
+		p := filepath.Join(libDir, king, "The Waste Lands", king+" - Wastelands.epub")
+		writeFileAt(t, p)
+
+		s.ScanLibrary(ctx)
+
+		if got := fileOwners(t, books, ctx, seeded, p); !slices.Equal(got, []string{"The Waste Lands"}) {
+			t.Errorf("file went to %q, want [The Waste Lands]", got)
+		}
+	})
+}
+
+// TestScanLibrary_BackwardsFilenameUnmatchedEntryNamesTheRealTitle: a backwards
+// "Author - Title" file the catalogue has no book for is listed as unmatched
+// under its title, not under the author's name read as a title.
+func TestScanLibrary_BackwardsFilenameUnmatchedEntryNamesTheRealTitle(t *testing.T) {
+	s, _, books, authors, _, libraryDir, ctx := unmatchedFixture(t)
+	seedAuthorBooks(t, books, authors, ctx, "Stephen King", "Stephen King 8", "The Stand")
+
+	got := scanOneUnmatched(t, s, ctx, libraryDir, "Stephen King", "Carrie", "Stephen King - Carrie.epub")
+	if got.ParsedTitle != "Carrie" {
+		t.Errorf("unmatched title = %q, want %q", got.ParsedTitle, "Carrie")
+	}
+}
