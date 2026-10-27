@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -1352,6 +1353,9 @@ func (h *BookHandler) Rebind(w http.ResponseWriter, r *http.Request) {
 	// Snapshot old identifiers for the audit trail before mutating the book.
 	oldProvider := book.MetadataProvider
 	oldForeignID := book.ForeignID
+	// The locks decide what the clearing step below may erase, so keep them
+	// past the wholesale lock reset.
+	lockedBefore := slices.Clone(book.LockedFields)
 
 	// Update the book with the new foreign ID and refreshed metadata.
 	// Preserve fields managed by the user or the import pipeline (status,
@@ -1389,6 +1393,10 @@ func (h *BookHandler) Rebind(w http.ResponseWriter, r *http.Request) {
 	if upstream.Language != "" {
 		book.Language = upstream.Language
 	}
+	// A field the new record does not have must not keep the old record's
+	// value, or the book reads as if it came from the new one (#3104). Locked
+	// fields are the user's and stay.
+	cleared := book.ClearProviderFieldsMissingFrom(upstream, lockedBefore)
 	now := time.Now().UTC()
 	book.LastMetadataRefreshAt = &now
 
@@ -1408,6 +1416,10 @@ func (h *BookHandler) Rebind(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusConflict, map[string]string{"error": "This book changed while it was being rebound. Try again.", "reason": conflictReasonChanged})
 		return
 	}
+	if len(cleared) > 0 {
+		slog.Info("rebind: cleared fields the new record does not have", "bookId", book.ID, "fields", cleared)
+	}
+	book.Cleared = cleared
 	// The previous work's provider editions describe the wrong work: their
 	// ISBN would keep steering search, and their unique ids keep them from
 	// the book they belong to (#2781). Only when the identity actually
@@ -1452,12 +1464,13 @@ func (h *BookHandler) Rebind(w http.ResponseWriter, r *http.Request) {
 	// by hand and visible in the activity history.
 	if h.history != nil {
 		type rebindData struct {
-			OldProvider  string `json:"oldProvider"`
-			OldForeignID string `json:"oldForeignId"`
-			NewProvider  string `json:"newProvider"`
-			NewForeignID string `json:"newForeignId"`
+			OldProvider  string   `json:"oldProvider"`
+			OldForeignID string   `json:"oldForeignId"`
+			NewProvider  string   `json:"newProvider"`
+			NewForeignID string   `json:"newForeignId"`
+			Cleared      []string `json:"cleared,omitempty"`
 		}
-		if data, jerr := json.Marshal(rebindData{oldProvider, oldForeignID, req.Provider, req.ForeignID}); jerr == nil {
+		if data, jerr := json.Marshal(rebindData{oldProvider, oldForeignID, req.Provider, req.ForeignID, cleared}); jerr == nil {
 			bookID := book.ID
 			_ = h.history.Create(r.Context(), &models.HistoryEvent{
 				BookID:      &bookID,
