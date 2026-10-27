@@ -3503,11 +3503,105 @@ func flipByLayout(parsed ParsedFile, layoutAuthor string) (ParsedFile, bool) {
 	if layoutAuthor == "" || parsed.Title == "" || parsed.Author == "" {
 		return parsed, false
 	}
-	if !confidentAuthorMatch(parsed.Title, layoutAuthor) || confidentAuthorMatch(parsed.Author, layoutAuthor) {
+	if !namesAuthorConfidently(parsed.Title, layoutAuthor) || namesAuthorConfidently(parsed.Author, layoutAuthor) {
 		return parsed, false
 	}
 	parsed.Title, parsed.Author = parsed.Author, layoutAuthor
 	return parsed, true
+}
+
+// namesAuthorConfidently reports whether one side of a filename names the
+// author folder: the whole side matches it under confidentAuthorMatch, or, for
+// a multi author side ("Stephen King, Peter Straub", "King & Straub"), one of
+// the names in it does (#3494).
+func namesAuthorConfidently(side, layoutAuthor string) bool {
+	if confidentAuthorMatch(side, layoutAuthor) {
+		return true
+	}
+	names := splitAuthorNames(side)
+	if len(names) < 2 {
+		return false
+	}
+	// A list counts only when every element reads as a person's name. A title
+	// that happens to start with the author ("Tom Clancy and Steve Pieczenik's
+	// Net Force", "Stephen King, A Life") is a forward file and must keep the
+	// plain reading it always had.
+	found := false
+	for _, name := range names {
+		if !looksLikePersonName(name) {
+			return false
+		}
+		if confidentAuthorMatch(name, layoutAuthor) {
+			found = true
+		}
+	}
+	return found
+}
+
+var authorNameParticles = map[string]bool{
+	"van": true, "von": true, "de": true, "der": true, "den": true, "la": true, "le": true,
+	"du": true, "di": true, "da": true, "del": true, "bin": true, "al": true, "ibn": true,
+}
+
+// looksLikePersonName is a cheap shape test for one element of an author list:
+// one to four words, each a capitalised name, an initial or a particle, with no
+// digits, possessive or leading article.
+func looksLikePersonName(name string) bool {
+	words := strings.Fields(name)
+	if len(words) == 0 || len(words) > 4 {
+		return false
+	}
+	switch strings.ToLower(words[0]) {
+	case "the", "a", "an":
+		return false
+	}
+	for _, w := range words {
+		lw := strings.ToLower(w)
+		if strings.HasSuffix(lw, "'s") || strings.HasSuffix(lw, "\u2019s") {
+			return false
+		}
+		if authorNameParticles[lw] {
+			continue
+		}
+		runes := []rune(w)
+		for _, r := range runes {
+			if !unicode.IsLetter(r) && r != '.' && r != '-' && r != '\'' && r != '\u2019' {
+				return false
+			}
+		}
+		if !unicode.IsUpper(runes[0]) || (len(runes) == 1) {
+			return false
+		}
+	}
+	return true
+}
+
+var authorListSepRe = regexp.MustCompile(`(?i)\s*(?:[,;&+]|\band\b)\s*`)
+
+// splitAuthorNames splits a multi author side on commas, semicolons, ampersands,
+// plus signs and "and". A side with no separator comes back as it is.
+func splitAuthorNames(side string) []string {
+	var names []string
+	for _, n := range authorListSepRe.Split(side, -1) {
+		if n = strings.TrimSpace(n); n != "" {
+			names = append(names, n)
+		}
+	}
+	return names
+}
+
+// namesAuthorAmbiguously is the title side of an "Author - Title" filename the
+// flip refuses: a variant spelling of the folder author ("Dostoyevsky" in a
+// Dostoevsky folder) that lookupAuthorMatch accepts and confidentAuthorMatch
+// does not. The flip never auto matches on it, but the title side is still the
+// author's name, so the plain reading must not fuzzy-match it as a title
+// (#3494).
+func namesAuthorAmbiguously(parsed ParsedFile, layoutAuthor string) bool {
+	if layoutAuthor == "" || parsed.Title == "" || parsed.Author == "" {
+		return false
+	}
+	return lookupAuthorMatch(parsed.Title, layoutAuthor) && !namesAuthorConfidently(parsed.Title, layoutAuthor) &&
+		!namesAuthorConfidently(parsed.Author, layoutAuthor)
 }
 
 // ErrScanAlreadyRunning was StartScan's answer to a request made while a
@@ -4338,6 +4432,10 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 			catalogue, catalogueByAuthor = suggestionCatalogue(allBooks, wantedBooks)
 		}
 	}
+	// exactTitleOnly narrows the next reconcileByTitle to a book whose
+	// normalised title is the file's, for the reading that is most likely the
+	// author's name read as a title (#3494).
+	exactTitleOnly := false
 	reconcileByTitle := func(path, cleanPath, detectedFmt, title, author, layoutAuthor string) bool {
 		ensureCatalogue()
 		// normalizeTitle strips leading articles and inverts comma-suffix
@@ -4427,6 +4525,9 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 			// not on every candidate so the ranking above, and the near ties it
 			// leaves unmatched (#2941), are exactly what they were. A different
 			// work is not a book this file matches, so claimBlocked stays unset.
+			if exactTitleOnly && normalizeTitle(best.sb.book.Title) != normParsed {
+				return false
+			}
 			if titlesNameDifferentWorks(title, best.sb.book.Title) {
 				slog.Debug("library scan: title match rejected (different work)",
 					"title", best.sb.book.Title, "path", path, "fileTitle", title, "jw", best.score)
@@ -4510,8 +4611,14 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 		// on the same title the folder names.
 		var flipped ParsedFile
 		var canFlip bool
+		// authorNamedTitle is the other side of an "Author - Title" name whose
+		// author side is only an ambiguous match for the folder author (#3494).
+		var authorNamedTitle string
 		if a, t, ok := authorTitleFromLayout(path, s.libraryDir, s.audiobookDir); ok {
 			flipped, canFlip = flipByLayout(parsed, a)
+			if !canFlip && namesAuthorAmbiguously(parsed, a) {
+				authorNamedTitle = parsed.Author
+			}
 			if a != "" {
 				parsed.Author = a
 				layoutAuthor = a
@@ -4545,6 +4652,7 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 				// title, so the flip stays open, as it is in bulk import.
 				if tags.Title != "" || (tags.Author != "" && !confidentAuthorMatch(tags.Author, layoutAuthor)) {
 					canFlip = false
+					authorNamedTitle = ""
 				}
 				// Multi-part audiobooks tag each track with its chapter name
 				// ("04 - Sinister Grey Mists..."). When the folder hierarchy
@@ -4637,6 +4745,17 @@ func (s *Scanner) scanLibrary(ctx context.Context) {
 		// side as the parsed title and let the book folder tier go next.
 		if flipTried && !matched {
 			parsed.Title = flipped.Title
+		} else if !matched && authorNamedTitle != "" {
+			// A variant spelling the flip refuses to act on. The title side is
+			// most likely the author's name, so it may claim a book only by
+			// naming it exactly ("Dostoevski" the book), never by fuzzy
+			// matching "Dostoevsky 8". Otherwise the other side is the title.
+			exactTitleOnly = true
+			matched = reconcileByTitle(path, cleanPath, detectedFmt, parsed.Title, parsed.Author, fallbackAuthor)
+			exactTitleOnly = false
+			if !matched {
+				parsed.Title = authorNamedTitle
+			}
 		} else if !matched && parsed.Title != "" {
 			matched = reconcileByTitle(path, cleanPath, detectedFmt, parsed.Title, parsed.Author, fallbackAuthor)
 		}
